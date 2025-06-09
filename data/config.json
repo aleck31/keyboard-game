@@ -1,0 +1,14 @@
+{
+  "defaultMode": "classic",
+  "timeLimit": 60,
+  "enableSound": true,
+  "theme": "dark",
+  "difficulty": "normal",
+  "showWPM": true,
+  "showAccuracy": true,
+  "enableBackgroundMusic": true,
+  "keyboardSounds": true,
+  "autoStart": false,
+  "highlightErrors": true,
+  "showProgress": true
+}

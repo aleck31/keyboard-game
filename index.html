@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>键盘打字竞速游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/vue-components.css">
+    <link rel="stylesheet" href="css/defense-mode.css">
+    <!-- Vue.js 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+    <!-- 游戏主容器 -->
+    <div class="game-container">
+        <!-- 头部 -->
+        <header class="game-header">
+            <h1 class="game-title">⌨️ 键盘打字竞速</h1>
+            <div class="header-controls">
+                <button class="btn btn-icon" id="themeToggle" title="切换主题">
+                    🌙
+                </button>
+                <button class="btn btn-icon" id="settingsBtn" title="设置">
+                    ⚙️
+                </button>
+                <button class="btn btn-icon" id="audioToggle" title="音频开关">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <!-- Vue应用容器 -->
+        <div id="vue-app"></div>
+
+        <!-- 游戏模式选择 -->
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="classic">经典模式</button>
+            <button class="mode-btn" data-mode="words">单词模式</button>
+            <button class="mode-btn" data-mode="racing">赛车追逐</button>
+            <button class="mode-btn" data-mode="defense">植物防御</button>
+            <button class="mode-btn" data-mode="endless">无尽模式</button>
+        </div>
+
+        <!-- 统计面板 -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">WPM</span>
+                <span class="stat-value" id="wpmDisplay">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">CPM</span>
+                <span class="stat-value" id="cpmDisplay">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">准确率</span>
+                <span class="stat-value" id="accuracyDisplay">100%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">时间</span>
+                <span class="stat-value" id="timeDisplay">0:00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">错误</span>
+                <span class="stat-value" id="errorsDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div class="game-area">
+            <!-- 进度条 -->
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <!-- 赛车追逐模式 -->
+            <div class="racing-container hidden" id="racingContainer">
+                <div class="racing-header">
+                    <div class="racing-title">🏁 赛车追逐模式</div>
+                    <div class="racing-countdown">
+                        <span class="countdown-label">剩余时间</span>
+                        <span class="countdown-time" id="racingCountdown">1:00</span>
+                    </div>
+                </div>
+                
+                <div class="racing-track">
+                    <div class="track-line"></div>
+                    
+                    <!-- 玩家赛车 -->
+                    <div class="racing-car player-car" id="playerCar">
+                        <div class="car-icon">🏎️</div>
+                        <div class="car-label">你</div>
+                        <div class="car-speed" id="playerSpeed">0 WPM</div>
+                    </div>
+                    
+                    <!-- AI赛车 -->
+                    <div class="racing-car ai-car slow-car" id="slowCar">
+                        <div class="car-icon">🚗</div>
+                        <div class="car-label">慢车</div>
+                        <div class="car-speed">30 WPM</div>
+                    </div>
+                    
+                    <div class="racing-car ai-car medium-car" id="mediumCar">
+                        <div class="car-icon">🚙</div>
+                        <div class="car-label">中速车</div>
+                        <div class="car-speed">50 WPM</div>
+                    </div>
+                    
+                    <div class="racing-car ai-car fast-car" id="fastCar">
+                        <div class="car-icon">🏁</div>
+                        <div class="car-label">快车</div>
+                        <div class="car-speed">70 WPM</div>
+                    </div>
+                    
+                    <!-- 终点线 -->
+                    <div class="finish-line">🏁</div>
+                </div>
+                
+                <div class="racing-status">
+                    <div class="current-rank" id="currentRank">当前排名: 第4名</div>
+                    <div class="overtaken-cars" id="overtakenCars">已超越: 无</div>
+                </div>
+            </div>
+
+            <!-- 文本显示区域 -->
+            <div class="text-display" id="textDisplay">
+                <div class="text-content" id="textContent">
+                    点击开始按钮或直接开始输入来开始游戏...
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-area">
+                <textarea 
+                    id="textInput" 
+                    class="text-input" 
+                    placeholder="在这里输入文本..."
+                    disabled
+                ></textarea>
+            </div>
+
+            <!-- 游戏控制按钮 -->
+            <div class="game-controls">
+                <button class="btn btn-primary" id="startBtn">开始游戏</button>
+                <button class="btn btn-secondary" id="pauseBtn" disabled>暂停</button>
+                <button class="btn btn-secondary" id="resetBtn">结束游戏</button>
+            </div>
+        </div>
+
+        <!-- 结果面板 -->
+        <div class="results-panel hidden" id="resultsPanel">
+            <h2>游戏结果</h2>
+            <div class="results-stats">
+                <div class="result-item">
+                    <span class="result-label">最终WPM:</span>
+                    <span class="result-value" id="finalWPM">0</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">最终CPM:</span>
+                    <span class="result-value" id="finalCPM">0</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">准确率:</span>
+                    <span class="result-value" id="finalAccuracy">0%</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">总时间:</span>
+                    <span class="result-value" id="finalTime">0:00</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">错误数:</span>
+                    <span class="result-value" id="finalErrors">0</span>
+                </div>
+            </div>
+            
+            <!-- 赛车结果 -->
+            <div class="racing-results hidden" id="racingResults">
+                <div class="racing-results-title">🏁 赛车结果</div>
+                <div class="racing-rank" id="racingRank">第4名</div>
+                <div class="racing-overtaken" id="racingOvertaken">已超越: 无</div>
+                <div class="racing-distance" id="racingDistance">完成距离: 0%</div>
+            </div>
+            <div class="results-actions">
+                <button class="btn btn-primary" id="playAgainBtn">再玩一次</button>
+                <button class="btn btn-secondary" id="shareBtn">分享成绩</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div class="modal hidden" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>游戏设置</h3>
+                <button class="modal-close" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="timeLimitSelect">时间限制 (秒):</label>
+                    <select id="timeLimitSelect">
+                        <option value="30">30秒</option>
+                        <option value="60" selected>60秒</option>
+                        <option value="120">120秒</option>
+                        <option value="300">300秒</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="difficultySelect">难度:</label>
+                    <select id="difficultySelect">
+                        <option value="easy">简单</option>
+                        <option value="normal" selected>普通</option>
+                        <option value="hard">困难</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="enableSounds" checked>
+                        启用音效
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="enableMusic" checked>
+                        启用背景音乐
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="highlightErrors" checked>
+                        高亮错误
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="saveSettings">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜模态框 -->
+    <div class="modal hidden" id="leaderboardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>排行榜</h3>
+                <button class="modal-close" id="closeLeaderboard">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="leaderboard-list" id="leaderboardList">
+                    <!-- 排行榜内容将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript文件 -->
+    <script src="js/utils.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/audio-manager.js"></script>
+    <script src="js/stats-manager.js"></script>
+    <script src="js/ui-manager.js"></script>
+    <script src="js/game-engine.js"></script>
+    <script src="js/defense-engine.js"></script>
+    
+    <!-- Vue组件 -->
+    <script src="js/components/game-controls.js"></script>
+    <script src="js/components/game-stats.js"></script>
+    <script src="js/components/racing-track.js"></script>
+    <script src="js/components/defense-game.js"></script>
+    <script src="js/vue-app.js"></script>
+    
+    <!-- 主应用 -->
+    <script src="js/main.js"></script>
+    
+    <!-- 初始化Vue应用 -->
+    <script>
+        // 在所有脚本加载完成后初始化Vue应用
+        window.addEventListener('load', () => {
+            if (window.initVueApp) {
+                window.initVueApp();
+            }
+        });
+    </script>
+</body>
+</html>

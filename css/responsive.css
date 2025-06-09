@@ -1,0 +1,324 @@
+/* 响应式设计 */
+
+/* 大屏幕 (桌面) */
+@media (min-width: 1200px) {
+    .game-container {
+        padding: 40px;
+    }
+    
+    .game-title {
+        font-size: 3rem;
+    }
+    
+    .text-content {
+        font-size: 1.3rem;
+        padding: 30px;
+    }
+    
+    .stats-panel {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* 中等屏幕 (平板) */
+@media (max-width: 1199px) and (min-width: 768px) {
+    .game-container {
+        padding: 30px;
+    }
+    
+    .game-title {
+        font-size: 2.2rem;
+    }
+    
+    .stats-panel {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .mode-selector {
+        justify-content: center;
+    }
+    
+    .mode-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
+
+/* 小屏幕 (手机) */
+@media (max-width: 767px) {
+    .game-container {
+        padding: 15px;
+    }
+    
+    .game-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .game-title {
+        font-size: 1.8rem;
+    }
+    
+    .header-controls {
+        justify-content: center;
+    }
+    
+    .mode-selector {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .mode-btn {
+        width: 100%;
+        max-width: 200px;
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .stats-panel {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .stat-item {
+        padding: 15px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .game-area {
+        padding: 20px;
+    }
+    
+    .text-content {
+        font-size: 1rem;
+        padding: 15px;
+        min-height: 100px;
+    }
+    
+    .text-input {
+        min-height: 80px;
+        padding: 15px;
+        font-size: 1rem;
+    }
+    
+    .game-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 200px;
+        padding: 12px;
+    }
+    
+    .results-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .results-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 20px;
+    }
+    
+    .leaderboard-item {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .leaderboard-stats {
+        justify-content: center;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+    .game-container {
+        padding: 10px;
+    }
+    
+    .game-title {
+        font-size: 1.5rem;
+    }
+    
+    .stats-panel {
+        grid-template-columns: 1fr;
+    }
+    
+    .text-content {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+    
+    .text-input {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+    
+    .btn {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    .modal-content {
+        width: 98%;
+        margin: 5px;
+    }
+    
+    .modal-header h3 {
+        font-size: 1.2rem;
+    }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 600px) and (orientation: landscape) {
+    .game-container {
+        padding: 10px;
+    }
+    
+    .game-header {
+        margin-bottom: 15px;
+        padding: 10px 0;
+    }
+    
+    .game-title {
+        font-size: 1.5rem;
+    }
+    
+    .mode-selector {
+        margin-bottom: 15px;
+    }
+    
+    .stats-panel {
+        margin-bottom: 15px;
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .stat-item {
+        padding: 10px;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .game-area {
+        padding: 15px;
+    }
+    
+    .text-content {
+        min-height: 60px;
+        font-size: 0.9rem;
+    }
+    
+    .text-input {
+        min-height: 60px;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    .game-container {
+        background: white;
+        color: black;
+    }
+    
+    .header-controls,
+    .game-controls,
+    .modal {
+        display: none;
+    }
+    
+    .game-area {
+        border: 1px solid #ccc;
+        background: white;
+    }
+    
+    .text-content {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+    }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #0066ff;
+        --success-color: #008800;
+        --error-color: #cc0000;
+        --border-color: #666666;
+    }
+    
+    .theme-dark {
+        --bg-primary: #000000;
+        --bg-secondary: #111111;
+        --card-bg: #222222;
+        --text-color: #ffffff;
+        --border-color: #888888;
+    }
+    
+    .theme-light {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f0f0f0;
+        --card-bg: #ffffff;
+        --text-color: #000000;
+        --border-color: #666666;
+    }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .char-current {
+        animation: none;
+        background-color: var(--primary-color);
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .mode-btn {
+        min-height: 44px;
+        padding: 12px 20px;
+    }
+    
+    .modal-close {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* 移除hover效果 */
+    .btn:hover,
+    .mode-btn:hover,
+    .stat-item:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}

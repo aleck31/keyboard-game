@@ -1,0 +1,387 @@
+/* Vue组件样式 */
+
+/* Vue应用容器 */
+.vue-game-container {
+    margin-bottom: 20px;
+}
+
+/* 通知组件 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.notification-success {
+    background: var(--success-color);
+}
+
+.notification-error {
+    background: var(--error-color);
+}
+
+.notification-warning {
+    background: var(--warning-color);
+}
+
+.notification-info {
+    background: var(--primary-color);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 游戏控制组件 */
+.game-controls-container {
+    margin-bottom: 20px;
+}
+
+.mode-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.mode-btn:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    background: var(--hover-bg);
+}
+
+.mode-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.mode-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mode-icon {
+    font-size: 16px;
+}
+
+.game-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 统计组件 */
+.stats-container {
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 12px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* 赛车组件增强样式 */
+.racing-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.racing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.racing-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.racing-countdown {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.racing-countdown .countdown-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.racing-countdown .countdown-time {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 50px;
+}
+
+.racing-countdown .countdown-time.warning {
+    color: var(--warning-color);
+    animation: pulse 1s infinite;
+}
+
+.racing-countdown .countdown-time.danger {
+    color: var(--error-color);
+    animation: pulse 0.5s infinite;
+}
+
+.racing-track {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(90deg, #2a2a2a 0%, #1a1a1a 50%, #2a2a2a 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    border: 2px solid var(--border-color);
+}
+
+.track-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.3) 0px,
+        rgba(255, 255, 255, 0.3) 20px,
+        transparent 20px,
+        transparent 40px
+    );
+    transform: translateY(-50%);
+}
+
+.racing-car {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: left 0.3s ease;
+    z-index: 10;
+    cursor: default;
+}
+
+.player-car {
+    top: 20px;
+}
+
+.slow-car {
+    top: 60px;
+}
+
+.medium-car {
+    top: 100px;
+}
+
+.fast-car {
+    top: 140px;
+}
+
+.car-icon {
+    font-size: 2rem;
+    margin-bottom: 2px;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+    transition: transform 0.2s ease;
+}
+
+.racing-car:hover .car-icon {
+    transform: scale(1.1);
+}
+
+.car-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    background: rgba(0,0,0,0.7);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+}
+
+.car-speed {
+    font-size: 9px;
+    color: var(--text-secondary);
+    background: rgba(0,0,0,0.5);
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.player-car .car-label {
+    background: var(--primary-color);
+    color: white;
+}
+
+.slow-car .car-label {
+    background: var(--success-color);
+}
+
+.medium-car .car-label {
+    background: var(--warning-color);
+}
+
+.fast-car .car-label {
+    background: var(--error-color);
+}
+
+.finish-line {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: repeating-linear-gradient(
+        0deg,
+        white 0px,
+        white 10px,
+        black 10px,
+        black 20px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.racing-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.current-rank {
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 4px 8px;
+    background: rgba(var(--primary-color-rgb), 0.1);
+    border-radius: 4px;
+}
+
+.overtaken-cars {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+/* 超越动画 */
+.racing-car.overtaking {
+    animation: overtake 0.5s ease;
+}
+
+@keyframes overtake {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .racing-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .racing-track {
+        height: 160px;
+    }
+    
+    .car-icon {
+        font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 10px;
+    }
+    
+    .mode-selector {
+        justify-content: center;
+    }
+    
+    .mode-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}

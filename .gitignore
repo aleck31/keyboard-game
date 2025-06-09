@@ -1,0 +1,136 @@
+# Python相关
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 运行时文件
+*.pid
+*.seed
+*.pid.lock
+
+# 临时文件
+tmp/
+temp/
+.tmp/
+
+# 缓存文件
+.cache/
+.npm/
+.yarn/
+node_modules/
+
+# 操作系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 备份文件
+*.bak
+*.backup
+*.old
+*.orig
+
+# 压缩文件
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 配置文件（如果包含敏感信息）
+# config.json
+# .env
+
+# 用户上传的文件
+uploads/
+user-data/
+
+# 生成的文件
+generated/
+build/
+dist/
+
+# 开发测试
+dev-docs/
+
+# 文档生成文件
+docs/_build/
+site/
+
+# 测试覆盖率报告
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# 性能分析文件
+.prof
+
+# 本地环境变量
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 统计和分析文件（可选，根据需要）
+# data/game_stats.json
+# data/defense_stats.json
+
+# 媒体文件（如果很大的话）
+# assets/audio/
+# assets/images/

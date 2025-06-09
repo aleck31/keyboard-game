@@ -1,0 +1,34 @@
+[
+  {
+    "wpm": 51.0,
+    "accuracy": 99.0,
+    "time_taken": 32,
+    "errors": 18,
+    "mode": "time",
+    "timestamp": "2025-06-08T14:13:34.631235"
+  },
+  {
+    "wpm": 48.0,
+    "accuracy": 99.0,
+    "time_taken": 28,
+    "errors": 22,
+    "mode": "classic",
+    "timestamp": "2025-06-08T14:44:27.111995"
+  },
+  {
+    "wpm": 1.0,
+    "accuracy": 100.0,
+    "time_taken": 120,
+    "errors": 26,
+    "mode": "words",
+    "timestamp": "2025-06-08T14:47:14.890633"
+  },
+  {
+    "wpm": 13.0,
+    "accuracy": 7.0,
+    "time_taken": 22,
+    "errors": 578,
+    "mode": "endless",
+    "timestamp": "2025-06-08T14:50:39.874609"
+  }
+]

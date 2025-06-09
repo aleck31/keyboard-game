@@ -1,0 +1,31 @@
+{
+  "basic": [
+    "cat", "dog", "run", "sun", "car", "hat", "bat", "rat", "cup", "pen",
+    "box", "key", "map", "bag", "egg", "ice", "jam", "net", "owl", "pie",
+    "red", "sky", "top", "van", "web", "zoo", "arm", "bed", "cow", "day",
+    "ear", "fox", "gun", "hit", "job", "kid", "leg", "man", "new", "old"
+  ],
+  "medium": [
+    "house", "water", "quick", "brown", "jumps", "table", "chair", "phone",
+    "light", "music", "paper", "plant", "smile", "world", "happy", "green",
+    "black", "white", "small", "large", "sweet", "fresh", "clean", "smart",
+    "brave", "strong", "quiet", "bright", "smooth", "simple", "gentle", "magic",
+    "forest", "garden", "window", "bridge", "castle", "dragon", "flower", "golden"
+  ],
+  "strong": [
+    "computer", "keyboard", "beautiful", "wonderful", "fantastic", "amazing",
+    "powerful", "strength", "elephant", "butterfly", "mountain", "adventure",
+    "treasure", "princess", "champion", "universe", "rainbow", "sunshine",
+    "chocolate", "hamburger", "telephone", "television", "refrigerator", "microwave",
+    "basketball", "football", "swimming", "dancing", "painting", "singing",
+    "learning", "teaching", "building", "creating", "exploring", "discovering"
+  ],
+  "boss": [
+    "extraordinary", "incomprehensible", "unbelievable", "magnificent", "overwhelming",
+    "unstoppable", "revolutionary", "transformation", "communication", "responsibility",
+    "understanding", "appreciation", "concentration", "determination", "investigation",
+    "representation", "administration", "recommendation", "implementation", "demonstration",
+    "characterization", "internationalization", "professionalization", "commercialization",
+    "industrialization", "standardization", "personalization", "specialization"
+  ]
+}

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频修复测试页面</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0d1117;
+            color: #f0f6fc;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #21262d;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #161b22;
+            border: 1px solid #30363d;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 音频修复测试页面</h1>
+    
+    <div class="test-section">
+        <h2>1. 音频管理器状态测试</h2>
+        <div class="controls">
+            <button onclick="checkAudioStatus()">检查音频状态</button>
+            <button onclick="toggleMainAudio()">切换主音频开关</button>
+            <button onclick="toggleMusic()">切换音乐开关</button>
+            <button onclick="toggleEffects()">切换音效开关</button>
+        </div>
+        <div id="audioStatus" class="status">点击"检查音频状态"查看当前状态</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 背景音乐测试</h2>
+        <div class="controls">
+            <button onclick="startMusic()">开始音乐</button>
+            <button onclick="stopMusic()">停止音乐</button>
+            <button onclick="testMusicTypes()">测试不同音乐类型</button>
+        </div>
+        <div id="musicStatus" class="status">音乐状态: 未开始</div>
+        <div class="info">
+            ℹ️ 现在有4种不同的背景音乐类型：
+            <ul>
+                <li>经典和弦进行 (Classic)</li>
+                <li>五声音阶旋律 (Pentatonic)</li>
+                <li>琶音模式 (Arpeggio)</li>
+                <li>环境音垫 (Ambient)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 音效测试</h2>
+        <div class="controls">
+            <button onclick="playKeyPress()">按键音效</button>
+            <button onclick="playKeyError()">错误音效</button>
+            <button onclick="playGameStart()">开始音效</button>
+            <button onclick="playGameEnd()">结束音效</button>
+            <button onclick="playAchievement()">成就音效</button>
+        </div>
+        <div id="effectsStatus" class="status">点击按钮测试各种音效</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 游戏暂停/继续测试</h2>
+        <div class="controls">
+            <button onclick="simulateGameStart()">模拟游戏开始</button>
+            <button onclick="simulateGamePause()" id="pauseBtn" disabled>模拟暂停</button>
+            <button onclick="simulateGameStop()" id="stopBtn" disabled>模拟停止</button>
+        </div>
+        <div id="gameStatus" class="status">游戏状态: 未开始</div>
+        <div class="warning">
+            ⚠️ 测试要点：
+            <ul>
+                <li>游戏开始时应该播放背景音乐（如果音乐开关开启）</li>
+                <li>暂停时应该停止背景音乐</li>
+                <li>继续时应该恢复背景音乐（如果音乐开关开启）</li>
+                <li>停止时应该停止所有音频</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 设置同步测试</h2>
+        <div class="controls">
+            <button onclick="saveTestSettings()">保存测试设置</button>
+            <button onclick="loadTestSettings()">加载设置</button>
+            <button onclick="clearTestSettings()">清除设置</button>
+        </div>
+        <div id="settingsStatus" class="status">设置状态: 未测试</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 启动完整游戏</h2>
+        <p>如果上述测试都正常，可以启动完整游戏进行体验：</p>
+        <div class="controls">
+            <button onclick="window.location.href='index.html'">启动游戏</button>
+            <button onclick="window.location.href='test_fixes.html'">其他修复测试</button>
+        </div>
+    </div>
+
+    <script>
+        let gameSimulationState = {
+            isPlaying: false,
+            isPaused: false
+        };
+        
+        // 等待页面加载完成
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.audioManager) {
+                    console.log('✅ 音频管理器已加载');
+                    checkAudioStatus();
+                } else {
+                    console.log('❌ 音频管理器未加载');
+                    document.getElementById('audioStatus').innerHTML = 
+                        '<span class="error">❌ 音频管理器未加载，请在主游戏页面测试</span>';
+                }
+            }, 1000);
+        });
+        
+        // 检查音频状态
+        function checkAudioStatus() {
+            if (!window.audioManager) {
+                document.getElementById('audioStatus').innerHTML = 
+                    '<span class="error">❌ 音频管理器未加载</span>';
+                return;
+            }
+            
+            const status = window.audioManager.getStatus();
+            document.getElementById('audioStatus').innerHTML = `
+                <div class="info">🎵 音频状态:</div>
+                <ul>
+                    <li>主音频开关: <span class="${status.isEnabled ? 'success' : 'error'}">${status.isEnabled ? '开启' : '关闭'}</span></li>
+                    <li>音乐开关: <span class="${status.musicEnabled ? 'success' : 'error'}">${status.musicEnabled ? '开启' : '关闭'}</span></li>
+                    <li>音效开关: <span class="${status.effectsEnabled ? 'success' : 'error'}">${status.effectsEnabled ? '开启' : '关闭'}</span></li>
+                    <li>音乐播放中: <span class="${status.isPlaying ? 'success' : 'info'}">${status.isPlaying ? '是' : '否'}</span></li>
+                    <li>音乐音量: ${Math.round(status.musicVolume * 100)}%</li>
+                    <li>音效音量: ${Math.round(status.effectsVolume * 100)}%</li>
+                </ul>
+            `;
+        }
+        
+        // 切换主音频
+        function toggleMainAudio() {
+            if (window.audioManager) {
+                window.audioManager.toggleAudio();
+                setTimeout(checkAudioStatus, 100);
+            }
+        }
+        
+        // 切换音乐
+        function toggleMusic() {
+            if (window.audioManager) {
+                window.audioManager.toggleMusic();
+                setTimeout(checkAudioStatus, 100);
+            }
+        }
+        
+        // 切换音效
+        function toggleEffects() {
+            if (window.audioManager) {
+                window.audioManager.toggleEffects();
+                setTimeout(checkAudioStatus, 100);
+            }
+        }
+        
+        // 开始音乐
+        function startMusic() {
+            if (window.audioManager) {
+                window.audioManager.startBackgroundMusic();
+                document.getElementById('musicStatus').innerHTML = 
+                    '<span class="success">🎵 音乐已开始播放</span>';
+                setTimeout(checkAudioStatus, 100);
+            }
+        }
+        
+        // 停止音乐
+        function stopMusic() {
+            if (window.audioManager) {
+                window.audioManager.stopBackgroundMusic();
+                document.getElementById('musicStatus').innerHTML = 
+                    '<span class="info">⏹️ 音乐已停止</span>';
+                setTimeout(checkAudioStatus, 100);
+            }
+        }
+        
+        // 测试不同音乐类型
+        function testMusicTypes() {
+            if (!window.audioManager) return;
+            
+            let count = 0;
+            const testNext = () => {
+                if (count < 4) {
+                    window.audioManager.stopBackgroundMusic();
+                    setTimeout(() => {
+                        window.audioManager.startBackgroundMusic();
+                        count++;
+                        document.getElementById('musicStatus').innerHTML = 
+                            `<span class="info">🎵 正在测试音乐类型 ${count}/4</span>`;
+                        setTimeout(testNext, 3000);
+                    }, 500);
+                } else {
+                    document.getElementById('musicStatus').innerHTML = 
+                        '<span class="success">✅ 音乐类型测试完成</span>';
+                }
+            };
+            testNext();
+        }
+        
+        // 音效测试函数
+        function playKeyPress() {
+            if (window.audioManager) {
+                window.audioManager.playSound('keyPress');
+                document.getElementById('effectsStatus').innerHTML = 
+                    '<span class="success">🔊 播放按键音效</span>';
+            }
+        }
+        
+        function playKeyError() {
+            if (window.audioManager) {
+                window.audioManager.playSound('keyError');
+                document.getElementById('effectsStatus').innerHTML = 
+                    '<span class="error">🔊 播放错误音效</span>';
+            }
+        }
+        
+        function playGameStart() {
+            if (window.audioManager) {
+                window.audioManager.playSound('gameStart');
+                document.getElementById('effectsStatus').innerHTML = 
+                    '<span class="success">🔊 播放开始音效</span>';
+            }
+        }
+        
+        function playGameEnd() {
+            if (window.audioManager) {
+                window.audioManager.playSound('gameEnd');
+                document.getElementById('effectsStatus').innerHTML = 
+                    '<span class="info">🔊 播放结束音效</span>';
+            }
+        }
+        
+        function playAchievement() {
+            if (window.audioManager) {
+                window.audioManager.playSound('achievement');
+                document.getElementById('effectsStatus').innerHTML = 
+                    '<span class="success">🔊 播放成就音效</span>';
+            }
+        }
+        
+        // 游戏模拟函数
+        function simulateGameStart() {
+            gameSimulationState.isPlaying = true;
+            gameSimulationState.isPaused = false;
+            
+            if (window.audioManager) {
+                const status = window.audioManager.getStatus();
+                if (status.isEnabled && status.musicEnabled) {
+                    window.audioManager.startBackgroundMusic();
+                }
+                window.audioManager.playSound('gameStart');
+            }
+            
+            document.getElementById('gameStatus').innerHTML = 
+                '<span class="success">🎮 游戏已开始</span>';
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+        }
+        
+        function simulateGamePause() {
+            if (!gameSimulationState.isPlaying) return;
+            
+            gameSimulationState.isPaused = !gameSimulationState.isPaused;
+            
+            if (gameSimulationState.isPaused) {
+                if (window.audioManager) {
+                    window.audioManager.stopBackgroundMusic();
+                }
+                document.getElementById('gameStatus').innerHTML = 
+                    '<span class="warning">⏸️ 游戏已暂停</span>';
+                document.getElementById('pauseBtn').textContent = '模拟继续';
+            } else {
+                if (window.audioManager) {
+                    const status = window.audioManager.getStatus();
+                    if (status.isEnabled && status.musicEnabled) {
+                        window.audioManager.startBackgroundMusic();
+                    }
+                }
+                document.getElementById('gameStatus').innerHTML = 
+                    '<span class="success">▶️ 游戏已继续</span>';
+                document.getElementById('pauseBtn').textContent = '模拟暂停';
+            }
+        }
+        
+        function simulateGameStop() {
+            gameSimulationState.isPlaying = false;
+            gameSimulationState.isPaused = false;
+            
+            if (window.audioManager) {
+                window.audioManager.stopBackgroundMusic();
+                window.audioManager.playSound('gameEnd');
+            }
+            
+            document.getElementById('gameStatus').innerHTML = 
+                '<span class="info">⏹️ 游戏已停止</span>';
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('pauseBtn').textContent = '模拟暂停';
+        }
+        
+        // 设置测试函数
+        function saveTestSettings() {
+            const testSettings = {
+                enableMusic: false,
+                enableSounds: true,
+                theme: 'dark'
+            };
+            
+            localStorage.setItem('gameSettings', JSON.stringify(testSettings));
+            document.getElementById('settingsStatus').innerHTML = 
+                '<span class="success">✅ 测试设置已保存 (音乐关闭, 音效开启)</span>';
+        }
+        
+        function loadTestSettings() {
+            const settings = JSON.parse(localStorage.getItem('gameSettings') || '{}');
+            document.getElementById('settingsStatus').innerHTML = 
+                `<span class="info">📋 当前设置: ${JSON.stringify(settings, null, 2)}</span>`;
+        }
+        
+        function clearTestSettings() {
+            localStorage.removeItem('gameSettings');
+            document.getElementById('settingsStatus').innerHTML = 
+                '<span class="warning">🗑️ 设置已清除</span>';
+        }
+    </script>
+</body>
+</html>
