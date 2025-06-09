@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 植物防御模式测试</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0d1117;
+            color: #f0f6fc;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #21262d;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        .feature-list {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .gameplay-demo {
+            background: linear-gradient(135deg, #2d5016, #3d6b1f);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 2px solid #4a7c23;
+        }
+        .demo-battlefield {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, #87ceeb, #98fb98);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            color: #000;
+        }
+        .demo-plant {
+            font-size: 3rem;
+            animation: bounce 2s infinite;
+        }
+        .demo-zombies {
+            display: flex;
+            gap: 20px;
+            font-size: 2rem;
+        }
+        .demo-zombie {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: zombieWalk 1s infinite;
+        }
+        .zombie-word {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes zombieWalk {
+            0%, 100% { transform: translateX(0px); }
+            50% { transform: translateX(-5px); }
+        }
+        .difficulty-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .difficulty-card {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #30363d;
+        }
+        .difficulty-card.easy { border-color: #4caf50; }
+        .difficulty-card.medium { border-color: #ff9800; }
+        .difficulty-card.hard { border-color: #f44336; }
+        .controls-demo {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌱 植物防御模式 - 全新打字游戏体验！</h1>
+    
+    <div class="test-section">
+        <h2>🎮 游戏核心玩法</h2>
+        <div class="info">
+            <strong>植物防御模式</strong>将传统打字练习转变为激动人心的塔防射击游戏！<br>
+            你将扮演勇敢的植物守卫者，通过准确快速的打字来击退僵尸大军！
+        </div>
+        
+        <div class="gameplay-demo">
+            <h3>🏟️ 战场演示</h3>
+            <div class="demo-battlefield">
+                <div class="demo-plant">🌻</div>
+                <div style="font-size: 1.5rem;">💥 🌰 ➡️</div>
+                <div class="demo-zombies">
+                    <div class="demo-zombie">
+                        <div>🧟‍♂️</div>
+                        <div class="zombie-word">CAT</div>
+                    </div>
+                    <div class="demo-zombie">
+                        <div>🧟‍♀️</div>
+                        <div class="zombie-word">HOUSE</div>
+                    </div>
+                    <div class="demo-zombie">
+                        <div>👹</div>
+                        <div class="zombie-word">COMPUTER</div>
+                    </div>
+                </div>
+            </div>
+            <div class="success">
+                <strong>玩法说明</strong>: 植物在左侧防守，僵尸从右侧进攻。输入僵尸头上的单词来射击它们！
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧟‍♂️ 僵尸等级系统</h2>
+        
+        <div class="feature-list">
+            <h3>四种不同类型的僵尸</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="text-align: center; padding: 15px; background: #0d1117; border-radius: 8px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🧟‍♂️</div>
+                    <div><strong>基础僵尸</strong></div>
+                    <div style="font-size: 12px; color: #888;">3-4字母单词</div>
+                    <div style="font-size: 12px; color: #888;">血量: 1 | 速度: 25</div>
+                    <div style="font-size: 12px; color: #888;">伤害: 10 | 分数: 10</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: #0d1117; border-radius: 8px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🧟‍♀️</div>
+                    <div><strong>中级僵尸</strong></div>
+                    <div style="font-size: 12px; color: #888;">5-7字母单词</div>
+                    <div style="font-size: 12px; color: #888;">血量: 2 | 速度: 18</div>
+                    <div style="font-size: 12px; color: #888;">伤害: 15 | 分数: 25</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: #0d1117; border-radius: 8px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🧟</div>
+                    <div><strong>强力僵尸</strong></div>
+                    <div style="font-size: 12px; color: #888;">8-12字母单词</div>
+                    <div style="font-size: 12px; color: #888;">血量: 3 | 速度: 12</div>
+                    <div style="font-size: 12px; color: #888;">伤害: 25 | 分数: 50</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: #0d1117; border-radius: 8px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">👹</div>
+                    <div><strong>Boss僵尸</strong></div>
+                    <div style="font-size: 12px; color: #888;">13+字母单词</div>
+                    <div style="font-size: 12px; color: #888;">血量: 5 | 速度: 8</div>
+                    <div style="font-size: 12px; color: #888;">伤害: 40 | 分数: 100</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🌊 波次难度系统</h2>
+        
+        <div class="difficulty-comparison">
+            <div class="difficulty-card easy">
+                <h3>🌱 简单难度</h3>
+                <ul>
+                    <li><strong>波次</strong>: 4波</li>
+                    <li><strong>僵尸数量</strong>: 3-6只/波</li>
+                    <li><strong>类型分布</strong>:</li>
+                    <li>基础僵尸: 70%</li>
+                    <li>中级僵尸: 25%</li>
+                    <li>强力僵尸: 5%</li>
+                    <li>Boss僵尸: 0%</li>
+                </ul>
+            </div>
+            
+            <div class="difficulty-card medium">
+                <h3>🌿 中等难度</h3>
+                <ul>
+                    <li><strong>波次</strong>: 7波</li>
+                    <li><strong>僵尸数量</strong>: 4-10只/波</li>
+                    <li><strong>类型分布</strong>:</li>
+                    <li>基础僵尸: 50%</li>
+                    <li>中级僵尸: 35%</li>
+                    <li>强力僵尸: 13%</li>
+                    <li>Boss僵尸: 2%</li>
+                </ul>
+            </div>
+            
+            <div class="difficulty-card hard">
+                <h3>🌳 困难难度</h3>
+                <ul>
+                    <li><strong>波次</strong>: 10波</li>
+                    <li><strong>僵尸数量</strong>: 5-25只/波</li>
+                    <li><strong>类型分布</strong>:</li>
+                    <li>基础僵尸: 30%</li>
+                    <li>中级僵尸: 40%</li>
+                    <li>强力僵尸: 25%</li>
+                    <li>Boss僵尸: 5%</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 游戏机制详解</h2>
+        
+        <div class="feature-list">
+            <h3>🌻 植物防御系统</h3>
+            <ul>
+                <li><strong>血量系统</strong>: 植物初始血量100点</li>
+                <li><strong>受伤机制</strong>: 僵尸到达植物位置时造成伤害</li>
+                <li><strong>死亡条件</strong>: 血量归零时游戏失败</li>
+                <li><strong>射击系统</strong>: 完成单词输入后自动射击目标僵尸</li>
+            </ul>
+        </div>
+        
+        <div class="feature-list">
+            <h3>🎯 目标锁定系统</h3>
+            <ul>
+                <li><strong>自动锁定</strong>: 系统自动选择最近的僵尸作为目标</li>
+                <li><strong>单词显示</strong>: 当前目标的单词会高亮显示</li>
+                <li><strong>进度追踪</strong>: 实时显示已输入和剩余字母</li>
+                <li><strong>错误处理</strong>: 输入错误时有视觉和音频反馈</li>
+            </ul>
+        </div>
+        
+        <div class="feature-list">
+            <h3>💥 战斗系统</h3>
+            <ul>
+                <li><strong>子弹飞行</strong>: 完成单词后发射子弹击中僵尸</li>
+                <li><strong>伤害计算</strong>: 每发子弹造成1点伤害</li>
+                <li><strong>血量显示</strong>: 僵尸血量用红点表示</li>
+                <li><strong>击杀奖励</strong>: 击杀僵尸获得分数奖励</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>⌨️ 操作说明</h2>
+        
+        <div class="controls-demo">
+            <h3>基本操作:</h3>
+            <ul>
+                <li><strong>字母键 (A-Z)</strong>: 输入目标单词的字母</li>
+                <li><strong>退格键 (Backspace)</strong>: 删除已输入的字母</li>
+                <li><strong>完成单词</strong>: 正确输入完整单词后自动射击</li>
+            </ul>
+            
+            <h3>游戏控制:</h3>
+            <ul>
+                <li><strong>开始防御</strong>: 点击按钮开始游戏</li>
+                <li><strong>暂停/继续</strong>: 暂停或继续游戏</li>
+                <li><strong>重新开始</strong>: 重置游戏状态</li>
+                <li><strong>难度选择</strong>: 游戏开始前选择难度</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏆 胜利条件</h2>
+        
+        <div class="success">
+            <h3>✅ 胜利条件</h3>
+            <ul>
+                <li>成功防御所有波次的僵尸攻击</li>
+                <li>植物血量大于0</li>
+                <li>击杀所有僵尸</li>
+            </ul>
+        </div>
+        
+        <div class="error">
+            <h3>❌ 失败条件</h3>
+            <ul>
+                <li>植物血量降至0</li>
+                <li>僵尸成功突破防线</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 测试要点</h2>
+        
+        <div class="feature-list">
+            <h3>需要验证的功能</h3>
+            <ol>
+                <li><strong>模式切换</strong>: 选择"植物防御"模式后正确显示界面</li>
+                <li><strong>难度选择</strong>: 三种难度可以正常选择</li>
+                <li><strong>游戏开始</strong>: 点击"开始防御"后游戏正常启动</li>
+                <li><strong>僵尸生成</strong>: 僵尸按照设定的间隔和数量生成</li>
+                <li><strong>目标锁定</strong>: 系统自动锁定最近的僵尸</li>
+                <li><strong>输入检测</strong>: 键盘输入正确响应</li>
+                <li><strong>射击系统</strong>: 完成单词后正确射击</li>
+                <li><strong>碰撞检测</strong>: 子弹击中僵尸时正确处理</li>
+                <li><strong>血量系统</strong>: 植物和僵尸血量正确显示和更新</li>
+                <li><strong>波次系统</strong>: 波次正确推进</li>
+                <li><strong>胜负判定</strong>: 游戏结束条件正确触发</li>
+                <li><strong>分数统计</strong>: 分数正确计算和显示</li>
+            </ol>
+        </div>
+        
+        <div class="warning">
+            <h3>⚠️ 注意事项</h3>
+            <ul>
+                <li>植物防御模式是完全独立的游戏系统</li>
+                <li>使用了Vue.js组件化架构</li>
+                <li>有独立的游戏引擎和状态管理</li>
+                <li>支持暂停/继续功能</li>
+                <li>包含完整的音效和视觉反馈</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 开始测试</h2>
+        <p>点击下面的按钮开始测试植物防御模式：</p>
+        <button onclick="window.location.href='index.html'">🌱 启动植物防御游戏</button>
+        <button onclick="window.location.href='test_vue_refactor.html'">🚀 Vue重构测试</button>
+        <button onclick="window.location.href='test_racing_mode.html'">🏎️ 赛车模式测试</button>
+        
+        <div class="success" style="margin-top: 15px;">
+            <h3>✅ 测试步骤</h3>
+            <ol>
+                <li>启动游戏</li>
+                <li>选择"植物防御"模式</li>
+                <li>选择合适的难度</li>
+                <li>点击"开始防御"</li>
+                <li>观察僵尸生成和移动</li>
+                <li>尝试输入目标单词</li>
+                <li>观察射击和击中效果</li>
+                <li>测试血量和分数系统</li>
+                <li>体验完整的游戏流程</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成提示
+        window.addEventListener('load', () => {
+            console.log('🌱 植物防御模式测试页面已加载');
+            console.log('🎮 准备测试全新的塔防打字游戏！');
+        });
+    </script>
+</body>
+</html>

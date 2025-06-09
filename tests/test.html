@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏测试页面</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0d1117;
+            color: #f0f6fc;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #21262d;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #1a472a; color: #4caf50; }
+        .error { background: #4a1a1a; color: #f44336; }
+        .info { background: #1a2a4a; color: #2196f3; }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        pre { background: #161b22; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🎮 键盘打字竞速游戏 - 测试页面</h1>
+    
+    <div class="test-section">
+        <h2>📡 API 测试</h2>
+        <button onclick="testAPI()">测试 API 连接</button>
+        <div id="apiResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎵 音频测试</h2>
+        <button onclick="testAudio()">测试音频系统</button>
+        <div id="audioResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>💾 存储测试</h2>
+        <button onclick="testStorage()">测试本地存储</button>
+        <div id="storageResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 游戏功能测试</h2>
+        <button onclick="testGameFeatures()">测试游戏功能</button>
+        <div id="gameResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 启动游戏</h2>
+        <p>如果所有测试都通过，你可以启动完整的游戏：</p>
+        <button onclick="window.location.href='index.html'">启动游戏</button>
+    </div>
+
+    <script>
+        // 测试结果显示函数
+        function showResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+        }
+        
+        // 清除测试结果
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+        
+        // API 测试
+        async function testAPI() {
+            clearResults('apiResults');
+            showResult('apiResults', '🔄 测试 API 连接...', 'info');
+            
+            try {
+                // 测试文本API
+                const textsResponse = await fetch('/api/texts');
+                if (textsResponse.ok) {
+                    const textsData = await textsResponse.json();
+                    showResult('apiResults', `✅ 文本API正常 - 加载了 ${textsData.data.length} 个文本`, 'success');
+                } else {
+                    showResult('apiResults', '❌ 文本API失败', 'error');
+                }
+                
+                // 测试单词API
+                const wordsResponse = await fetch('/api/words');
+                if (wordsResponse.ok) {
+                    const wordsData = await wordsResponse.json();
+                    showResult('apiResults', `✅ 单词API正常 - 加载了 ${wordsData.data.length} 个单词`, 'success');
+                } else {
+                    showResult('apiResults', '❌ 单词API失败', 'error');
+                }
+                
+                // 测试统计API
+                const statsResponse = await fetch('/api/stats');
+                if (statsResponse.ok) {
+                    showResult('apiResults', '✅ 统计API正常', 'success');
+                } else {
+                    showResult('apiResults', '❌ 统计API失败', 'error');
+                }
+                
+            } catch (error) {
+                showResult('apiResults', `❌ API连接失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 音频测试
+        function testAudio() {
+            clearResults('audioResults');
+            showResult('audioResults', '🔄 测试音频系统...', 'info');
+            
+            try {
+                // 检查Web Audio API支持
+                if (window.AudioContext || window.webkitAudioContext) {
+                    showResult('audioResults', '✅ Web Audio API 支持', 'success');
+                    
+                    // 创建音频上下文
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    showResult('audioResults', `✅ 音频上下文创建成功 - 状态: ${audioContext.state}`, 'success');
+                    
+                    // 测试音效生成
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    
+                    showResult('audioResults', '✅ 音效测试成功 - 你应该听到了一个短音', 'success');
+                    
+                } else {
+                    showResult('audioResults', '❌ Web Audio API 不支持', 'error');
+                }
+                
+            } catch (error) {
+                showResult('audioResults', `❌ 音频测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 存储测试
+        function testStorage() {
+            clearResults('storageResults');
+            showResult('storageResults', '🔄 测试本地存储...', 'info');
+            
+            try {
+                // 测试localStorage
+                const testKey = 'test_key';
+                const testValue = { test: 'data', timestamp: Date.now() };
+                
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                const retrieved = JSON.parse(localStorage.getItem(testKey));
+                
+                if (retrieved && retrieved.test === testValue.test) {
+                    showResult('storageResults', '✅ localStorage 读写正常', 'success');
+                    localStorage.removeItem(testKey);
+                } else {
+                    showResult('storageResults', '❌ localStorage 数据不匹配', 'error');
+                }
+                
+                // 测试存储容量
+                const storageInfo = navigator.storage && navigator.storage.estimate ? 
+                    await navigator.storage.estimate() : null;
+                
+                if (storageInfo) {
+                    const usedMB = (storageInfo.usage / 1024 / 1024).toFixed(2);
+                    const quotaMB = (storageInfo.quota / 1024 / 1024).toFixed(2);
+                    showResult('storageResults', `✅ 存储信息 - 已使用: ${usedMB}MB / 配额: ${quotaMB}MB`, 'success');
+                }
+                
+            } catch (error) {
+                showResult('storageResults', `❌ 存储测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 游戏功能测试
+        function testGameFeatures() {
+            clearResults('gameResults');
+            showResult('gameResults', '🔄 测试游戏功能...', 'info');
+            
+            try {
+                // 测试工具函数
+                if (typeof Utils !== 'undefined') {
+                    showResult('gameResults', '❌ Utils 未加载 - 请确保在主页面测试', 'error');
+                } else {
+                    // 模拟工具函数测试
+                    const testWPM = Math.round((100 / 5) / (60 / 60)); // 100字符，60秒
+                    showResult('gameResults', `✅ WPM计算测试 - 模拟结果: ${testWPM} WPM`, 'success');
+                    
+                    const testAccuracy = Math.round((95 / 100) * 100);
+                    showResult('gameResults', `✅ 准确率计算测试 - 模拟结果: ${testAccuracy}%`, 'success');
+                }
+                
+                // 测试键盘事件
+                let keyTestPassed = false;
+                const keyHandler = (e) => {
+                    if (e.key === 'Enter') {
+                        keyTestPassed = true;
+                        showResult('gameResults', '✅ 键盘事件测试通过', 'success');
+                        document.removeEventListener('keydown', keyHandler);
+                    }
+                };
+                
+                document.addEventListener('keydown', keyHandler);
+                showResult('gameResults', '⌨️ 请按 Enter 键测试键盘事件...', 'info');
+                
+                // 5秒后移除监听器
+                setTimeout(() => {
+                    if (!keyTestPassed) {
+                        document.removeEventListener('keydown', keyHandler);
+                        showResult('gameResults', '⚠️ 键盘事件测试超时', 'error');
+                    }
+                }, 5000);
+                
+                // 测试DOM操作
+                const testDiv = document.createElement('div');
+                testDiv.textContent = 'DOM测试';
+                if (testDiv.textContent === 'DOM测试') {
+                    showResult('gameResults', '✅ DOM操作正常', 'success');
+                }
+                
+            } catch (error) {
+                showResult('gameResults', `❌ 游戏功能测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载完成后自动运行基础测试
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                showResult('apiResults', '🔄 自动运行API测试...', 'info');
+                testAPI();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

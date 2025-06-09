@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏎️ 赛车追逐模式测试</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0d1117;
+            color: #f0f6fc;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #21262d;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        .feature-list {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .demo-track {
+            background: linear-gradient(90deg, #2a2a2a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            height: 100px;
+            border-radius: 8px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .demo-car {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            transition: left 0.3s ease;
+        }
+        .demo-player { left: 10%; }
+        .demo-ai1 { left: 30%; }
+        .demo-ai2 { left: 50%; }
+        .demo-ai3 { left: 70%; }
+    </style>
+</head>
+<body>
+    <h1>🏎️ 赛车追逐模式测试页面</h1>
+    
+    <div class="test-section">
+        <h2>🎮 新游戏模式介绍</h2>
+        <div class="info">
+            <strong>赛车追逐模式</strong> 是对原"时间挑战"模式的全新升级！<br>
+            现在你不再只是与时间赛跑，而是要在赛道上超越其他赛车！
+        </div>
+        
+        <div class="feature-list">
+            <h3>🏁 游戏玩法</h3>
+            <ul>
+                <li><strong>目标</strong>: 在60秒内尽可能超越更多的AI赛车</li>
+                <li><strong>控制</strong>: 通过提高打字速度来加速你的赛车</li>
+                <li><strong>排名</strong>: 根据最终位置获得名次（第1-4名）</li>
+                <li><strong>成就</strong>: 超越每辆车都会有特殊动画和音效</li>
+            </ul>
+        </div>
+        
+        <div class="feature-list">
+            <h3>🚗 AI赛车设定</h3>
+            <ul>
+                <li><strong>慢车 🚗</strong>: 30 WPM 恒定速度 - 相对容易超越</li>
+                <li><strong>中速车 🚙</strong>: 50 WPM 恒定速度 - 需要一定技巧</li>
+                <li><strong>快车 🏁</strong>: 70 WPM 恒定速度 - 高手挑战</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏁 赛道演示</h2>
+        <p>下面是赛车追逐模式的赛道布局示例：</p>
+        
+        <div class="demo-track">
+            <div class="demo-car demo-player">🏎️</div>
+            <div class="demo-car demo-ai1">🚗</div>
+            <div class="demo-car demo-ai2">🚙</div>
+            <div class="demo-car demo-ai3">🏁</div>
+        </div>
+        
+        <div class="info">
+            <ul>
+                <li>🏎️ <strong>你的赛车</strong> - 速度取决于你的WPM</li>
+                <li>🚗 <strong>慢车</strong> - 30 WPM</li>
+                <li>🚙 <strong>中速车</strong> - 50 WPM</li>
+                <li>🏁 <strong>快车</strong> - 70 WPM</li>
+            </ul>
+        </div>
+        
+        <button onclick="animateDemo()">🎬 播放演示动画</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏆 排名系统</h2>
+        <div class="feature-list">
+            <h3>最终排名判定</h3>
+            <ul>
+                <li><strong>🥇 第一名</strong>: 超越所有AI赛车 - 冠军！</li>
+                <li><strong>🥈 第二名</strong>: 超越2辆AI赛车 - 亚军！</li>
+                <li><strong>🥉 第三名</strong>: 超越1辆AI赛车 - 季军！</li>
+                <li><strong>第四名</strong>: 未超越任何AI赛车 - 继续努力！</li>
+            </ul>
+        </div>
+        
+        <div class="warning">
+            <h3>⚡ 策略提示</h3>
+            <ul>
+                <li>保持稳定的打字速度比短时间爆发更重要</li>
+                <li>准确率影响实际前进速度，避免过多错误</li>
+                <li>观察倒计时，合理分配时间和精力</li>
+                <li>超越每辆车都会有成就感的反馈！</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 测试要点</h2>
+        <div class="feature-list">
+            <h3>需要验证的功能</h3>
+            <ol>
+                <li><strong>模式切换</strong>: 选择"赛车追逐"模式后显示赛道</li>
+                <li><strong>赛车移动</strong>: 打字时玩家赛车应该前进</li>
+                <li><strong>AI赛车</strong>: AI赛车应该以固定速度前进</li>
+                <li><strong>超越检测</strong>: 超越AI赛车时应该有动画和音效</li>
+                <li><strong>排名更新</strong>: 实时显示当前排名</li>
+                <li><strong>倒计时</strong>: 60秒倒计时正常工作</li>
+                <li><strong>结果显示</strong>: 游戏结束后显示赛车结果</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 开始测试</h2>
+        <p>点击下面的按钮开始测试赛车追逐模式：</p>
+        <button onclick="window.location.href='index.html'">🏎️ 启动游戏测试</button>
+        <button onclick="window.location.href='test_final_fixes.html'">🔧 其他修复测试</button>
+        
+        <div class="success" style="margin-top: 15px;">
+            <h3>✅ 测试步骤</h3>
+            <ol>
+                <li>启动游戏</li>
+                <li>选择"赛车追逐"模式</li>
+                <li>观察赛道是否正确显示</li>
+                <li>点击开始游戏</li>
+                <li>开始打字，观察赛车移动</li>
+                <li>尝试超越AI赛车</li>
+                <li>观察排名变化</li>
+                <li>等待游戏结束查看结果</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let demoAnimationRunning = false;
+        
+        function animateDemo() {
+            if (demoAnimationRunning) return;
+            demoAnimationRunning = true;
+            
+            const cars = document.querySelectorAll('.demo-car');
+            const speeds = [0.8, 0.3, 0.5, 0.7]; // 相对速度
+            
+            // 重置位置
+            cars.forEach((car, index) => {
+                car.style.left = '10%';
+            });
+            
+            // 动画
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                
+                cars.forEach((car, index) => {
+                    const newPos = 10 + (progress * speeds[index]);
+                    car.style.left = Math.min(newPos, 85) + '%';
+                });
+                
+                if (progress >= 80) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        demoAnimationRunning = false;
+                    }, 1000);
+                }
+            }, 50);
+        }
+        
+        // 页面加载完成提示
+        window.addEventListener('load', () => {
+            console.log('🏎️ 赛车追逐模式测试页面已加载');
+            console.log('🎮 准备测试新的游戏模式！');
+        });
+    </script>
+</body>
+</html>

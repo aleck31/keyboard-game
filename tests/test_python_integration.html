@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Python后端集成测试</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0d1117;
+            color: #f0f6fc;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #21262d;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        .api-test {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #30363d;
+        }
+        .api-test.success { border-left-color: #4caf50; }
+        .api-test.error { border-left-color: #f44336; }
+        .api-test.loading { border-left-color: #ff9800; }
+        .code-block {
+            background: #0d1117;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .architecture-diagram {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .layer {
+            background: #0d1117;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            border: 2px solid #30363d;
+        }
+        .layer.frontend { border-color: #2196f3; }
+        .layer.backend { border-color: #4caf50; }
+        .layer.data { border-color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🐍 Python后端集成测试</h1>
+    
+    <div class="test-section">
+        <h2>🏗️ 项目架构说明</h2>
+        
+        <div class="architecture-diagram">
+            <h3>三层架构设计</h3>
+            
+            <div class="layer frontend">
+                <h4>🎨 前端层 (Frontend)</h4>
+                <ul style="text-align: left;">
+                    <li><strong>Vue.js 3</strong> - 响应式UI框架</li>
+                    <li><strong>Vanilla JavaScript</strong> - 游戏引擎逻辑</li>
+                    <li><strong>HTML5/CSS3</strong> - 界面和样式</li>
+                    <li><strong>Web APIs</strong> - 音频、存储等</li>
+                </ul>
+            </div>
+            
+            <div style="font-size: 2rem; margin: 10px;">⬇️ HTTP/REST API ⬇️</div>
+            
+            <div class="layer backend">
+                <h4>🐍 后端层 (Backend)</h4>
+                <ul style="text-align: left;">
+                    <li><strong>FastAPI</strong> - 现代Python Web框架</li>
+                    <li><strong>Pydantic</strong> - 数据验证和序列化</li>
+                    <li><strong>Uvicorn</strong> - ASGI服务器</li>
+                    <li><strong>静态文件服务</strong> - 前端资源托管</li>
+                </ul>
+            </div>
+            
+            <div style="font-size: 2rem; margin: 10px;">⬇️ File I/O ⬇️</div>
+            
+            <div class="layer data">
+                <h4>💾 数据层 (Data)</h4>
+                <ul style="text-align: left;">
+                    <li><strong>JSON文件</strong> - 配置和数据存储</li>
+                    <li><strong>游戏统计</strong> - 性能数据记录</li>
+                    <li><strong>单词库</strong> - 多模式文本数据</li>
+                    <li><strong>排行榜</strong> - 玩家成绩排名</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔗 前后端集成方式</h2>
+        
+        <div class="info">
+            <h3>集成策略</h3>
+            <ul>
+                <li><strong>单一服务器</strong>: Python FastAPI同时提供API和静态文件服务</li>
+                <li><strong>RESTful API</strong>: 前端通过HTTP请求与后端通信</li>
+                <li><strong>JSON数据交换</strong>: 统一的数据格式</li>
+                <li><strong>异步处理</strong>: 前端异步调用，不阻塞用户界面</li>
+            </ul>
+        </div>
+        
+        <div class="code-block">
+# Python后端 (FastAPI)
+@app.get("/api/defense/words")
+async def get_defense_words():
+    """获取植物防御模式单词"""
+    with open("data/defense_words.json", "r") as f:
+        words = json.load(f)
+    return {"status": "success", "data": words}
+
+// JavaScript前端 (API调用)
+const response = await fetch('/api/defense/words');
+const data = await response.json();
+if (data.status === 'success') {
+    this.wordsData = data.data;
+}
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 API接口测试</h2>
+        
+        <div class="api-test" id="basicApiTest">
+            <h4>基础API测试</h4>
+            <button onclick="testBasicAPIs()">测试基础接口</button>
+            <div id="basicApiResult"></div>
+        </div>
+        
+        <div class="api-test" id="defenseApiTest">
+            <h4>植物防御API测试</h4>
+            <button onclick="testDefenseAPIs()">测试植物防御接口</button>
+            <div id="defenseApiResult"></div>
+        </div>
+        
+        <div class="api-test" id="statsApiTest">
+            <h4>统计API测试</h4>
+            <button onclick="testStatsAPIs()">测试统计接口</button>
+            <div id="statsApiResult"></div>
+        </div>
+        
+        <div class="api-test" id="analyticsApiTest">
+            <h4>分析API测试</h4>
+            <button onclick="testAnalyticsAPI()">测试分析接口</button>
+            <div id="analyticsApiResult"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 新增的Python API端点</h2>
+        
+        <div class="code-block">
+<strong>植物防御模式专用API:</strong>
+GET  /api/defense/words           - 获取植物防御单词库
+POST /api/defense/wave            - 生成波次配置
+GET  /api/defense/config/{difficulty} - 获取难度配置
+POST /api/defense/stats           - 保存植物防御统计
+GET  /api/defense/stats           - 获取植物防御统计
+GET  /api/defense/leaderboard     - 获取植物防御排行榜
+
+<strong>分析和统计API:</strong>
+GET  /api/analytics               - 获取游戏分析数据
+
+<strong>现有API (已增强):</strong>
+GET  /api/texts                   - 获取练习文本
+GET  /api/words                   - 获取练习单词
+POST /api/stats                   - 保存游戏统计
+GET  /api/stats                   - 获取游戏统计
+GET  /api/leaderboard             - 获取排行榜
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>💾 数据存储结构</h2>
+        
+        <div class="info">
+            <h3>新增数据文件</h3>
+            <ul>
+                <li><strong>defense_words.json</strong> - 植物防御模式单词库</li>
+                <li><strong>defense_stats.json</strong> - 植物防御游戏统计</li>
+            </ul>
+        </div>
+        
+        <div class="code-block">
+// defense_words.json 结构
+{
+  "basic": ["cat", "dog", "run", ...],      // 基础僵尸单词
+  "medium": ["house", "water", ...],        // 中级僵尸单词
+  "strong": ["computer", "keyboard", ...],  // 强力僵尸单词
+  "boss": ["extraordinary", ...]            // Boss僵尸单词
+}
+
+// defense_stats.json 结构
+{
+  "score": 1250,
+  "wave": 7,
+  "total_waves": 10,
+  "zombies_killed": 45,
+  "plant_health": 65,
+  "difficulty": "medium",
+  "victory": false,
+  "play_time": 180.5,
+  "timestamp": "2025-06-08T15:30:00"
+}
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 开始完整测试</h2>
+        <p>点击下面的按钮开始测试完整的前后端集成：</p>
+        <button onclick="window.location.href='index.html'">🎮 启动完整游戏</button>
+        <button onclick="window.location.href='test_defense_mode.html'">🌱 植物防御测试</button>
+        <button onclick="window.location.href='/docs'">📚 查看API文档</button>
+        
+        <div class="success" style="margin-top: 15px;">
+            <h3>✅ 集成测试步骤</h3>
+            <ol>
+                <li>测试所有API接口响应</li>
+                <li>验证数据存储和读取</li>
+                <li>测试植物防御模式完整流程</li>
+                <li>检查统计数据保存</li>
+                <li>验证排行榜功能</li>
+                <li>测试分析数据生成</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // API测试函数
+        async function testBasicAPIs() {
+            const testDiv = document.getElementById('basicApiTest');
+            const resultDiv = document.getElementById('basicApiResult');
+            
+            testDiv.className = 'api-test loading';
+            resultDiv.innerHTML = '🔄 测试中...';
+            
+            try {
+                const tests = [
+                    { name: '获取练习文本', url: '/api/texts' },
+                    { name: '获取练习单词', url: '/api/words' },
+                    { name: '获取游戏统计', url: '/api/stats' },
+                    { name: '获取排行榜', url: '/api/leaderboard' }
+                ];
+                
+                const results = [];
+                for (const test of tests) {
+                    try {
+                        const response = await fetch(test.url);
+                        const data = await response.json();
+                        results.push(`✅ ${test.name}: ${data.status}`);
+                    } catch (error) {
+                        results.push(`❌ ${test.name}: ${error.message}`);
+                    }
+                }
+                
+                testDiv.className = 'api-test success';
+                resultDiv.innerHTML = results.join('<br>');
+            } catch (error) {
+                testDiv.className = 'api-test error';
+                resultDiv.innerHTML = `❌ 测试失败: ${error.message}`;
+            }
+        }
+        
+        async function testDefenseAPIs() {
+            const testDiv = document.getElementById('defenseApiTest');
+            const resultDiv = document.getElementById('defenseApiResult');
+            
+            testDiv.className = 'api-test loading';
+            resultDiv.innerHTML = '🔄 测试中...';
+            
+            try {
+                const tests = [
+                    { name: '获取植物防御单词', url: '/api/defense/words' },
+                    { name: '获取简单难度配置', url: '/api/defense/config/easy' },
+                    { name: '获取植物防御统计', url: '/api/defense/stats' },
+                    { name: '获取植物防御排行榜', url: '/api/defense/leaderboard' }
+                ];
+                
+                const results = [];
+                for (const test of tests) {
+                    try {
+                        const response = await fetch(test.url);
+                        const data = await response.json();
+                        results.push(`✅ ${test.name}: ${data.status}`);
+                    } catch (error) {
+                        results.push(`❌ ${test.name}: ${error.message}`);
+                    }
+                }
+                
+                // 测试波次生成
+                try {
+                    const waveResponse = await fetch('/api/defense/wave', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ difficulty: 'easy', wave: 1 })
+                    });
+                    const waveData = await waveResponse.json();
+                    results.push(`✅ 生成波次: ${waveData.status}`);
+                } catch (error) {
+                    results.push(`❌ 生成波次: ${error.message}`);
+                }
+                
+                testDiv.className = 'api-test success';
+                resultDiv.innerHTML = results.join('<br>');
+            } catch (error) {
+                testDiv.className = 'api-test error';
+                resultDiv.innerHTML = `❌ 测试失败: ${error.message}`;
+            }
+        }
+        
+        async function testStatsAPIs() {
+            const testDiv = document.getElementById('statsApiTest');
+            const resultDiv = document.getElementById('statsApiResult');
+            
+            testDiv.className = 'api-test loading';
+            resultDiv.innerHTML = '🔄 测试中...';
+            
+            try {
+                // 测试保存植物防御统计
+                const testStats = {
+                    score: 1000,
+                    wave: 3,
+                    total_waves: 4,
+                    zombies_killed: 15,
+                    plant_health: 80,
+                    difficulty: 'easy',
+                    victory: false,
+                    play_time: 120.5
+                };
+                
+                const saveResponse = await fetch('/api/defense/stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testStats)
+                });
+                const saveData = await saveResponse.json();
+                
+                testDiv.className = 'api-test success';
+                resultDiv.innerHTML = `✅ 保存测试统计: ${saveData.status}<br>✅ 消息: ${saveData.message}`;
+            } catch (error) {
+                testDiv.className = 'api-test error';
+                resultDiv.innerHTML = `❌ 测试失败: ${error.message}`;
+            }
+        }
+        
+        async function testAnalyticsAPI() {
+            const testDiv = document.getElementById('analyticsApiTest');
+            const resultDiv = document.getElementById('analyticsApiResult');
+            
+            testDiv.className = 'api-test loading';
+            resultDiv.innerHTML = '🔄 测试中...';
+            
+            try {
+                const response = await fetch('/api/analytics');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const analytics = data.data;
+                    const result = `
+                        ✅ 分析数据获取成功<br>
+                        📊 总游戏数: ${analytics.total_games}<br>
+                        🎮 传统模式: ${analytics.traditional_games}<br>
+                        🌱 植物防御: ${analytics.defense_games}
+                    `;
+                    
+                    testDiv.className = 'api-test success';
+                    resultDiv.innerHTML = result;
+                } else {
+                    throw new Error('分析数据获取失败');
+                }
+            } catch (error) {
+                testDiv.className = 'api-test error';
+                resultDiv.innerHTML = `❌ 测试失败: ${error.message}`;
+            }
+        }
+        
+        // 页面加载完成提示
+        window.addEventListener('load', () => {
+            console.log('🐍 Python后端集成测试页面已加载');
+            console.log('🔗 准备测试前后端集成功能！');
+        });
+    </script>
+</body>
+</html>
