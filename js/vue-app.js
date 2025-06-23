@@ -1,16 +1,16 @@
 // Vue主应用
-const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
-
-// 主应用组件
 const TypingGameApp = {
     name: 'TypingGameApp',
     components: {
         GameControls: window.GameControls,
         GameStats: window.GameStats,
         RacingTrack: window.RacingTrack,
-        DefenseGame: window.DefenseGame
+        DefenseGame: window.DefenseGame,
+        AppUtils: window.AppUtils
     },
     setup() {
+        const { ref, reactive, computed, watch, onMounted } = Vue;
+        
         // 游戏状态 (响应式)
         const gameState = reactive({
             isPlaying: false,
@@ -23,23 +23,18 @@ const TypingGameApp = {
             currentText: '',
             userInput: '',
             currentIndex: 0,
+            // 统计数据
+            wpm: 0,
+            cpm: 0,
+            accuracy: 100,
+            errors: 0,
+            correctChars: 0,
+            totalChars: 0,
             // 单词模式状态
             currentWordIndex: 0,
             totalWords: 0,
             wordsCompleted: 0,
-            wordsList: [],
-            // 赛车模式状态
-            racingData: {
-                aiCars: {
-                    slow: { speed: 30, position: 0, name: '慢车' },
-                    medium: { speed: 50, position: 0, name: '中速车' },
-                    fast: { speed: 70, position: 0, name: '快车' }
-                },
-                playerPosition: 0,
-                overtakenCars: [],
-                currentRank: 4,
-                raceStartTime: null
-            }
+            wordsList: []
         });
         
         // UI状态
@@ -55,183 +50,268 @@ const TypingGameApp = {
         });
         
         // 计算属性
-        const isRacingMode = computed(() => gameState.mode === 'racing');
-        const isDefenseMode = computed(() => gameState.mode === 'defense');
+        const isBasicMode = computed(() => {
+            return ['classic', 'words', 'endless'].includes(gameState.mode);
+        });
         
-        // 事件处理
+        const isSpecialMode = computed(() => {
+            return ['racing', 'defense'].includes(gameState.mode);
+        });
+        
+        const isDefenseMode = computed(() => {
+            return gameState.mode === 'defense';
+        });
+        
+        const isRacingMode = computed(() => {
+            return gameState.mode === 'racing';
+        });
+        
+        const progress = computed(() => {
+            if (gameState.currentText.length === 0) return 0;
+            return Math.round((gameState.currentIndex / gameState.currentText.length) * 100);
+        });
+        
+        const timeElapsed = computed(() => {
+            if (!gameState.startTime) return 0;
+            const endTime = gameState.endTime || Date.now();
+            return Math.floor((endTime - gameState.startTime) / 1000);
+        });
+        
+        // 方法
         const handleModeChanged = (mode) => {
+            if (gameState.isPlaying) return;
+            
+            console.log(`🎮 切换到${mode}模式`);
             gameState.mode = mode;
+            
+            // 重置UI状态
             uiState.showRacing = mode === 'racing';
             uiState.showDefense = mode === 'defense';
+            uiState.showResults = false;
             
-            // 通知原有的游戏引擎
-            if (window.gameEngine && mode !== 'defense') {
-                window.gameEngine.setMode(mode);
+            // 重置游戏状态
+            resetGameState();
+            
+            // 根据模式加载相应数据
+            if (isBasicMode.value) {
+                loadBasicModeData();
             }
         };
         
         const handleStartGame = () => {
-            if (gameState.mode === 'defense') {
-                // 植物防御模式由其自己的组件处理
-                return;
-            }
+            if (!isBasicMode.value) return;
             
-            // 其他模式使用原有游戏引擎
-            if (window.gameEngine) {
-                window.gameEngine.startGame();
-            }
+            console.log(`🎮 开始${gameState.mode}模式游戏`);
+            startBasicGame();
         };
         
         const handlePauseGame = () => {
-            if (gameState.mode === 'defense') {
-                // 植物防御模式由其自己的组件处理
-                return;
-            }
-            
-            if (window.gameEngine) {
-                window.gameEngine.togglePause();
+            if (gameState.isPlaying) {
+                pauseGame();
+            } else if (gameState.isPaused) {
+                resumeGame();
             }
         };
         
         const handleResetGame = () => {
-            if (gameState.mode === 'defense') {
-                // 植物防御模式由其自己的组件处理
-                return;
+            console.log('🔄 重置游戏');
+            resetGame();
+        };
+        
+        const handleDefenseGameOver = (result) => {
+            console.log('🌱 植物防御游戏结束', result);
+            gameState.isPlaying = false;
+            gameState.isCompleted = true;
+            gameState.endTime = Date.now();
+            
+            showNotification(
+                result.victory ? '🏆 防御成功！' : '💀 防御失败！',
+                result.victory ? 'success' : 'error'
+            );
+        };
+        
+        const handleRaceFinished = (result) => {
+            console.log('🏎️ 赛车比赛结束', result);
+            gameState.isPlaying = false;
+            gameState.isCompleted = true;
+            gameState.endTime = Date.now();
+            
+            const rankText = ['🥇 第一名', '🥈 第二名', '🥉 第三名', '4️⃣ 第四名'];
+            showNotification(
+                `🏁 比赛结束！${rankText[result.finalRank - 1]}`,
+                result.finalRank === 1 ? 'success' : 'info'
+            );
+        };
+        
+        // 基础游戏逻辑
+        const startBasicGame = async () => {
+            try {
+                gameState.isPlaying = true;
+                gameState.isPaused = false;
+                gameState.isCompleted = false;
+                gameState.startTime = Date.now();
+                gameState.endTime = null;
+                
+                // 启用输入
+                const textInput = document.getElementById('textInput');
+                if (textInput) {
+                    textInput.disabled = false;
+                    textInput.focus();
+                }
+                
+                // 启动计时器
+                startGameTimer();
+                
+                showNotification('游戏开始！', 'success');
+                
+            } catch (error) {
+                console.error('启动游戏失败:', error);
+                showNotification('启动游戏失败', 'error');
+            }
+        };
+        
+        const pauseGame = () => {
+            gameState.isPaused = true;
+            showNotification('游戏已暂停', 'info');
+        };
+        
+        const resumeGame = () => {
+            gameState.isPaused = false;
+            showNotification('游戏继续', 'info');
+        };
+        
+        const resetGame = () => {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            gameState.isCompleted = false;
+            resetGameState();
+            
+            // 禁用输入
+            const textInput = document.getElementById('textInput');
+            if (textInput) {
+                textInput.disabled = true;
+                textInput.value = '';
             }
             
-            if (window.gameEngine) {
-                window.gameEngine.resetGame();
+            showNotification('游戏已重置', 'info');
+        };
+        
+        const resetGameState = () => {
+            gameState.startTime = null;
+            gameState.endTime = null;
+            gameState.currentText = '';
+            gameState.userInput = '';
+            gameState.currentIndex = 0;
+            gameState.wpm = 0;
+            gameState.cpm = 0;
+            gameState.accuracy = 100;
+            gameState.errors = 0;
+            gameState.correctChars = 0;
+            gameState.totalChars = 0;
+            gameState.currentWordIndex = 0;
+            gameState.totalWords = 0;
+            gameState.wordsCompleted = 0;
+            gameState.wordsList = [];
+        };
+        
+        const loadBasicModeData = async () => {
+            try {
+                if (gameState.mode === 'classic' || gameState.mode === 'endless') {
+                    // 加载文本数据
+                    const response = await fetch('/api/texts');
+                    const texts = await response.json();
+                    gameState.currentText = texts[Math.floor(Math.random() * texts.length)];
+                } else if (gameState.mode === 'words') {
+                    // 加载单词数据
+                    const response = await fetch('/api/words');
+                    const words = await response.json();
+                    gameState.wordsList = words.slice(0, 50); // 默认50个单词
+                    gameState.totalWords = gameState.wordsList.length;
+                    gameState.currentText = gameState.wordsList[0] || '';
+                }
+            } catch (error) {
+                console.error('加载游戏数据失败:', error);
+                showNotification('加载游戏数据失败', 'error');
             }
         };
         
-        const handleCarOvertaken = ({ carName, carType }) => {
-            // 显示超越通知
-            showNotification(`🏎️ 超越了${carName}！`, 'success');
-            
-            // 播放音效
-            if (window.audioManager) {
-                window.audioManager.playSound('achievement');
-            }
+        const startGameTimer = () => {
+            const timer = setInterval(() => {
+                if (!gameState.isPlaying || gameState.isPaused) {
+                    clearInterval(timer);
+                    return;
+                }
+                
+                const elapsed = timeElapsed.value;
+                if (elapsed >= gameState.timeLimit) {
+                    clearInterval(timer);
+                    endGame();
+                }
+                
+                // 更新统计数据
+                updateStats();
+                
+            }, 100);
         };
         
-        const handleRaceFinished = (results) => {
-            const { rank, overtakenCars, finalPosition } = results;
+        const updateStats = () => {
+            if (!gameState.startTime) return;
             
-            let rankText = '';
-            switch (rank) {
-                case 1:
-                    rankText = '🥇 第一名 - 冠军！';
-                    break;
-                case 2:
-                    rankText = '🥈 第二名 - 亚军！';
-                    break;
-                case 3:
-                    rankText = '🥉 第三名 - 季军！';
-                    break;
-                case 4:
-                    rankText = '第四名 - 继续努力！';
-                    break;
-            }
+            const timeInMinutes = timeElapsed.value / 60;
+            const words = gameState.correctChars / 5;
             
-            showNotification(`🏁 比赛结束！${rankText}`, rank <= 3 ? 'success' : 'info', 5000);
+            gameState.wpm = timeInMinutes > 0 ? Math.round(words / timeInMinutes) : 0;
+            gameState.cpm = timeInMinutes > 0 ? Math.round(gameState.correctChars / timeInMinutes) : 0;
+            gameState.accuracy = gameState.totalChars > 0 ? 
+                Math.round((gameState.correctChars / gameState.totalChars) * 100) : 100;
         };
         
-        const handleDefenseGameOver = (results) => {
-            console.log('🌱 植物防御游戏结束', results);
+        const endGame = () => {
+            gameState.isPlaying = false;
+            gameState.isCompleted = true;
+            gameState.endTime = Date.now();
             
-            // 显示结果通知
-            const message = results.victory 
-                ? `🎉 防御成功！完成${results.wave}波，得分${results.score}` 
-                : `💀 防御失败！坚持到第${results.wave}波，得分${results.score}`;
-            
-            showNotification(message, results.victory ? 'success' : 'error', 5000);
+            showNotification('游戏结束！', 'info');
+            uiState.showResults = true;
         };
         
-        const handleDefenseScoreChanged = (score) => {
-            console.log('🌱 植物防御分数更新:', score);
-        };
-        
-        // 显示通知
-        const showNotification = (message, type = 'info', duration = 3000) => {
-            uiState.notification = {
-                show: true,
-                message,
-                type
-            };
+        const showNotification = (message, type = 'info') => {
+            uiState.notification.message = message;
+            uiState.notification.type = type;
+            uiState.notification.show = true;
             
             setTimeout(() => {
                 uiState.notification.show = false;
-            }, duration);
+            }, 3000);
         };
         
-        // 同步原有游戏引擎状态
-        const syncGameEngineState = () => {
-            if (window.gameEngine && gameState.mode !== 'defense') {
-                const engineState = window.gameEngine.getGameState();
-                if (engineState) {
-                    // 同步基本状态
-                    gameState.isPlaying = engineState.isPlaying;
-                    gameState.isPaused = engineState.isPaused;
-                    gameState.isCompleted = engineState.isCompleted;
-                    gameState.mode = engineState.mode;
-                    gameState.startTime = engineState.startTime;
-                    gameState.endTime = engineState.endTime;
-                    gameState.timeLimit = engineState.timeLimit; // 同步时间限制
-                    gameState.currentText = engineState.currentText;
-                    gameState.userInput = engineState.userInput;
-                    gameState.currentIndex = engineState.currentIndex;
-                    
-                    // 同步单词模式状态
-                    if (engineState.currentWordIndex !== undefined) {
-                        gameState.currentWordIndex = engineState.currentWordIndex;
-                        gameState.totalWords = engineState.totalWords;
-                        gameState.wordsCompleted = engineState.wordsCompleted;
-                        gameState.wordsList = engineState.wordsList;
-                    }
-                    
-                    // 同步赛车模式状态
-                    if (engineState.racingData) {
-                        gameState.racingData = { ...engineState.racingData };
-                    }
-                }
-            }
-        };
-        
-        // 监听游戏状态变化
-        watch(() => gameState.mode, (newMode) => {
-            uiState.showRacing = newMode === 'racing';
-            uiState.showDefense = newMode === 'defense';
-        });
-        
-        // 组件挂载后的初始化
+        // 生命周期
         onMounted(() => {
-            // 定期同步游戏引擎状态 (仅非植物防御模式)
-            setInterval(() => {
-                if (gameState.mode !== 'defense') {
-                    syncGameEngineState();
-                }
-            }, 100);
+            console.log('🎮 Vue应用已挂载');
             
-            // 监听原有游戏引擎事件
-            if (window.gameEngine) {
-                window.gameEngine.on('gameStarted', () => {
-                    if (gameState.mode !== 'defense') {
-                        syncGameEngineState();
-                    }
-                });
-                
-                window.gameEngine.on('gameCompleted', () => {
-                    if (gameState.mode !== 'defense') {
-                        syncGameEngineState();
-                    }
-                });
-                
-                window.gameEngine.on('gamePaused', () => {
-                    if (gameState.mode !== 'defense') {
-                        syncGameEngineState();
-                    }
-                });
+            // 加载初始数据
+            if (isBasicMode.value) {
+                loadBasicModeData();
             }
+            
+            // 监听AppUtils的通知事件
+            document.addEventListener('app-notification', (e) => {
+                showNotification(e.detail.message, e.detail.type);
+            });
+            
+            // 监听页面可见性事件
+            document.addEventListener('page-hidden', () => {
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    handlePauseGame();
+                }
+            });
+            
+            document.addEventListener('page-visible', () => {
+                // 页面可见时的处理
+                if (window.audioManager) {
+                    window.audioManager.resumeAudioContext();
+                }
+            });
         });
         
         return {
@@ -240,35 +320,32 @@ const TypingGameApp = {
             uiState,
             
             // 计算属性
-            isRacingMode,
+            isBasicMode,
+            isSpecialMode,
             isDefenseMode,
+            isRacingMode,
+            progress,
+            timeElapsed,
             
-            // 事件处理
+            // 方法
             handleModeChanged,
             handleStartGame,
             handlePauseGame,
             handleResetGame,
-            handleCarOvertaken,
-            handleRaceFinished,
             handleDefenseGameOver,
-            handleDefenseScoreChanged,
-            
-            // 方法
-            showNotification
+            handleRaceFinished
         };
     },
     template: `
-        <div class="vue-game-container">
-            <!-- 通知组件 -->
-            <div 
-                v-if="uiState.notification.show"
-                class="notification"
-                :class="'notification-' + uiState.notification.type"
-            >
+        <div class="typing-game-app">
+            <!-- 通知消息 -->
+            <div v-if="uiState.notification.show" 
+                 class="notification"
+                 :class="'notification-' + uiState.notification.type">
                 {{ uiState.notification.message }}
             </div>
             
-            <!-- 游戏控制 -->
+            <!-- 游戏控制组件 -->
             <game-controls
                 :game-state="gameState"
                 @mode-changed="handleModeChanged"
@@ -277,76 +354,102 @@ const TypingGameApp = {
                 @reset-game="handleResetGame"
             />
             
-            <!-- 游戏统计 (非植物防御模式) -->
-            <game-stats 
-                v-if="!isDefenseMode"
-                :game-state="gameState" 
+            <!-- 游戏统计组件 -->
+            <game-stats
+                :game-state="gameState"
+                :is-visible="gameState.isPlaying || gameState.isCompleted"
             />
             
-            <!-- 赛车追逐模式 -->
+            <!-- 进度条 (仅基础模式显示) -->
+            <div v-if="isBasicMode && (gameState.isPlaying || gameState.isCompleted)" 
+                 class="progress-container">
+                <div class="progress-bar" :style="{ width: progress + '%' }"></div>
+            </div>
+            
+            <!-- 赛车追逐组件 -->
             <racing-track
                 v-if="isRacingMode"
                 :game-state="gameState"
                 :is-visible="uiState.showRacing"
-                @car-overtaken="handleCarOvertaken"
                 @race-finished="handleRaceFinished"
             />
             
-            <!-- 植物防御模式 -->
+            <!-- 植物防御组件 -->
             <defense-game
                 v-if="isDefenseMode"
                 :is-visible="uiState.showDefense"
                 @game-over="handleDefenseGameOver"
-                @score-changed="handleDefenseScoreChanged"
             />
             
-            <!-- 模式选择器 (植物防御模式时显示) -->
-            <div v-if="isDefenseMode" class="mode-selector" style="margin-top: 20px;">
-                <button 
-                    v-for="mode in [
-                        { key: 'classic', label: '经典模式', icon: '📝' },
-                        { key: 'words', label: '单词模式', icon: '🔤' },
-                        { key: 'racing', label: '赛车追逐', icon: '🏎️' },
-                        { key: 'defense', label: '植物防御', icon: '🌱' },
-                        { key: 'endless', label: '无尽模式', icon: '♾️' }
-                    ]" 
-                    :key="mode.key"
-                    class="mode-btn"
-                    :class="{ active: gameState.mode === mode.key }"
-                    @click="handleModeChanged(mode.key)"
-                >
-                    <span class="mode-icon">{{ mode.icon }}</span>
-                    {{ mode.label }}
-                </button>
+            <!-- 基础模式文本显示和输入区域 -->
+            <div v-if="isBasicMode" class="basic-game-area">
+                <!-- 文本显示区域 -->
+                <div class="text-display">
+                    <div class="text-content">
+                        {{ gameState.currentText || '点击开始按钮开始游戏...' }}
+                    </div>
+                </div>
+                
+                <!-- 输入区域 -->
+                <div class="input-area">
+                    <textarea 
+                        id="textInput"
+                        class="text-input" 
+                        placeholder="在这里输入文本..."
+                        :disabled="!gameState.isPlaying"
+                        v-model="gameState.userInput"
+                    ></textarea>
+                </div>
             </div>
+            
+            <!-- AppUtils组件 (提供工具功能) -->
+            <app-utils ref="appUtils" />
         </div>
     `
 };
 
 // 初始化Vue应用
 function initVueApp() {
-    // 等待DOM加载完成
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            createVueApp();
-        });
-    } else {
+    if (typeof Vue === 'undefined') {
+        console.error('Vue.js 未加载');
+        return;
+    }
+    
+    // 等待所有组件加载完成
+    if (typeof window.GameControls === 'undefined' || 
+        typeof window.GameStats === 'undefined' ||
+        typeof window.RacingTrack === 'undefined' ||
+        typeof window.DefenseGame === 'undefined' ||
+        typeof window.AppUtils === 'undefined') {
+        setTimeout(initVueApp, 100);
+        return;
+    }
+    
+    try {
         createVueApp();
+    } catch (error) {
+        console.error('Vue应用初始化失败:', error);
+        setTimeout(initVueApp, 500);
     }
 }
 
 function createVueApp() {
+    const { createApp } = Vue;
+    
     // 创建Vue应用实例
     const app = createApp(TypingGameApp);
     
-    // 挂载到指定元素
-    const vueContainer = document.getElementById('vue-app');
-    if (vueContainer) {
-        app.mount('#vue-app');
-        console.log('✅ Vue应用已成功挂载');
-    } else {
-        console.warn('⚠️ 未找到Vue挂载点 #vue-app');
-    }
+    // 注册全局组件
+    app.component('GameControls', window.GameControls);
+    app.component('GameStats', window.GameStats);
+    app.component('RacingTrack', window.RacingTrack);
+    app.component('DefenseGame', window.DefenseGame);
+    app.component('AppUtils', window.AppUtils);
+    
+    // 挂载vueS应用
+    app.mount('#vue-app');
+    
+    console.log('✅ Vue应用已成功挂载到 #vue-app');
 }
 
 // 导出初始化函数

@@ -1,27 +1,24 @@
 #!/bin/bash
 
-# 键盘打字竞速游戏启动脚本
+echo "🚀 启动键盘打字竞速游戏服务器..."
 
-echo "🎮 启动键盘打字竞速游戏..."
-
-# 检查虚拟环境
-if [ ! -d "venv" ]; then
-    echo "📦 创建虚拟环境..."
-    python3 -m venv venv
+# 检查 uv 是否安装
+if ! command -v uv &> /dev/null; then
+    echo "❌ uv 未安装，请先安装 uv:"
+    echo "   curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1
 fi
 
-# 激活虚拟环境
-source venv/bin/activate
-
 # 安装依赖
-echo "📋 检查依赖..."
-pip install -r requirements.txt > /dev/null 2>&1
+echo "📦 安装依赖..."
+uv sync
 
 # 启动服务器
-echo "🚀 启动服务器..."
-echo "📍 游戏地址: http://localhost:8000"
-echo "📖 API文档: http://localhost:8000/docs"
+echo "🎮 启动游戏服务器..."
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+echo "✅ 服务器已启动！"
+echo "🌐 游戏地址: http://localhost:8000"
+echo "📊 API文档: http://localhost:8000/docs"
 echo "🛑 按 Ctrl+C 停止服务器"
 echo ""
-
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload

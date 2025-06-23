@@ -1,0 +1,89 @@
+{
+    "racing": {
+        "trackLength": 100,
+        "raceTime": 60,
+        "cars": {
+            "player": {
+                "name": "玩家",
+                "icon": "🚙",
+                "color": "#00ff00",
+                "description": "你的赛车，速度取决于打字速度"
+            },
+            "slow": {
+                "name": "摩托车",
+                "icon": "🏍️",
+                "speed": 30,
+                "color": "#90ee90",
+                "description": "速度较慢的AI赛车，适合新手超越"
+            },
+            "medium": {
+                "name": "小汽车",
+                "icon": "🚗",
+                "speed": 50,
+                "color": "#ffd700",
+                "description": "中等速度的AI赛车，需要一定技巧"
+            },
+            "fast": {
+                "name": "超级跑车",
+                "icon": "🏎️",
+                "speed": 70,
+                "color": "#ff6347",
+                "description": "高速AI赛车，挑战你的极限"
+            }
+        },
+        "difficulty": {
+            "easy": {
+                "name": "简单",
+                "description": "AI赛车速度降低20%",
+                "speedMultiplier": 0.8,
+                "raceTime": 90
+            },
+            "normal": {
+                "name": "普通",
+                "description": "标准AI赛车速度",
+                "speedMultiplier": 1.0,
+                "raceTime": 60
+            },
+            "hard": {
+                "name": "困难",
+                "description": "AI赛车速度提升20%",
+                "speedMultiplier": 1.2,
+                "raceTime": 45
+            }
+        },
+        "achievements": {
+            "firstWin": {
+                "name": "初次胜利",
+                "description": "获得第一次比赛胜利",
+                "icon": "🏆"
+            },
+            "speedDemon": {
+                "name": "速度恶魔",
+                "description": "达到100 WPM以上",
+                "icon": "⚡"
+            },
+            "overtaker": {
+                "name": "超车王",
+                "description": "单场比赛超越3辆赛车",
+                "icon": "🚀"
+            },
+            "perfectRace": {
+                "name": "完美比赛",
+                "description": "以第一名完成比赛且准确率100%",
+                "icon": "💎"
+            }
+        },
+        "sounds": {
+            "raceStart": "race_start.mp3",
+            "overtake": "overtake.mp3",
+            "raceEnd": "race_end.mp3",
+            "victory": "victory.mp3"
+        },
+        "ui": {
+            "showMinimap": true,
+            "showSpeedometer": true,
+            "showRankings": true,
+            "animationSpeed": "normal"
+        }
+    }
+}

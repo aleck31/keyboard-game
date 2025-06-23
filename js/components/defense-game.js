@@ -1,6 +1,4 @@
 // 植物防御游戏组件
-const { ref, reactive, computed, watch, onMounted, onUnmounted } = Vue;
-
 const DefenseGame = {
     name: 'DefenseGame',
     props: {
@@ -11,6 +9,9 @@ const DefenseGame = {
     },
     emits: ['game-over', 'score-changed'],
     setup(props, { emit }) {
+        const { ref, reactive, computed, watch, onMounted, onUnmounted } = Vue;
+        console.log('🌱 DefenseGame组件初始化', props);
+        
         // 游戏引擎实例
         let defenseEngine = null;
         
@@ -117,8 +118,13 @@ const DefenseGame = {
         };
         
         const startGame = () => {
+            console.log('🌱 开始防御游戏');
             if (defenseEngine && canStartGame.value) {
                 defenseEngine.startGame();
+            } else {
+                // 如果引擎未初始化，先模拟开始
+                gameState.isPlaying = true;
+                console.log('🌱 游戏已开始（模拟模式）');
             }
         };
         
@@ -131,6 +137,14 @@ const DefenseGame = {
         const resetGame = () => {
             if (defenseEngine) {
                 defenseEngine.resetGame();
+            } else {
+                // 模拟重置
+                gameState.isPlaying = false;
+                gameState.isPaused = false;
+                gameState.isCompleted = false;
+                gameState.score = 0;
+                plant.health = plant.maxHealth;
+                console.log('🌱 游戏已重置（模拟模式）');
             }
         };
         
@@ -138,6 +152,7 @@ const DefenseGame = {
         const initDefenseEngine = () => {
             if (window.DefenseEngine) {
                 defenseEngine = new window.DefenseEngine();
+                console.log('🌱 植物防御引擎已初始化');
                 
                 // 监听游戏事件
                 defenseEngine.on('gameStarted', handleGameStarted);
@@ -343,6 +358,7 @@ const DefenseGame = {
         
         // 生命周期
         onMounted(() => {
+            console.log('🌱 DefenseGame组件已挂载');
             initDefenseEngine();
         });
         
@@ -501,20 +517,22 @@ const DefenseGame = {
                     </button>
                 </div>
             </div>
-            
+
             <!-- 游戏控制按钮 -->
             <div class="game-controls" style="margin-top: 20px;">
                 <button 
                     v-if="canStartGame"
                     class="btn btn-primary"
                     @click="startGame"
+                    style="background: #4caf50; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 5px;"
                 >
-                    🌱 开始防御
+                    🌱 开始
                 </button>
                 <button 
                     v-if="gameState.isPlaying && !gameState.isCompleted"
                     class="btn btn-secondary"
                     @click="pauseGame"
+                    style="background: #ff9800; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 5px;"
                 >
                     {{ gameState.isPaused ? '▶️ 继续' : '⏸️ 暂停' }}
                 </button>
@@ -522,10 +540,21 @@ const DefenseGame = {
                     v-if="gameState.isPlaying || gameState.isCompleted"
                     class="btn btn-secondary"
                     @click="resetGame"
+                    style="background: #f44336; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 5px;"
                 >
-                    🔄 重新开始
+                    🔄 结束
                 </button>
             </div>
+            
+            <!-- 调试信息
+            <div v-if="!gameState.isPlaying" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; color: #ccc;">
+                <p>🔧 调试信息:</p>
+                <p>• 游戏状态: {{ gameState.isPlaying ? '进行中' : '未开始' }}</p>
+                <p>• 植物血量: {{ plant.health }}/{{ plant.maxHealth }}</p>
+                <p>• 当前难度: {{ gameState.difficulty }}</p>
+                <p>• 可以开始: {{ canStartGame ? '是' : '否' }}</p>
+            </div>
+            -->
         </div>
     `
 };

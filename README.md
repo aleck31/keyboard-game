@@ -13,7 +13,7 @@
 - 🏆 **成就系统**（排行榜和历史记录）
 - 🚀 **Vue.js组件化**（现代前端架构）
 
-## 🆕 最新更新 (v2.0.0)
+## 🆕 最新更新 (v2)
 
 ### 🌱 **植物防御模式** - 全新游戏体验！
 - ✅ **塔防玩法**: 植物vs僵尸的打字射击游戏
@@ -36,10 +36,13 @@
 - ✅ **自动文档**: Swagger UI集成
 - ✅ **分析功能**: 游戏数据分析和报告
 
-### 🏎️ **赛车追逐模式增强**
+### 🏎️ **赛车追逐模式增强** - 短期优化完成！
 - ✅ **AI赛车**: 三辆不同速度的AI赛车竞争
 - ✅ **实时排名**: 动态排名显示和超越动画
 - ✅ **60秒挑战**: 时间限制增加紧迫感
+- ✅ **独立样式**: 专用CSS文件和视觉效果 🆕
+- ✅ **增强组件**: 完整的游戏逻辑和统计面板 🆕
+- ✅ **配置系统**: 赛车参数和难度设置 🆕
 
 ### 🔧 **重要修复**
 - ✅ **暂停功能**: 修复暂停按钮无效问题
@@ -64,6 +67,8 @@
 - 🚗 三辆不同速度的AI赛车：慢车(30WPM)、中速车(50WPM)、快车(70WPM)
 - 🏁 60秒内尽可能超越更多赛车，获得更好名次
 - 🏆 实时排名显示，超越时有特殊动画和音效
+- 📊 完整的统计面板和游戏结束总结 🆕
+- 🎨 专业的赛道设计和视觉效果 🆕
 
 ### 🌱 植物防御模式 (🆕)
 - 🌻 **玩法**: 植物在左侧防守，通过输入单词射击右侧进攻的僵尸
@@ -109,8 +114,9 @@
 ### 环境要求
 - Python 3.11+
 - 现代浏览器（Chrome 80+, Firefox 75+, Safari 13+, Edge 80+）
+- **推荐**: [uv](https://docs.astral.sh/uv/) - 现代化的 Python 包管理工具
 
-### 安装和启动
+### 🆕 安装和启动
 
 1. **克隆项目**
    ```bash
@@ -118,62 +124,48 @@
    cd keyboard-game
    ```
 
-2. **使用启动脚本** (推荐)
+2. **安装 uv**（如果尚未安装）
+   ```bash
+   # macOS 和 Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Windows (PowerShell)
+   powershell -c "irm https://astral.sh/uv/install.sh | iex"
+   
+   # 或使用包管理器
+   brew install uv  # macOS
+   pip install uv   # 任何平台
+   ```
+
+3. **一键启动**
    ```bash
    ./start.sh
    ```
 
-3. **或手动启动**
+4. **或手动使用 uv**
    ```bash
-   # 创建虚拟环境
-   python -m venv .venv
-   source .venv/bin/activate  # Linux/Mac
-   # 或 .venv\Scripts\activate  # Windows
-   
-   # 安装依赖
-   pip install fastapi uvicorn
+   # 安装依赖（自动创建虚拟环境）
+   uv sync
    
    # 启动服务器
-   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
-4. **访问游戏**
-  🎮 开始你的打字冒险之旅！
+### 🎮 访问游戏
+
+启动成功后，在浏览器中访问：
    ```
    http://localhost:8000
    ```
 
-## 📊 API接口文档
-
-### 🔗 自动生成文档
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-### 🌱 植物防御模式API
-```
-GET  /api/defense/words              - 获取植物防御单词库
-POST /api/defense/wave               - 生成波次配置
-GET  /api/defense/config/{difficulty} - 获取难度配置
-POST /api/defense/stats              - 保存植物防御统计
-GET  /api/defense/stats              - 获取植物防御统计
-GET  /api/defense/leaderboard        - 获取植物防御排行榜
-```
-
-### 📈 通用API
-```
-GET  /api/texts                      - 获取练习文本
-GET  /api/words                      - 获取练习单词
-POST /api/stats                      - 保存游戏统计
-GET  /api/stats                      - 获取游戏统计
-GET  /api/leaderboard                - 获取排行榜
-GET  /api/analytics                  - 获取游戏分析数据
-```
+🎮 开始你的打字冒险之旅！
 
 ## 📁 项目结构
 
 ```
 keyboard-game/
 ├── main.py                     # FastAPI后端主文件
+├── pyproject.toml              # 项目配置文件
 ├── start.sh                    # 启动脚本
 ├── index.html                  # 主页面
 ├── css/                        # 样式文件
@@ -181,7 +173,8 @@ keyboard-game/
 │   ├── themes.css             # 主题样式
 │   ├── responsive.css         # 响应式样式
 │   ├── vue-components.css     # Vue组件样式
-│   └── defense-mode.css       # 植物防御模式样式
+│   ├── defense-mode.css       # 植物防御模式样式
+│   └── racing-mode.css        # 赛车追逐模式样式
 ├── js/                         # JavaScript文件
 │   ├── utils.js               # 工具函数
 │   ├── api-client.js          # API客户端
@@ -201,6 +194,7 @@ keyboard-game/
 │   ├── texts.json             # 练习文本
 │   ├── words.json             # 练习单词
 │   ├── defense_words.json     # 植物防御单词
+│   ├── racing_config.json     # 赛车追逐配置
 │   ├── config.json            # 游戏配置
 │   ├── game_stats.json        # 游戏统计
 │   └── defense_stats.json     # 植物防御统计
@@ -263,6 +257,32 @@ keyboard-game/
 }
 ```
 
+## 📊 API接口文档
+
+### 🔗 自动生成文档
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### 📈 通用API
+```
+GET  /api/texts                      - 获取练习文本
+GET  /api/words                      - 获取练习单词
+POST /api/stats                      - 保存游戏统计
+GET  /api/stats                      - 获取游戏统计
+GET  /api/leaderboard                - 获取排行榜
+GET  /api/analytics                  - 获取游戏分析数据
+```
+
+### 🌱 植物防御模式API
+```
+GET  /api/defense/words              - 获取植物防御单词库
+POST /api/defense/wave               - 生成波次配置
+GET  /api/defense/config/{difficulty} - 获取难度配置
+POST /api/defense/stats              - 保存植物防御统计
+GET  /api/defense/stats              - 获取植物防御统计
+GET  /api/defense/leaderboard        - 获取植物防御排行榜
+```
+
 ## 🔧 开发和调试
 
 ### 开发模式启动
@@ -291,20 +311,6 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 - JSON文件缓存
 - 静态文件压缩
 - API响应优化
-
-## 🐛 故障排除
-
-### 常见问题
-1. **音频无法播放**: 检查浏览器音频权限
-2. **API请求失败**: 确认Python服务器正在运行
-3. **Vue组件不显示**: 检查浏览器控制台错误
-4. **统计数据丢失**: 检查data目录权限
-
-### 调试步骤
-1. 打开浏览器开发者工具
-2. 查看Console标签页的错误信息
-3. 检查Network标签页的API请求
-4. 查看Python服务器终端输出
 
 ## 📄 许可证
 

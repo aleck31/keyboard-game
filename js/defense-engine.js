@@ -290,7 +290,7 @@ class DefenseEngine extends EventEmitter {
         
         const zombieConfig = this.zombieTypes[type];
         const typeWords = this.wordsData[type] || this.wordsData.basic || ['error'];
-        const word = Utils.getRandomItem(typeWords);
+        const word = Utils.randomChoice(typeWords);
         
         const zombie = {
             id: ++this.zombieIdCounter,

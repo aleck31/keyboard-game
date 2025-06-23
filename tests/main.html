@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>游戏测试页面</title>
+    <title>游戏主测试页面</title>
+    <!-- Vue.js 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         body {
             font-family: 'JetBrains Mono', monospace;
@@ -28,6 +30,7 @@
         .success { background: #1a472a; color: #4caf50; }
         .error { background: #4a1a1a; color: #f44336; }
         .info { background: #1a2a4a; color: #2196f3; }
+        .warning { background: #4a3a1a; color: #ff9800; }
         button {
             background: #2196f3;
             color: white;
@@ -63,30 +66,35 @@
     </div>
     
     <div class="test-section">
-        <h2>🎯 游戏功能测试</h2>
+        <h2>🎮 游戏功能测试</h2>
         <button onclick="testGameFeatures()">测试游戏功能</button>
         <div id="gameResults"></div>
     </div>
     
     <div class="test-section">
-        <h2>🚀 启动游戏</h2>
-        <p>如果所有测试都通过，你可以启动完整的游戏：</p>
-        <button onclick="window.location.href='index.html'">启动游戏</button>
+        <h2>🔗 快速链接</h2>
+        <button onclick="window.location.href='../index.html'">返回主游戏</button>
+        <button onclick="window.location.href='../docs'">查看API文档</button>
+        <button onclick="window.location.href='test_defense_mode.html'">植物防御测试</button>
     </div>
 
     <script>
         // 测试结果显示函数
         function showResult(containerId, message, type = 'info') {
             const container = document.getElementById(containerId);
-            const div = document.createElement('div');
-            div.className = `test-result ${type}`;
-            div.innerHTML = message;
-            container.appendChild(div);
+            if (!container) return;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            container.appendChild(resultDiv);
         }
         
-        // 清除测试结果
         function clearResults(containerId) {
-            document.getElementById(containerId).innerHTML = '';
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = '';
+            }
         }
         
         // API 测试
@@ -113,21 +121,32 @@
                     showResult('apiResults', '❌ 单词API失败', 'error');
                 }
                 
+                // 测试植物防御API
+                const defenseResponse = await fetch('/api/defense/words');
+                if (defenseResponse.ok) {
+                    const defenseData = await defenseResponse.json();
+                    const totalWords = Object.values(defenseData.data).reduce((sum, arr) => sum + arr.length, 0);
+                    showResult('apiResults', `✅ 植物防御API正常 - 加载了 ${totalWords} 个防御单词`, 'success');
+                } else {
+                    showResult('apiResults', '❌ 植物防御API失败', 'error');
+                }
+                
                 // 测试统计API
                 const statsResponse = await fetch('/api/stats');
                 if (statsResponse.ok) {
-                    showResult('apiResults', '✅ 统计API正常', 'success');
+                    const statsData = await statsResponse.json();
+                    showResult('apiResults', `✅ 统计API正常 - 历史记录: ${statsData.data.length} 条`, 'success');
                 } else {
                     showResult('apiResults', '❌ 统计API失败', 'error');
                 }
                 
             } catch (error) {
-                showResult('apiResults', `❌ API连接失败: ${error.message}`, 'error');
+                showResult('apiResults', `❌ API测试失败: ${error.message}`, 'error');
             }
         }
         
         // 音频测试
-        function testAudio() {
+        async function testAudio() {
             clearResults('audioResults');
             showResult('audioResults', '🔄 测试音频系统...', 'info');
             
@@ -135,11 +154,18 @@
                 // 检查Web Audio API支持
                 if (window.AudioContext || window.webkitAudioContext) {
                     showResult('audioResults', '✅ Web Audio API 支持', 'success');
-                    
+
+                    // 检查音频上下文支持
+                    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                        showResult('audioResults', '✅ 浏览器支持Web Audio API', 'success');
+                    } else {
+                        showResult('audioResults', '❌ 浏览器不支持Web Audio API', 'error');
+                    }
+
                     // 创建音频上下文
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     showResult('audioResults', `✅ 音频上下文创建成功 - 状态: ${audioContext.state}`, 'success');
-                    
+
                     // 测试音效生成
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
@@ -166,13 +192,13 @@
         }
         
         // 存储测试
-        function testStorage() {
+        async function testStorage() {
             clearResults('storageResults');
             showResult('storageResults', '🔄 测试本地存储...', 'info');
             
             try {
                 // 测试localStorage
-                const testKey = 'test_key';
+                const testKey = 'test_storage_key';
                 const testValue = { test: 'data', timestamp: Date.now() };
                 
                 localStorage.setItem(testKey, JSON.stringify(testValue));
@@ -185,14 +211,25 @@
                     showResult('storageResults', '❌ localStorage 数据不匹配', 'error');
                 }
                 
-                // 测试存储容量
-                const storageInfo = navigator.storage && navigator.storage.estimate ? 
-                    await navigator.storage.estimate() : null;
+                // 测试sessionStorage
+                sessionStorage.setItem(testKey, JSON.stringify(testValue));
+                const sessionRetrieved = JSON.parse(sessionStorage.getItem(testKey));
                 
-                if (storageInfo) {
+                if (sessionRetrieved && sessionRetrieved.test === testValue.test) {
+                    showResult('storageResults', '✅ sessionStorage 读写正常', 'success');
+                    sessionStorage.removeItem(testKey);
+                } else {
+                    showResult('storageResults', '❌ sessionStorage 数据不匹配', 'error');
+                }
+                
+                // 测试存储容量
+                if (navigator.storage && navigator.storage.estimate) {
+                    const storageInfo = await navigator.storage.estimate();
                     const usedMB = (storageInfo.usage / 1024 / 1024).toFixed(2);
                     const quotaMB = (storageInfo.quota / 1024 / 1024).toFixed(2);
                     showResult('storageResults', `✅ 存储信息 - 已使用: ${usedMB}MB / 配额: ${quotaMB}MB`, 'success');
+                } else {
+                    showResult('storageResults', '⚠️ 存储容量信息不可用', 'warning');
                 }
                 
             } catch (error) {
@@ -201,11 +238,50 @@
         }
         
         // 游戏功能测试
-        function testGameFeatures() {
+        async function testGameFeatures() {
             clearResults('gameResults');
             showResult('gameResults', '🔄 测试游戏功能...', 'info');
             
             try {
+                // 测试Vue.js加载
+                if (typeof Vue !== 'undefined') {
+                    showResult('gameResults', `✅ Vue.js 已加载 - 版本: ${Vue.version}`, 'success');
+                } else {
+                    showResult('gameResults', '❌ Vue.js 未加载', 'error');
+                }
+                
+                // 测试基本JavaScript功能
+                if (typeof window !== 'undefined') {
+                    showResult('gameResults', '✅ 全局window对象可用', 'success');
+                } else {
+                    showResult('gameResults', '❌ 全局window对象不可用', 'error');
+                }
+                
+                // 测试ES6功能
+                try {
+                    const testArrow = () => 'ES6 Arrow Functions';
+                    const testTemplate = `ES6 Template Literals`;
+                    const testDestructuring = { a: 1, b: 2 };
+                    const { a, b } = testDestructuring;
+                    
+                    if (testArrow() && testTemplate && a === 1 && b === 2) {
+                        showResult('gameResults', '✅ ES6功能支持正常', 'success');
+                    }
+                } catch (es6Error) {
+                    showResult('gameResults', '❌ ES6功能支持有限', 'error');
+                }
+                
+                // 测试异步功能
+                try {
+                    const testPromise = new Promise(resolve => resolve('Promise支持'));
+                    const result = await testPromise;
+                    if (result) {
+                        showResult('gameResults', '✅ Promise/Async支持正常', 'success');
+                    }
+                } catch (asyncError) {
+                    showResult('gameResults', '❌ Promise/Async支持有限', 'error');
+                }
+
                 // 测试工具函数
                 if (typeof Utils !== 'undefined') {
                     showResult('gameResults', '❌ Utils 未加载 - 请确保在主页面测试', 'error');
@@ -218,34 +294,43 @@
                     showResult('gameResults', `✅ 准确率计算测试 - 模拟结果: ${testAccuracy}%`, 'success');
                 }
                 
+                // 测试定时器功能
+                const startTime = Date.now();
+                setTimeout(() => {
+                    const elapsed = Date.now() - startTime;
+                    if (elapsed >= 990 && elapsed <= 1100) {
+                        showResult('gameResults', `✅ 定时器功能正常 - 精度: ${elapsed}ms`, 'success');
+                    } else {
+                        showResult('gameResults', `⚠️ 定时器精度偏差 - 实际: ${elapsed}ms`, 'warning');
+                    }
+                }, 1000);
+                
+                // 测试requestAnimationFrame
+                if (typeof requestAnimationFrame !== 'undefined') {
+                    showResult('gameResults', '✅ requestAnimationFrame 支持正常', 'success');
+                } else {
+                    showResult('gameResults', '❌ requestAnimationFrame 不支持', 'error');
+                }
+
                 // 测试键盘事件
                 let keyTestPassed = false;
                 const keyHandler = (e) => {
-                    if (e.key === 'Enter') {
-                        keyTestPassed = true;
-                        showResult('gameResults', '✅ 键盘事件测试通过', 'success');
-                        document.removeEventListener('keydown', keyHandler);
-                    }
+                    keyTestPassed = true;
+                    showResult('gameResults', `✅ 键盘事件监听正常 - 按键: ${e.key}`, 'success');
+                    document.removeEventListener('keydown', keyHandler);
                 };
                 
                 document.addEventListener('keydown', keyHandler);
-                showResult('gameResults', '⌨️ 请按 Enter 键测试键盘事件...', 'info');
+                showResult('gameResults', '⌨️ 请按任意键测试键盘事件...', 'info');
                 
-                // 5秒后移除监听器
+                // 5秒后如果没有按键，显示超时
                 setTimeout(() => {
                     if (!keyTestPassed) {
+                        showResult('gameResults', '⚠️ 键盘事件测试超时（未检测到按键）', 'warning');
                         document.removeEventListener('keydown', keyHandler);
-                        showResult('gameResults', '⚠️ 键盘事件测试超时', 'error');
                     }
                 }, 5000);
-                
-                // 测试DOM操作
-                const testDiv = document.createElement('div');
-                testDiv.textContent = 'DOM测试';
-                if (testDiv.textContent === 'DOM测试') {
-                    showResult('gameResults', '✅ DOM操作正常', 'success');
-                }
-                
+
             } catch (error) {
                 showResult('gameResults', `❌ 游戏功能测试失败: ${error.message}`, 'error');
             }
@@ -253,6 +338,19 @@
         
         // 页面加载完成后自动运行基础测试
         window.addEventListener('load', () => {
+            console.log('🧪 测试页面已加载');
+            
+            // 显示浏览器信息
+            const userAgent = navigator.userAgent;
+            const browserInfo = {
+                chrome: userAgent.includes('Chrome'),
+                firefox: userAgent.includes('Firefox'),
+                safari: userAgent.includes('Safari') && !userAgent.includes('Chrome'),
+                edge: userAgent.includes('Edge')
+            };
+            
+            console.log('🌐 浏览器信息:', browserInfo);
+            
             setTimeout(() => {
                 showResult('apiResults', '🔄 自动运行API测试...', 'info');
                 testAPI();

@@ -1,0 +1,352 @@
+/* 赛车追逐模式专用样式 */
+
+/* 赛车追逐容器 */
+.racing-container {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid #30363d;
+}
+
+/* 赛车追逐标题 */
+.racing-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ff6b35;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 赛道容器 */
+.racing-track {
+    position: relative;
+    height: 300px;
+    background: linear-gradient(180deg, 
+        #87ceeb 0%,     /* 天空蓝 */
+        #98fb98 10%,    /* 草地绿 */
+        #696969 20%,    /* 赛道灰 */
+        #2f2f2f 50%,    /* 赛道深灰 */
+        #696969 80%,    /* 赛道灰 */
+        #98fb98 90%,    /* 草地绿 */
+        #87ceeb 100%    /* 天空蓝 */
+    );
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 赛道分隔线 */
+.racing-track::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(
+        90deg,
+        #fff 0px,
+        #fff 20px,
+        transparent 20px,
+        transparent 40px
+    );
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+/* 赛车基础样式 */
+.racing-car {
+    position: absolute;
+    font-size: 2.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* 玩家赛车 */
+.racing-car.player {
+    top: 45%;
+    transform: translateY(-50%);
+    animation: playerCarBounce 2s ease-in-out infinite;
+}
+
+/* AI赛车 */
+.racing-car.ai {
+    transform: translateY(-50%);
+}
+
+.racing-car.ai.slow {
+    top: 25%;
+    color: #90ee90;
+}
+
+.racing-car.ai.medium {
+    top: 35%;
+    color: #ffd700;
+}
+
+.racing-car.ai.fast {
+    top: 65%;
+    color: #ff6347;
+}
+
+/* 赛车动画 */
+@keyframes playerCarBounce {
+    0%, 100% { transform: translateY(-50%) scale(1); }
+    50% { transform: translateY(-50%) scale(1.05); }
+}
+
+/* 超越特效 */
+.racing-car.overtaking {
+    animation: overtakeFlash 0.5s ease-in-out;
+    z-index: 10;
+}
+
+@keyframes overtakeFlash {
+    0%, 100% { 
+        transform: translateY(-50%) scale(1);
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+    }
+    50% { 
+        transform: translateY(-50%) scale(1.2);
+        filter: drop-shadow(0 0 20px #ffff00);
+    }
+}
+
+/* 赛车尾气效果 */
+.racing-car::after {
+    content: '💨';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8em;
+    opacity: 0.6;
+    animation: exhaustSmoke 1s ease-in-out infinite;
+}
+
+@keyframes exhaustSmoke {
+    0% { opacity: 0.6; transform: translateY(-50%) translateX(0); }
+    100% { opacity: 0; transform: translateY(-50%) translateX(-20px); }
+}
+
+/* 赛车统计面板 */
+.racing-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.racing-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid #555;
+}
+
+.racing-stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.racing-stat-label {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 3px;
+}
+
+.racing-stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* 排名显示 */
+.racing-leaderboard {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    border: 1px solid #444;
+}
+
+.racing-leaderboard-title {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.racing-position {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 4px solid transparent;
+}
+
+.racing-position.first {
+    border-left-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.racing-position.second {
+    border-left-color: #c0c0c0;
+    background: rgba(192, 192, 192, 0.1);
+}
+
+.racing-position.third {
+    border-left-color: #cd7f32;
+    background: rgba(205, 127, 50, 0.1);
+}
+
+.racing-position.player {
+    border-left-color: #00ff00;
+    background: rgba(0, 255, 0, 0.1);
+    font-weight: bold;
+}
+
+.racing-position-rank {
+    font-size: 1.1rem;
+    font-weight: bold;
+    min-width: 30px;
+}
+
+.racing-position-name {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.racing-position-progress {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* 时间显示 */
+.racing-timer {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ff6b35;
+    margin: 15px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.racing-timer.warning {
+    color: #ff4444;
+    animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* 游戏结束界面 */
+.racing-game-over {
+    text-align: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    margin: 20px 0;
+    border: 2px solid #ff6b35;
+}
+
+.racing-game-over-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.racing-game-over-title.victory {
+    color: #00ff00;
+}
+
+.racing-game-over-title.defeat {
+    color: #ff4444;
+}
+
+.racing-final-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.racing-final-stat {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    text-align: center;
+}
+
+.racing-final-stat-label {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+.racing-final-stat-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .racing-track {
+        height: 250px;
+    }
+    
+    .racing-car {
+        font-size: 2rem;
+    }
+    
+    .racing-stats {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+    }
+    
+    .racing-timer {
+        font-size: 1.5rem;
+    }
+    
+    .racing-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .racing-track {
+        height: 200px;
+    }
+    
+    .racing-car {
+        font-size: 1.5rem;
+    }
+    
+    .racing-container {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .racing-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}

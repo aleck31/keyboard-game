@@ -1,6 +1,4 @@
 // 赛车追逐组件
-const { ref, computed, watch, onMounted, onUnmounted } = Vue;
-
 const RacingTrack = {
     name: 'RacingTrack',
     props: {
@@ -15,88 +13,161 @@ const RacingTrack = {
     },
     emits: ['car-overtaken', 'race-finished'],
     setup(props, { emit }) {
-        // 响应式数据
-        const playerWPM = ref(0);
-        const remainingTime = ref(60);
-        const currentRank = ref(4);
-        const overtakenCars = ref([]);
+        const { ref, computed, watch, onMounted, onUnmounted } = Vue;
         
-        // AI赛车配置
-        const aiCars = ref({
-            slow: { speed: 30, position: 0, name: '慢车', icon: '🚗', color: 'success' },
-            medium: { speed: 50, position: 0, name: '中速车', icon: '🚙', color: 'warning' },
-            fast: { speed: 70, position: 0, name: '快车', icon: '🏁', color: 'error' }
+        // 赛车配置
+        const racingConfig = ref({
+            trackLength: 100,
+            raceTime: 60,
+            cars: {
+                player: { name: '玩家', icon: '🚙', speed: 0, position: 0, color: '#00ff00' },
+                slow: { name: '摩托车', icon: '🏍️', speed: 30, position: 0, color: '#90ee90' },
+                medium: { name: '小汽车', icon: '🚗', speed: 50, position: 0, color: '#ffd700' },
+                fast: { name: '超级跑车', icon: '🏎️', speed: 70, position: 0, color: '#ff6347' }
+            }
         });
+        
+        // 响应式数据
+        const raceState = ref({
+            isRunning: false,
+            timeLeft: 60,
+            playerPosition: 0,
+            aiPositions: {
+                slow: 0,
+                medium: 0,
+                fast: 0
+            },
+            rankings: [],
+            overtakeCount: 0,
+            finalRank: 0
+        });
+        
+        const raceTimer = ref(null);
+        const animationFrame = ref(null);
         
         // 计算属性
-        const playerPosition = computed(() => {
-            return Math.min((playerWPM.value / 100) * 100, 85);
+        const playerProgress = computed(() => {
+            return Math.min((raceState.value.playerPosition / racingConfig.value.trackLength) * 100, 100);
         });
         
-        const countdownClass = computed(() => {
-            if (remainingTime.value <= 10) return 'danger';
-            if (remainingTime.value <= 30) return 'warning';
-            return '';
+        const aiProgress = computed(() => {
+            return {
+                slow: Math.min((raceState.value.aiPositions.slow / racingConfig.value.trackLength) * 100, 100),
+                medium: Math.min((raceState.value.aiPositions.medium / racingConfig.value.trackLength) * 100, 100),
+                fast: Math.min((raceState.value.aiPositions.fast / racingConfig.value.trackLength) * 100, 100)
+            };
         });
         
-        const formattedTime = computed(() => {
-            const minutes = Math.floor(remainingTime.value / 60);
-            const seconds = remainingTime.value % 60;
+        const currentRankings = computed(() => {
+            const cars = [
+                { name: '玩家', position: raceState.value.playerPosition, type: 'player', icon: '🏎️' },
+                { name: '慢车', position: raceState.value.aiPositions.slow, type: 'slow', icon: '🚗' },
+                { name: '中速车', position: raceState.value.aiPositions.medium, type: 'medium', icon: '🚙' },
+                { name: '快车', position: raceState.value.aiPositions.fast, type: 'fast', icon: '🏁' }
+            ];
+            
+            return cars
+                .sort((a, b) => b.position - a.position)
+                .map((car, index) => ({
+                    ...car,
+                    rank: index + 1,
+                    progress: Math.min((car.position / racingConfig.value.trackLength) * 100, 100)
+                }));
+        });
+        
+        const timeDisplay = computed(() => {
+            const minutes = Math.floor(raceState.value.timeLeft / 60);
+            const seconds = raceState.value.timeLeft % 60;
             return `${minutes}:${seconds.toString().padStart(2, '0')}`;
         });
         
-        const rankText = computed(() => {
-            const ranks = ['', '第一名', '第二名', '第三名', '第四名'];
-            return ranks[currentRank.value] || '第四名';
+        const isTimeWarning = computed(() => {
+            return raceState.value.timeLeft <= 10;
         });
         
-        const overtakenText = computed(() => {
-            return overtakenCars.value.length > 0 
-                ? `已超越: ${overtakenCars.value.join(', ')}` 
-                : '已超越: 无';
-        });
-        
-        // 更新AI赛车位置
-        const updateAIPositions = (elapsed) => {
-            Object.keys(aiCars.value).forEach(carKey => {
-                const car = aiCars.value[carKey];
-                // AI赛车以固定速度前进 (基于时间)
-                car.position = Math.min((car.speed / 100) * (elapsed / 60) * 100, 85);
-            });
-        };
-        
-        // 检查超越
-        const checkOvertakes = () => {
-            const playerPos = playerPosition.value;
+        // 方法
+        const startRace = () => {
+            if (raceState.value.isRunning) return;
             
-            Object.keys(aiCars.value).forEach(carKey => {
-                const car = aiCars.value[carKey];
-                const carName = car.name;
-                
-                // 如果玩家超越了这辆车且之前没有超越过
-                if (playerPos > car.position && !overtakenCars.value.includes(carName)) {
-                    overtakenCars.value.push(carName);
-                    emit('car-overtaken', { carName, carType: carKey });
-                    
-                    // 触发超越动画
-                    triggerOvertakeAnimation();
+            console.log('🏎️ 赛车比赛开始！');
+            raceState.value.isRunning = true;
+            raceState.value.timeLeft = racingConfig.value.raceTime;
+            
+            // 重置位置
+            raceState.value.playerPosition = 0;
+            raceState.value.aiPositions = { slow: 0, medium: 0, fast: 0 };
+            raceState.value.overtakeCount = 0;
+            
+            // 启动计时器
+            raceTimer.value = setInterval(() => {
+                raceState.value.timeLeft--;
+                if (raceState.value.timeLeft <= 0) {
+                    finishRace();
                 }
-            });
-        };
-        
-        // 计算当前排名
-        const calculateRank = () => {
-            const playerPos = playerPosition.value;
-            const aiPositions = Object.values(aiCars.value).map(car => car.position);
+            }, 1000);
             
-            // 计算有多少辆车在玩家前面
-            const carsAhead = aiPositions.filter(pos => pos > playerPos).length;
-            currentRank.value = carsAhead + 1;
+            // 启动AI赛车更新
+            updateAICars();
         };
         
-        // 超越动画
+        const updatePlayerPosition = (wpm) => {
+            if (!raceState.value.isRunning) return;
+            
+            // 根据WPM计算玩家位置
+            const speedFactor = Math.max(wpm / 60, 0); // 60 WPM = 1.0倍速
+            const timeElapsed = racingConfig.value.raceTime - raceState.value.timeLeft;
+            raceState.value.playerPosition = Math.min(speedFactor * timeElapsed * 1.5, racingConfig.value.trackLength);
+            
+            checkOvertakes();
+        };
+        
+        const updateAICars = () => {
+            if (!raceState.value.isRunning) return;
+            
+            const timeElapsed = racingConfig.value.raceTime - raceState.value.timeLeft;
+            
+            // 更新AI赛车位置
+            Object.keys(raceState.value.aiPositions).forEach(carType => {
+                const carSpeed = racingConfig.value.cars[carType].speed;
+                const speedFactor = carSpeed / 60; // 转换为相对速度
+                raceState.value.aiPositions[carType] = Math.min(
+                    speedFactor * timeElapsed * 1.5,
+                    racingConfig.value.trackLength
+                );
+            });
+            
+            if (raceState.value.isRunning) {
+                animationFrame.value = requestAnimationFrame(() => {
+                    setTimeout(updateAICars, 100); // 每100ms更新一次
+                });
+            }
+        };
+        
+        const checkOvertakes = () => {
+            const previousRankings = [...raceState.value.rankings];
+            const currentRanks = currentRankings.value;
+            
+            // 检查玩家是否超越了其他赛车
+            const playerCurrentRank = currentRanks.find(car => car.type === 'player')?.rank || 4;
+            const playerPreviousRank = previousRankings.find(car => car.type === 'player')?.rank || 4;
+            
+            if (playerCurrentRank < playerPreviousRank) {
+                raceState.value.overtakeCount++;
+                emit('car-overtaken', {
+                    overtakenCar: previousRankings[playerCurrentRank - 1]?.name || '未知',
+                    newRank: playerCurrentRank,
+                    totalOvertakes: raceState.value.overtakeCount
+                });
+                
+                // 触发超越动画
+                triggerOvertakeAnimation();
+            }
+            
+            raceState.value.rankings = currentRanks;
+        };
+        
         const triggerOvertakeAnimation = () => {
-            const playerCar = document.querySelector('.player-car');
+            const playerCar = document.querySelector('.racing-car.player');
             if (playerCar) {
                 playerCar.classList.add('overtaking');
                 setTimeout(() => {
@@ -105,131 +176,230 @@ const RacingTrack = {
             }
         };
         
-        // 更新游戏数据
-        const updateRaceData = () => {
-            if (!props.gameState.isPlaying || props.gameState.isPaused) return;
+        const finishRace = () => {
+            if (!raceState.value.isRunning) return;
             
-            // 获取当前统计数据
-            const stats = window.statsManager?.getCurrentStats();
-            if (stats) {
-                playerWPM.value = stats.wpm || 0;
+            console.log('🏁 赛车比赛结束！');
+            raceState.value.isRunning = false;
+            
+            // 清理计时器
+            if (raceTimer.value) {
+                clearInterval(raceTimer.value);
+                raceTimer.value = null;
             }
             
-            // 计算经过时间
-            const elapsed = props.gameState.startTime 
-                ? (Date.now() - props.gameState.startTime) / 1000 
-                : 0;
-            
-            remainingTime.value = Math.max(0, props.gameState.timeLimit - elapsed);
-            
-            // 更新AI位置
-            updateAIPositions(elapsed);
-            
-            // 检查超越和排名
-            checkOvertakes();
-            calculateRank();
-            
-            // 检查比赛是否结束
-            if (remainingTime.value <= 0) {
-                emit('race-finished', {
-                    rank: currentRank.value,
-                    overtakenCars: overtakenCars.value,
-                    finalPosition: playerPosition.value
-                });
+            if (animationFrame.value) {
+                cancelAnimationFrame(animationFrame.value);
+                animationFrame.value = null;
             }
-        };
-        
-        // 重置比赛数据
-        const resetRace = () => {
-            playerWPM.value = 0;
-            remainingTime.value = 60;
-            currentRank.value = 4;
-            overtakenCars.value = [];
             
-            Object.keys(aiCars.value).forEach(carKey => {
-                aiCars.value[carKey].position = 0;
+            // 计算最终排名
+            const finalRankings = currentRankings.value;
+            const playerFinalRank = finalRankings.find(car => car.type === 'player')?.rank || 4;
+            raceState.value.finalRank = playerFinalRank;
+            
+            // 发送比赛结束事件
+            emit('race-finished', {
+                finalRank: playerFinalRank,
+                overtakeCount: raceState.value.overtakeCount,
+                finalPosition: raceState.value.playerPosition,
+                rankings: finalRankings
             });
         };
         
+        const resetRace = () => {
+            raceState.value.isRunning = false;
+            raceState.value.timeLeft = racingConfig.value.raceTime;
+            raceState.value.playerPosition = 0;
+            raceState.value.aiPositions = { slow: 0, medium: 0, fast: 0 };
+            raceState.value.rankings = [];
+            raceState.value.overtakeCount = 0;
+            raceState.value.finalRank = 0;
+            
+            if (raceTimer.value) {
+                clearInterval(raceTimer.value);
+                raceTimer.value = null;
+            }
+            
+            if (animationFrame.value) {
+                cancelAnimationFrame(animationFrame.value);
+                animationFrame.value = null;
+            }
+        };
+        
         // 监听游戏状态变化
-        watch(() => props.gameState.isPlaying, (newVal) => {
-            if (newVal) {
+        watch(() => props.gameState.wpm, (newWpm) => {
+            if (raceState.value.isRunning) {
+                updatePlayerPosition(newWpm);
+            }
+        });
+        
+        watch(() => props.gameState.isPlaying, (isPlaying) => {
+            if (isPlaying && props.gameState.mode === 'racing' && !raceState.value.isRunning) {
+                startRace();
+            } else if (!isPlaying && raceState.value.isRunning) {
+                finishRace();
+            }
+        });
+        
+        watch(() => props.isVisible, (visible) => {
+            if (!visible) {
                 resetRace();
             }
         });
         
-        // 定时器
-        let updateInterval = null;
-        
+        // 生命周期
         onMounted(() => {
-            updateInterval = setInterval(updateRaceData, 100);
+            console.log('🏎️ RacingTrack组件已挂载');
         });
         
         onUnmounted(() => {
-            if (updateInterval) {
-                clearInterval(updateInterval);
-            }
+            resetRace();
         });
         
         return {
             // 数据
-            playerWPM,
-            remainingTime,
-            currentRank,
-            overtakenCars,
-            aiCars,
+            racingConfig,
+            raceState,
             
             // 计算属性
-            playerPosition,
-            countdownClass,
-            formattedTime,
-            rankText,
-            overtakenText,
+            playerProgress,
+            aiProgress,
+            currentRankings,
+            timeDisplay,
+            isTimeWarning,
             
             // 方法
+            startRace,
+            finishRace,
             resetRace
         };
     },
     template: `
         <div class="racing-container" v-show="isVisible">
-            <div class="racing-header">
-                <div class="racing-title">🏁 赛车追逐模式</div>
-                <div class="racing-countdown">
-                    <span class="countdown-label">剩余时间</span>
-                    <span class="countdown-time" :class="countdownClass">{{ formattedTime }}</span>
-                </div>
+            <!-- 赛车追逐标题 -->
+            <div class="racing-title">🏎️ 赛车追逐模式</div>
+            
+            <!-- 时间显示 -->
+            <div class="racing-timer" :class="{ warning: isTimeWarning }">
+                ⏱️ {{ timeDisplay }}
             </div>
             
+            <!-- 赛道 -->
             <div class="racing-track">
-                <div class="track-line"></div>
-                
                 <!-- 玩家赛车 -->
-                <div class="racing-car player-car" :style="{ left: playerPosition + '%' }">
-                    <div class="car-icon">🏎️</div>
-                    <div class="car-label">你</div>
-                    <div class="car-speed">{{ playerWPM }} WPM</div>
+                <div 
+                    class="racing-car player"
+                    :style="{ left: playerProgress + '%' }"
+                >
+                    {{ racingConfig.cars.player.icon }}
                 </div>
                 
                 <!-- AI赛车 -->
                 <div 
-                    v-for="(car, key) in aiCars" 
-                    :key="key"
-                    class="racing-car ai-car"
-                    :class="key + '-car'"
-                    :style="{ left: car.position + '%' }"
+                    class="racing-car ai slow"
+                    :style="{ left: aiProgress.slow + '%' }"
                 >
-                    <div class="car-icon">{{ car.icon }}</div>
-                    <div class="car-label">{{ car.name }}</div>
-                    <div class="car-speed">{{ car.speed }} WPM</div>
+                    {{ racingConfig.cars.slow.icon }}
                 </div>
                 
-                <!-- 终点线 -->
-                <div class="finish-line">🏁</div>
+                <div 
+                    class="racing-car ai medium"
+                    :style="{ left: aiProgress.medium + '%' }"
+                >
+                    {{ racingConfig.cars.medium.icon }}
+                </div>
+                
+                <div 
+                    class="racing-car ai fast"
+                    :style="{ left: aiProgress.fast + '%' }"
+                >
+                    {{ racingConfig.cars.fast.icon }}
+                </div>
             </div>
             
-            <div class="racing-status">
-                <div class="current-rank">当前排名: {{ rankText }}</div>
-                <div class="overtaken-cars">{{ overtakenText }}</div>
+            <!-- 赛车统计 -->
+            <div class="racing-stats">
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">⚡</div>
+                    <div class="racing-stat-label">当前速度</div>
+                    <div class="racing-stat-value">{{ gameState.wpm || 0 }} WPM</div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">🚀</div>
+                    <div class="racing-stat-label">超越次数</div>
+                    <div class="racing-stat-value">{{ raceState.overtakeCount }}</div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">📊</div>
+                    <div class="racing-stat-label">完成进度</div>
+                    <div class="racing-stat-value">{{ Math.round(playerProgress) }}%</div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">🏁</div>
+                    <div class="racing-stat-label">当前排名</div>
+                    <div class="racing-stat-value">
+                        {{ currentRankings.find(car => car.type === 'player')?.rank || 4 }}/4
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 排行榜 -->
+            <div class="racing-leaderboard">
+                <div class="racing-leaderboard-title">🏆 实时排名</div>
+                <div 
+                    v-for="car in currentRankings" 
+                    :key="car.type"
+                    class="racing-position"
+                    :class="{ 
+                        first: car.rank === 1,
+                        second: car.rank === 2,
+                        third: car.rank === 3,
+                        player: car.type === 'player'
+                    }"
+                >
+                    <div class="racing-position-rank">
+                        {{ car.rank === 1 ? '🥇' : car.rank === 2 ? '🥈' : car.rank === 3 ? '🥉' : car.rank }}
+                    </div>
+                    <div class="racing-position-name">
+                        {{ car.icon }} {{ car.name }}
+                    </div>
+                    <div class="racing-position-progress">
+                        {{ Math.round(car.progress) }}%
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 游戏结束界面 -->
+            <div v-if="!raceState.isRunning && raceState.finalRank > 0" class="racing-game-over">
+                <div 
+                    class="racing-game-over-title"
+                    :class="{ 
+                        victory: raceState.finalRank === 1,
+                        defeat: raceState.finalRank > 1
+                    }"
+                >
+                    {{ raceState.finalRank === 1 ? '🏆 恭喜获胜！' : '🏁 比赛结束' }}
+                </div>
+                
+                <div class="racing-final-stats">
+                    <div class="racing-final-stat">
+                        <div class="racing-final-stat-label">最终排名</div>
+                        <div class="racing-final-stat-value">{{ raceState.finalRank }}/4</div>
+                    </div>
+                    <div class="racing-final-stat">
+                        <div class="racing-final-stat-label">超越次数</div>
+                        <div class="racing-final-stat-value">{{ raceState.overtakeCount }}</div>
+                    </div>
+                    <div class="racing-final-stat">
+                        <div class="racing-final-stat-label">完成进度</div>
+                        <div class="racing-final-stat-value">{{ Math.round(playerProgress) }}%</div>
+                    </div>
+                    <div class="racing-final-stat">
+                        <div class="racing-final-stat-label">平均速度</div>
+                        <div class="racing-final-stat-value">{{ gameState.wpm || 0 }} WPM</div>
+                    </div>
+                </div>
             </div>
         </div>
     `

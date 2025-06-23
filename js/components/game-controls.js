@@ -1,6 +1,4 @@
 // 游戏控制组件
-const { ref, computed } = Vue;
-
 const GameControls = {
     name: 'GameControls',
     props: {
@@ -9,22 +7,39 @@ const GameControls = {
             required: true
         }
     },
-    emits: ['start-game', 'pause-game', 'reset-game', 'mode-changed'],
+    emits: ['mode-changed', 'start-game', 'pause-game', 'reset-game'],
     setup(props, { emit }) {
+        const { ref, computed, watch, onMounted, onUnmounted } = Vue;
+        
         // 游戏模式配置
         const gameModes = ref([
-            { key: 'classic', label: '经典模式', icon: '📝' },
-            { key: 'words', label: '单词模式', icon: '🔤' },
-            { key: 'racing', label: '赛车追逐', icon: '🏎️' },
-            { key: 'defense', label: '植物防御', icon: '🌱' },
-            { key: 'endless', label: '无尽模式', icon: '♾️' }
+            { key: 'classic', label: '经典模式', icon: '📝', type: 'basic' },
+            { key: 'words', label: '单词模式', icon: '🔤', type: 'basic' },
+            { key: 'racing', label: '赛车追逐', icon: '🏎️', type: 'special' },
+            { key: 'defense', label: '植物防御', icon: '🌱', type: 'special' },
+            { key: 'endless', label: '无尽模式', icon: '♾️', type: 'basic' }
         ]);
         
-        const currentMode = ref('classic');
-        
         // 计算属性
+        const currentMode = computed(() => props.gameState.mode);
+        
+        const currentModeConfig = computed(() => {
+            return gameModes.value.find(mode => mode.key === currentMode.value);
+        });
+        
+        const isBasicMode = computed(() => {
+            return currentModeConfig.value?.type === 'basic';
+        });
+        
+        const isSpecialMode = computed(() => {
+            return currentModeConfig.value?.type === 'special';
+        });
+        
         const startButtonText = computed(() => {
-            return props.gameState.isPlaying ? '游戏中...' : '开始游戏';
+            if (props.gameState.isPlaying) {
+                return '游戏中...';
+            }
+            return '开始游戏';
         });
         
         const pauseButtonText = computed(() => {
@@ -36,19 +51,29 @@ const GameControls = {
         });
         
         const pauseButtonDisabled = computed(() => {
-            return !props.gameState.isPlaying || props.gameState.isCompleted;
+            return !props.gameState.isPlaying;
+        });
+        
+        const showStartButton = computed(() => {
+            // 只有基础模式显示开始按钮，特殊模式由各自组件控制
+            return isBasicMode.value;
+        });
+        
+        const showPauseResetButtons = computed(() => {
+            // 所有模式都显示暂停和重置按钮
+            return true;
         });
         
         // 方法
         const selectMode = (mode) => {
-            if (!props.gameState.isPlaying) {
-                currentMode.value = mode;
-                emit('mode-changed', mode);
-            }
+            if (props.gameState.isPlaying) return;
+            emit('mode-changed', mode);
         };
         
         const startGame = () => {
-            emit('start-game');
+            if (isBasicMode.value) {
+                emit('start-game');
+            }
         };
         
         const pauseGame = () => {
@@ -62,10 +87,15 @@ const GameControls = {
         return {
             gameModes,
             currentMode,
+            currentModeConfig,
+            isBasicMode,
+            isSpecialMode,
             startButtonText,
             pauseButtonText,
             startButtonDisabled,
             pauseButtonDisabled,
+            showStartButton,
+            showPauseResetButtons,
             selectMode,
             startGame,
             pauseGame,
@@ -80,7 +110,11 @@ const GameControls = {
                     v-for="mode in gameModes" 
                     :key="mode.key"
                     class="mode-btn"
-                    :class="{ active: currentMode === mode.key }"
+                    :class="{ 
+                        active: currentMode === mode.key,
+                        'basic-mode': mode.type === 'basic',
+                        'special-mode': mode.type === 'special'
+                    }"
                     :disabled="gameState.isPlaying"
                     @click="selectMode(mode.key)"
                 >
@@ -90,22 +124,30 @@ const GameControls = {
             </div>
             
             <!-- 游戏控制按钮 -->
-            <div class="game-controls">
+            <div class="game-controls" v-if="showStartButton || showPauseResetButtons">
+                <!-- 开始按钮 (仅基础模式显示) -->
                 <button 
+                    v-if="showStartButton"
                     class="btn btn-primary" 
                     :disabled="startButtonDisabled"
                     @click="startGame"
                 >
                     {{ startButtonText }}
                 </button>
+                
+                <!-- 暂停按钮 (所有模式显示) -->
                 <button 
+                    v-if="showPauseResetButtons"
                     class="btn btn-secondary" 
                     :disabled="pauseButtonDisabled"
                     @click="pauseGame"
                 >
                     {{ pauseButtonText }}
                 </button>
+                
+                <!-- 重置按钮 (所有模式显示) -->
                 <button 
+                    v-if="showPauseResetButtons"
                     class="btn btn-secondary" 
                     @click="resetGame"
                 >

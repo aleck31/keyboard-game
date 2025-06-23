@@ -1,6 +1,4 @@
 // 游戏统计组件
-const { ref, computed, watch, onMounted, onUnmounted } = Vue;
-
 const GameStats = {
     name: 'GameStats',
     props: {
@@ -10,6 +8,7 @@ const GameStats = {
         }
     },
     setup(props) {
+        const { ref, computed, watch, onMounted, onUnmounted } = Vue;
         // 响应式数据
         const stats = ref({
             wpm: 0,
@@ -75,34 +74,33 @@ const GameStats = {
         };
     },
     template: `
-        <div class="stats-container">
+        <div class="stats-container">           
+            <!-- 统计面版 -->
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span class="stat-label">CPM</span>
+                    <span class="stat-value">{{ stats.cpm }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">WPM</span>
+                    <span class="stat-value">{{ stats.wpm }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">错误</span>
+                    <span class="stat-value">{{ stats.errors }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">准确率</span>
+                    <span class="stat-value">{{ stats.accuracy }}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">时间</span>
+                    <span class="stat-value">{{ formattedTime }}</span>
+                </div>
+            </div>
             <!-- 进度条 -->
             <div class="progress-container">
                 <div class="progress-bar" :style="{ width: progressWidth }"></div>
-            </div>
-            
-            <!-- 统计数据 -->
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-label">WPM</div>
-                    <div class="stat-value">{{ stats.wpm }}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">CPM</div>
-                    <div class="stat-value">{{ stats.cpm }}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">准确率</div>
-                    <div class="stat-value">{{ stats.accuracy }}%</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">时间</div>
-                    <div class="stat-value">{{ formattedTime }}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">错误</div>
-                    <div class="stat-value">{{ stats.errors }}</div>
-                </div>
             </div>
         </div>
     `

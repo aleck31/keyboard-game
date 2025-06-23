@@ -240,7 +240,7 @@ class GameEngine extends Utils.EventEmitter {
         const longTexts = this.gameData.texts.filter(text => text.length > 200);
         const selectedTexts = longTexts.length > 0 ? longTexts : this.gameData.texts;
         
-        return Utils.getRandomItem(selectedTexts);
+        return Utils.randomChoice(selectedTexts);
     }
     
     // 生成无尽模式文本
