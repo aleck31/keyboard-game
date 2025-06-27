@@ -29,7 +29,6 @@ env/
 ENV/
 env.bak/
 venv.bak/
-uv.lock
 
 # IDE和编辑器
 .vscode/
@@ -135,3 +134,8 @@ coverage.xml
 # 媒体文件（如果很大的话）
 # assets/audio/
 # assets/images/
+
+# Clacky配置文件
+.1024*
+!.1024
+.breakpoints
