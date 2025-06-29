@@ -1,8 +1,3 @@
-/**
- * 游戏引擎
- * 处理游戏核心逻辑和状态管理
- */
-
 class GameEngine extends Utils.EventEmitter {
     constructor() {
         super();
@@ -624,6 +619,18 @@ class GameEngine extends Utils.EventEmitter {
         // 更新当前位置
         this.gameState.currentIndex = input.length;
         
+        // 计算正确和错误字符数
+        let correctChars = 0;
+        let incorrectChars = 0;
+        
+        for (let i = 0; i < input.length; i++) {
+            if (i < currentText.length && input[i] === currentText[i]) {
+                correctChars++;
+            } else {
+                incorrectChars++;
+            }
+        }
+        
         // 检查最后输入的字符
         if (input.length > 0) {
             const lastIndex = input.length - 1;
@@ -648,8 +655,17 @@ class GameEngine extends Utils.EventEmitter {
             }
         }
         
-        // 更新统计
-        this.updateStats();
+        // 更新统计数据
+        const statsData = {
+            totalChars: input.length,
+            correctChars: correctChars,
+            incorrectChars: incorrectChars,
+            currentIndex: this.gameState.currentIndex
+        };
+        
+        if (window.statsManager) {
+            window.statsManager.updateStats(statsData);
+        }
         
         // 更新显示
         this.updateDisplay();
@@ -696,43 +712,50 @@ class GameEngine extends Utils.EventEmitter {
         }
     }
     
-    // 更新统计
-    updateStats() {
-        const currentText = this.gameState.currentText;
-        const userInput = this.gameState.userInput;
-        
-        let correctChars = 0;
-        let incorrectChars = 0;
-        
-        for (let i = 0; i < userInput.length; i++) {
-            if (i < currentText.length && userInput[i] === currentText[i]) {
-                correctChars++;
-            } else {
-                incorrectChars++;
-            }
-        }
-        
-        const statsData = {
-            totalChars: userInput.length,
-            correctChars: correctChars,
-            incorrectChars: incorrectChars,
-            currentIndex: this.gameState.currentIndex
-        };
-        
-        if (window.statsManager) {
-            window.statsManager.updateStats(statsData);
-        }
-    }
-    
     // 更新显示
     updateDisplay() {
         if (window.uiManager) {
-            window.uiManager.displayText(
-                this.gameState.currentText,
+            const highlightedText = this.renderTextWithHighlight();
+            window.uiManager.displayTextWithHighlight(
+                highlightedText,
                 this.gameState.currentIndex,
                 this.gameState.userInput
             );
         }
+    }
+    
+    // 渲染带高亮的文本
+    renderTextWithHighlight() {
+        const currentText = this.gameState.currentText;
+        const userInput = this.gameState.userInput;
+        const currentIndex = this.gameState.currentIndex;
+        
+        if (!currentText) return '';
+        
+        let highlightedHTML = '';
+        
+        for (let i = 0; i < currentText.length; i++) {
+            const char = currentText[i];
+            let cssClass = 'char-pending';
+            
+            if (i < userInput.length) {
+                // 已输入的字符
+                if (userInput[i] === char) {
+                    cssClass = 'char-correct';
+                } else {
+                    cssClass = 'char-incorrect';
+                }
+            } else if (i === currentIndex) {
+                // 当前输入位置
+                cssClass = 'char-current';
+            }
+            
+            // 处理特殊字符显示
+            const displayChar = char === ' ' ? '&nbsp;' : char === '\n' ? '<br>' : char;
+            highlightedHTML += `<span class="${cssClass}">${displayChar}</span>`;
+        }
+        
+        return highlightedHTML;
     }
     
     // 更新UI
@@ -765,9 +788,6 @@ class GameEngine extends Utils.EventEmitter {
                         return;
                     }
                 }
-                
-                // 更新统计显示
-                this.updateStats();
             }
         }, 100); // 每100ms更新一次
     }
