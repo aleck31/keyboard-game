@@ -8,33 +8,42 @@ const GameStats = {
         }
     },
     setup(props) {
-        const { ref, computed, watch, onMounted, onUnmounted } = Vue;
+        const { ref, computed, watch, onMounted, onUnmounted, reactive } = Vue;
+        
         // 响应式数据
-        const stats = ref({
+        const stats = reactive({
             wpm: 0,
             cpm: 0,
             accuracy: 100,
             timeElapsed: 0,
             errors: 0,
             currentIndex: 0,
-            totalChars: 0
+            totalChars: 0,
+            correctChars: 0,
+            incorrectChars: 0,
+            progressPercentage: 0,
+            lastUpdateTime: Date.now()
         });
         
         // 计算属性
         const formattedTime = computed(() => {
-            const time = stats.value.timeElapsed;
+            const time = stats.timeElapsed;
             const minutes = Math.floor(time / 60);
             const seconds = time % 60;
             return `${minutes}:${seconds.toString().padStart(2, '0')}`;
         });
         
         const progressPercentage = computed(() => {
-            if (props.gameState.mode === 'words' && props.gameState.totalWords > 0) {
+            // 不同游戏模式下的进度计算
+            if (props.gameState.mode === 'endless') {
+                // 无尽模式不显示进度，或显示固定的进度动画
+                return 0; 
+            } else if (props.gameState.mode === 'words' && props.gameState.totalWords > 0) {
                 // 单词模式：基于完成的单词数
-                return (props.gameState.wordsCompleted / props.gameState.totalWords) * 100;
-            } else if (stats.value.currentIndex !== undefined && stats.value.totalChars > 0) {
-                // 其他模式：基于字符数，但只有在有有效数据时才计算
-                return (stats.value.currentIndex / stats.value.totalChars) * 100;
+                return Math.min(100, Math.round((props.gameState.wordsCompleted / props.gameState.totalWords) * 100));
+            } else if (props.gameState.currentText && props.gameState.currentText.length > 0) {
+                // 经典模式：基于当前文本进度
+                return Math.min(100, Math.round((stats.currentIndex / props.gameState.currentText.length) * 100));
             }
             return 0;
         });
@@ -43,26 +52,96 @@ const GameStats = {
             return Math.min(Math.max(progressPercentage.value, 0), 100) + '%';
         });
         
-        // 更新统计数据
+        const formattedWPM = computed(() => {
+            return Math.round(stats.wpm);
+        });
+        
+        const formattedCPM = computed(() => {
+            return Math.round(stats.cpm);
+        });
+        
+        const formattedAccuracy = computed(() => {
+            // 确保准确率在0-100范围内，并格式化为最多一位小数
+            return Math.min(100, Math.max(0, stats.accuracy)).toFixed(1);
+        });
+        
+        // 更新统计数据 - 增加更新频率和数据验证
         const updateStats = () => {
-            if (window.statsManager) {
+            if (!window.statsManager) return;
+            
+            try {
                 const currentStats = window.statsManager.getCurrentStats();
-                if (currentStats) {
-                    stats.value = { ...currentStats };
+                if (currentStats && typeof currentStats === 'object') {
+                    // 更新基础统计数据，添加数据验证
+                    stats.wpm = isFinite(currentStats.wpm) ? Math.max(0, currentStats.wpm) : 0;
+                    stats.cpm = isFinite(currentStats.cpm) ? Math.max(0, currentStats.cpm) : 0;
+                    stats.accuracy = isFinite(currentStats.accuracy) ? 
+                        Math.min(100, Math.max(0, currentStats.accuracy)) : 100;
+                    stats.timeElapsed = isFinite(currentStats.timeElapsed) ? 
+                        Math.max(0, currentStats.timeElapsed) : 0;
+                    stats.errors = isFinite(currentStats.errors) ? Math.max(0, currentStats.errors) : 0;
+                    stats.currentIndex = isFinite(currentStats.currentIndex) ? 
+                        Math.max(0, currentStats.currentIndex) : 0;
+                    stats.totalChars = isFinite(currentStats.totalChars) ? 
+                        Math.max(0, currentStats.totalChars) : 0;
+                    stats.correctChars = isFinite(currentStats.correctChars) ? 
+                        Math.max(0, currentStats.correctChars) : 0;
+                    stats.incorrectChars = isFinite(currentStats.incorrectChars) ? 
+                        Math.max(0, currentStats.incorrectChars) : 0;
+                    
+                    // 使用 statsManager 计算的进度
+                    if (typeof currentStats.progressPercentage === 'number') {
+                        stats.progressPercentage = Math.min(100, Math.max(0, currentStats.progressPercentage));
+                    }
+                    
+                    // 记录更新时间
+                    stats.lastUpdateTime = Date.now();
                 }
+            } catch (err) {
+                console.error('Error updating stats:', err);
             }
         };
         
-        // 定时器
+        // 游戏状态变化监听
+        watch(() => props.gameState.isPlaying, (isPlaying) => {
+            if (isPlaying) {
+                // 游戏开始时重置统计数据
+                stats.wpm = 0;
+                stats.cpm = 0;
+                stats.accuracy = 100;
+                stats.errors = 0;
+            }
+        });
+        
+        // 实时模式监听，确保在不同模式下正确显示统计
+        watch(() => props.gameState.mode, () => {
+            updateStats(); // 模式变化时立即更新统计
+        });
+        
+        // 定时器 - 提高更新频率到每30ms更新一次
         let updateInterval = null;
         
         onMounted(() => {
-            updateInterval = setInterval(updateStats, 100);
+            // 初始化更新
+            updateStats();
+            
+            // 设置更频繁的更新以获得更平滑的显示体验
+            updateInterval = setInterval(updateStats, 30);
+            
+            // 添加事件监听
+            if (window.statsManager) {
+                window.statsManager.on('statsUpdated', updateStats);
+            }
         });
         
         onUnmounted(() => {
             if (updateInterval) {
                 clearInterval(updateInterval);
+            }
+            
+            // 移除事件监听
+            if (window.statsManager) {
+                window.statsManager.off('statsUpdated', updateStats);
             }
         });
         
@@ -70,7 +149,10 @@ const GameStats = {
             stats,
             formattedTime,
             progressWidth,
-            progressPercentage
+            progressPercentage,
+            formattedWPM,
+            formattedCPM,
+            formattedAccuracy
         };
     },
     template: `
@@ -79,11 +161,11 @@ const GameStats = {
             <div class="stats-panel">
                 <div class="stat-item">
                     <span class="stat-label">CPM</span>
-                    <span class="stat-value">{{ stats.cpm }}</span>
+                    <span class="stat-value">{{ formattedCPM }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">WPM</span>
-                    <span class="stat-value">{{ stats.wpm }}</span>
+                    <span class="stat-value">{{ formattedWPM }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">错误</span>
@@ -91,7 +173,7 @@ const GameStats = {
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">准确率</span>
-                    <span class="stat-value">{{ stats.accuracy }}%</span>
+                    <span class="stat-value">{{ formattedAccuracy }}%</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">时间</span>
@@ -99,7 +181,7 @@ const GameStats = {
                 </div>
             </div>
             <!-- 进度条 -->
-            <div class="progress-container">
+            <div class="progress-container" :title="\`进度: \${Math.round(progressPercentage)}%\`">
                 <div class="progress-bar" :style="{ width: progressWidth }"></div>
             </div>
         </div>

@@ -428,7 +428,7 @@ body {
 
 .text-content {
     font-size: 1.2rem;
-    line-height: 1.8;
+    line-height: 2;
     color: var(--text-color);
     padding: 20px;
     background: var(--bg-secondary);
@@ -441,31 +441,78 @@ body {
     white-space: pre-wrap;
     overflow-wrap: break-word;
     hyphens: auto;
+    letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
 }
 
 /* 文本状态样式 */
 .char-correct {
-    background-color: var(--success-color);
+    background-color: #22c55e;
     color: white;
-    border-radius: 2px;
+    border-radius: 3px;
+    padding: 1px 2px;
+    margin: 0 1px;
 }
 
 .char-incorrect {
-    background-color: var(--error-color);
+    background-color: #ef4444;
     color: white;
-    border-radius: 2px;
+    border-radius: 3px;
+    padding: 1px 2px;
+    margin: 0 1px;
+    position: relative;
+}
+
+.char-incorrect::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #dc2626;
+    border-radius: 1px;
 }
 
 .char-current {
-    background-color: var(--primary-color);
+    background-color: #3b82f6;
     color: white;
-    border-radius: 2px;
+    border-radius: 3px;
+    padding: 1px 2px;
+    margin: 0 1px;
+    border: 2px solid #1d4ed8;
     animation: blink 1s infinite;
+    position: relative;
+}
+
+.char-current::before {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background-color: #1d4ed8;
+    animation: cursor-blink 1s infinite;
+}
+
+.char-pending {
+    color: var(--text-color);
+    opacity: 0.7;
+    background-color: transparent;
+    padding: 1px 2px;
+    margin: 0 1px;
 }
 
 @keyframes blink {
     0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+    51%, 100% { opacity: 0.6; }
+}
+
+@keyframes cursor-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
 }
 
 /* 输入区域 */

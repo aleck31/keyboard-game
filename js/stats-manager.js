@@ -62,30 +62,50 @@ class StatsManager extends Utils.EventEmitter {
     
     // 更新当前统计
     updateStats(data) {
-        const now = Date.now();
-        
-        // 更新基础数据
-        Object.assign(this.currentStats, data);
-        
-        // 计算时间
-        if (this.currentStats.startTime) {
-            this.currentStats.timeElapsed = Math.floor((now - this.currentStats.startTime) / 1000);
+        // 数据验证和边界条件处理
+        if (!data || typeof data !== 'object') {
+            console.warn('Invalid stats data provided');
+            return;
         }
         
-        // 计算WPM
+        const now = Date.now();
+        
+        // 验证和更新基础数据
+        if (typeof data.totalChars === 'number' && data.totalChars >= 0) {
+            this.currentStats.totalChars = data.totalChars;
+        }
+        
+        if (typeof data.correctChars === 'number' && data.correctChars >= 0) {
+            this.currentStats.correctChars = Math.min(data.correctChars, this.currentStats.totalChars);
+        }
+        
+        if (typeof data.incorrectChars === 'number' && data.incorrectChars >= 0) {
+            this.currentStats.incorrectChars = data.incorrectChars;
+            this.currentStats.errors = data.incorrectChars;
+        }
+        
+        if (typeof data.currentIndex === 'number' && data.currentIndex >= 0) {
+            this.currentStats.currentIndex = data.currentIndex;
+        }
+        
+        // 计算时间（实时更新）
+        if (this.currentStats.startTime) {
+            this.currentStats.timeElapsed = Math.max(0, Math.floor((now - this.currentStats.startTime) / 1000));
+        }
+        
+        // 实时计算所有指标
         this.calculateWPM();
-        
-        // 计算CPM
         this.calculateCPM();
-        
-        // 计算准确率
         this.calculateAccuracy();
         
-        // 记录WPM历史
+        // 记录WPM历史（更频繁的记录）
         this.recordWPMHistory();
         
-        // 发射更新事件
-        this.emit('statsUpdated', this.currentStats);
+        // 实时验证数据一致性
+        this.validateStatsConsistency();
+        
+        // 发射更新事件（包含完整的统计数据）
+        this.emit('statsUpdated', this.getCurrentStats());
     }
     
     // 计算WPM
@@ -141,35 +161,127 @@ class StatsManager extends Utils.EventEmitter {
         );
     }
     
-    // 记录WPM历史
-    recordWPMHistory() {
-        const interval = 5; // 每5秒记录一次
-        if (this.currentStats.timeElapsed % interval === 0 && this.currentStats.timeElapsed > 0) {
-            this.currentStats.wpmHistory.push({
-                time: this.currentStats.timeElapsed,
-                wpm: this.currentStats.wpm,
-                cpm: this.currentStats.cpm,
-                accuracy: this.currentStats.accuracy
-            });
+    // 验证统计数据一致性
+    validateStatsConsistency() {
+        // 确保数字字段的有效性
+        this.currentStats.totalChars = Math.max(0, this.currentStats.totalChars || 0);
+        this.currentStats.correctChars = Math.max(0, Math.min(this.currentStats.correctChars || 0, this.currentStats.totalChars));
+        this.currentStats.incorrectChars = Math.max(0, this.currentStats.incorrectChars || 0);
+        this.currentStats.currentIndex = Math.max(0, this.currentStats.currentIndex || 0);
+        
+        // 确保时间相关字段的有效性
+        this.currentStats.timeElapsed = Math.max(0, this.currentStats.timeElapsed || 0);
+        
+        // 确保WPM和CPM不为负数或无穷大
+        this.currentStats.wpm = Math.max(0, isFinite(this.currentStats.wpm) ? this.currentStats.wpm : 0);
+        this.currentStats.cpm = Math.max(0, isFinite(this.currentStats.cpm) ? this.currentStats.cpm : 0);
+        
+        // 确保准确率在0-100范围内
+        this.currentStats.accuracy = Math.max(0, Math.min(100, this.currentStats.accuracy || 100));
+        
+        // 验证错误数量一致性
+        if (this.currentStats.incorrectChars !== this.currentStats.errors) {
+            this.currentStats.errors = this.currentStats.incorrectChars;
         }
     }
     
-    // 记录错误位置
+    // 计算实时WPM（更平滑的计算）
+    calculateRealTimeWPM() {
+        if (!this.currentStats.startTime || this.currentStats.timeElapsed === 0) {
+            return 0;
+        }
+        
+        const timeInMinutes = this.currentStats.timeElapsed / 60;
+        const words = this.currentStats.correctChars / 5;
+        return Math.round(words / timeInMinutes) || 0;
+    }
+    
+    // 计算实时CPM
+    calculateRealTimeCPM() {
+        if (!this.currentStats.startTime || this.currentStats.timeElapsed === 0) {
+            return 0;
+        }
+        
+        const timeInMinutes = this.currentStats.timeElapsed / 60;
+        return Math.round(this.currentStats.correctChars / timeInMinutes) || 0;
+    }
+    
+    // 计算实时准确率
+    calculateRealTimeAccuracy() {
+        if (this.currentStats.totalChars === 0) {
+            return 100;
+        }
+        
+        return Math.round((this.currentStats.correctChars / this.currentStats.totalChars) * 100);
+    }
+    
+    // 获取目标文本长度（用于进度计算）
+    getTargetTextLength() {
+        // 从游戏引擎或配置中获取目标文本长度
+        if (window.gameEngine && window.gameEngine.gameState && window.gameEngine.gameState.currentText) {
+            return window.gameEngine.gameState.currentText.length;
+        }
+        return 0;
+    }
+    
+    // 记录WPM历史（更频繁的记录）
+    recordWPMHistory() {
+        const interval = 2; // 每2秒记录一次，提高更新频率
+        if (this.currentStats.timeElapsed > 0 && this.currentStats.timeElapsed % interval === 0) {
+            // 避免重复记录相同时间点的数据
+            const lastEntry = this.currentStats.wpmHistory[this.currentStats.wpmHistory.length - 1];
+            if (!lastEntry || lastEntry.time !== this.currentStats.timeElapsed) {
+                this.currentStats.wpmHistory.push({
+                    time: this.currentStats.timeElapsed,
+                    wpm: this.currentStats.wpm,
+                    cpm: this.currentStats.cpm,
+                    accuracy: this.currentStats.accuracy,
+                    correctChars: this.currentStats.correctChars,
+                    totalChars: this.currentStats.totalChars
+                });
+                
+                // 限制历史记录长度，避免内存溢出
+                if (this.currentStats.wpmHistory.length > 300) {
+                    this.currentStats.wpmHistory = this.currentStats.wpmHistory.slice(-200);
+                }
+            }
+        }
+    }
+    
+    // 增强的错误记录
     recordError(position, expectedChar, actualChar) {
+        // 验证输入参数
+        if (typeof position !== 'number' || position < 0) {
+            console.warn('Invalid error position:', position);
+            return;
+        }
+        
         this.currentStats.errors++;
-        this.currentStats.errorPositions.push({
+        this.currentStats.incorrectChars++;
+        
+        const errorRecord = {
             position,
-            expected: expectedChar,
-            actual: actualChar,
-            timestamp: Date.now() - this.currentStats.startTime
+            expected: expectedChar || '',
+            actual: actualChar || '',
+            timestamp: Date.now() - (this.currentStats.startTime || Date.now())
+        };
+        
+        this.currentStats.errorPositions.push(errorRecord);
+        
+        // 限制错误记录数量
+        if (this.currentStats.errorPositions.length > 500) {
+            this.currentStats.errorPositions = this.currentStats.errorPositions.slice(-400);
+        }
+        
+        // 实时发射错误事件
+        this.emit('errorRecorded', {
+            ...errorRecord,
+            totalErrors: this.currentStats.errors,
+            currentAccuracy: this.calculateRealTimeAccuracy()
         });
         
-        this.emit('errorRecorded', {
-            position,
-            expected: expectedChar,
-            actual: actualChar,
-            totalErrors: this.currentStats.errors
-        });
+        // 触发统计更新
+        this.emit('statsUpdated', this.getCurrentStats());
     }
     
     // 记录退格键
@@ -497,7 +609,27 @@ class StatsManager extends Utils.EventEmitter {
     
     // 获取当前统计
     getCurrentStats() {
-        return { ...this.currentStats };
+        // 返回深拷贝以避免外部修改
+        const stats = JSON.parse(JSON.stringify(this.currentStats));
+        
+        // 实时计算进度百分比
+        if (this.currentStats.mode === 'endless') {
+            stats.progressPercentage = 0; // 无尽模式无进度
+        } else {
+            const targetLength = this.getTargetTextLength();
+            if (targetLength > 0) {
+                stats.progressPercentage = Math.min(100, Math.round((this.currentStats.currentIndex / targetLength) * 100));
+            } else {
+                stats.progressPercentage = 0;
+            }
+        }
+        
+        // 添加实时计算的额外指标
+        stats.realTimeWPM = this.calculateRealTimeWPM();
+        stats.realTimeCPM = this.calculateRealTimeCPM();
+        stats.realTimeAccuracy = this.calculateRealTimeAccuracy();
+        
+        return stats;
     }
     
     // 获取历史记录

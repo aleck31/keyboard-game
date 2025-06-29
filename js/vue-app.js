@@ -23,6 +23,9 @@ const TypingGameApp = {
             currentText: '',
             userInput: '',
             currentIndex: 0,
+            // Text highlighting display data
+            highlightedText: '',
+            renderKey: 0,
             // 统计数据
             wpm: 0,
             cpm: 0,
@@ -35,6 +38,19 @@ const TypingGameApp = {
             totalWords: 0,
             wordsCompleted: 0,
             wordsList: []
+        });
+        
+        // Game engine and stats manager references
+        const gameEngine = ref(null);
+        const statsManager = ref(null);
+        const realTimeStats = reactive({
+            wpm: 0,
+            cpm: 0,
+            accuracy: 100,
+            errors: 0,
+            correctChars: 0,
+            totalChars: 0,
+            progressPercentage: 0
         });
         
         // UI状态
@@ -75,6 +91,21 @@ const TypingGameApp = {
             if (!gameState.startTime) return 0;
             const endTime = gameState.endTime || Date.now();
             return Math.floor((endTime - gameState.startTime) / 1000);
+        });
+        
+        // Watch for input changes to update display
+        watch(() => gameState.userInput, (newInput) => {
+            if (gameState.isPlaying && !gameState.isPaused) {
+                handleTextInput({ target: { value: newInput } });
+            }
+        });
+
+        // Watch for mode changes to reinitialize
+        watch(() => gameState.mode, (newMode) => {
+            if (gameEngine.value) {
+                gameEngine.value.setMode(newMode);
+            }
+            updateTextDisplay();
         });
         
         // 方法
@@ -151,15 +182,29 @@ const TypingGameApp = {
                 gameState.isCompleted = false;
                 gameState.startTime = Date.now();
                 gameState.endTime = null;
+                gameState.userInput = '';
+                gameState.currentIndex = 0;
+                
+                // Initialize game engine and stats manager
+                if (gameEngine.value) {
+                    gameEngine.value.startGame();
+                    gameEngine.value.setCurrentText(gameState.currentText);
+                }
+                
+                if (statsManager.value) {
+                    statsManager.value.startSession(gameState.mode);
+                }
                 
                 // 启用输入
                 const textInput = document.getElementById('textInput');
                 if (textInput) {
                     textInput.disabled = false;
                     textInput.focus();
+                    textInput.value = '';
                 }
                 
-                // 启动计时器
+                // Start real-time updates
+                startRealTimeUpdates();
                 startGameTimer();
                 
                 showNotification('游戏开始！', 'success');
@@ -212,10 +257,62 @@ const TypingGameApp = {
             gameState.totalWords = 0;
             gameState.wordsCompleted = 0;
             gameState.wordsList = [];
+            gameState.highlightedText = '';
+            gameState.renderKey = 0;
+        };
+
+        const handleTextInput = (event) => {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const inputValue = event.target.value;
+            gameState.userInput = inputValue;
+            gameState.currentIndex = inputValue.length;
+            
+            // Process input through game engine for character-level analysis
+            if (gameEngine.value) {
+                gameEngine.value.processInput(inputValue);
+            }
+            
+            // Force re-render of highlighted text
+            gameState.renderKey++;
+            
+            // Check for completion
+            checkGameCompletion();
+        };
+
+        const checkGameCompletion = () => {
+            if (gameState.mode === 'endless') return;
+            
+            if (gameState.userInput.length >= gameState.currentText.length ||
+                (gameState.mode === 'words' && gameState.wordsCompleted >= gameState.totalWords)) {
+                endGame();
+            }
+        };
+
+        const updateTextDisplay = () => {
+            if (gameEngine.value && gameEngine.value.renderTextWithHighlight) {
+                gameState.highlightedText = gameEngine.value.renderTextWithHighlight();
+            }
         };
         
         const loadBasicModeData = async () => {
             try {
+                // Initialize game engine connection
+                if (window.gameEngine) {
+                    gameEngine.value = window.gameEngine;
+                    gameEngine.value.setMode(gameState.mode);
+                }
+                
+                // Initialize stats manager connection
+                if (window.statsManager) {
+                    statsManager.value = window.statsManager;
+                    
+                    // Listen to stats updates
+                    statsManager.value.on('statsUpdated', (stats) => {
+                        syncWithStatsManager();
+                    });
+                }
+                
                 if (gameState.mode === 'classic' || gameState.mode === 'endless') {
                     // 加载文本数据
                     const response = await fetch('/api/texts');
@@ -227,8 +324,12 @@ const TypingGameApp = {
                     const words = await response.json();
                     gameState.wordsList = words.slice(0, 50); // 默认50个单词
                     gameState.totalWords = gameState.wordsList.length;
-                    gameState.currentText = gameState.wordsList[0] || '';
+                    gameState.currentText = gameState.wordsList.join(' ');
                 }
+                
+                // Initialize text display
+                updateTextDisplay();
+                
             } catch (error) {
                 console.error('加载游戏数据失败:', error);
                 showNotification('加载游戏数据失败', 'error');
@@ -265,6 +366,42 @@ const TypingGameApp = {
             gameState.accuracy = gameState.totalChars > 0 ? 
                 Math.round((gameState.correctChars / gameState.totalChars) * 100) : 100;
         };
+
+        const syncWithStatsManager = () => {
+            if (statsManager.value) {
+                const currentStats = statsManager.value.getCurrentStats();
+                Object.assign(realTimeStats, {
+                    wpm: currentStats.wpm || 0,
+                    cpm: currentStats.cpm || 0,
+                    accuracy: currentStats.accuracy || 100,
+                    errors: currentStats.errors || 0,
+                    correctChars: currentStats.correctChars || 0,
+                    totalChars: currentStats.totalChars || 0,
+                    progressPercentage: currentStats.progressPercentage || 0
+                });
+                
+                // Update game state for UI display
+                gameState.wpm = realTimeStats.wpm;
+                gameState.cpm = realTimeStats.cpm;
+                gameState.accuracy = realTimeStats.accuracy;
+                gameState.errors = realTimeStats.errors;
+                gameState.correctChars = realTimeStats.correctChars;
+                gameState.totalChars = realTimeStats.totalChars;
+            }
+        };
+
+        const startRealTimeUpdates = () => {
+            const updateInterval = setInterval(() => {
+                if (!gameState.isPlaying || gameState.isPaused) {
+                    clearInterval(updateInterval);
+                    return;
+                }
+                
+                syncWithStatsManager();
+                updateTextDisplay();
+                
+            }, 50); // Update every 50ms for smooth real-time experience
+        };
         
         const endGame = () => {
             gameState.isPlaying = false;
@@ -273,6 +410,9 @@ const TypingGameApp = {
             
             showNotification('游戏结束！', 'info');
             uiState.showResults = true;
+            
+            // Final sync with stats manager
+            syncWithStatsManager();
         };
         
         const showNotification = (message, type = 'info') => {
@@ -318,6 +458,7 @@ const TypingGameApp = {
             // 状态
             gameState,
             uiState,
+            realTimeStats,
             
             // 计算属性
             isBasicMode,
@@ -333,7 +474,10 @@ const TypingGameApp = {
             handlePauseGame,
             handleResetGame,
             handleDefenseGameOver,
-            handleRaceFinished
+            handleRaceFinished,
+            handleTextInput,
+            updateTextDisplay,
+            syncWithStatsManager
         };
     },
     template: `
@@ -385,8 +529,9 @@ const TypingGameApp = {
             <div v-if="isBasicMode" class="basic-game-area">
                 <!-- 文本显示区域 -->
                 <div class="text-display">
-                    <div class="text-content">
-                        {{ gameState.currentText || '点击开始按钮开始游戏...' }}
+                    <div class="text-content" 
+                         v-html="gameState.highlightedText || (gameState.currentText || '点击开始按钮开始游戏...')"
+                         :key="gameState.renderKey">
                     </div>
                 </div>
                 
@@ -398,6 +543,7 @@ const TypingGameApp = {
                         placeholder="在这里输入文本..."
                         :disabled="!gameState.isPlaying"
                         v-model="gameState.userInput"
+                        @input="handleTextInput"
                     ></textarea>
                 </div>
             </div>
