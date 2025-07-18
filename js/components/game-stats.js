@@ -35,10 +35,7 @@ const GameStats = {
         
         const progressPercentage = computed(() => {
             // 不同游戏模式下的进度计算
-            if (props.gameState.mode === 'endless') {
-                // 无尽模式不显示进度，或显示固定的进度动画
-                return 0; 
-            } else if (props.gameState.mode === 'words' && props.gameState.totalWords > 0) {
+            if (props.gameState.mode === 'words' && props.gameState.totalWords > 0) {
                 // 单词模式：基于完成的单词数
                 return Math.min(100, Math.round((props.gameState.wordsCompleted / props.gameState.totalWords) * 100));
             } else if (props.gameState.currentText && props.gameState.currentText.length > 0) {

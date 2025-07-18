@@ -20,8 +20,15 @@ class AudioManager extends Utils.EventEmitter {
     
     async init() {
         try {
-            // 初始化Web Audio API
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // 初始化Web Audio API - 使用延迟创建的方式，等待用户交互
+            // 创建一个暂停状态的音频上下文避免浏览器自动播放策略警告
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioContextClass({ latencyHint: 'interactive', sampleRate: 44100 });
+            
+            // 立即暂停音频上下文，等待用户交互后恢复
+            if (this.audioContext.state === 'running') {
+                await this.audioContext.suspend();
+            }
             
             // 创建音量控制节点
             this.musicGainNode = this.audioContext.createGain();
@@ -38,6 +45,10 @@ class AudioManager extends Utils.EventEmitter {
             
             // 从本地存储加载设置
             this.loadSettings();
+            
+            // 添加全局点击监听器来恢复音频上下文
+            document.addEventListener('click', () => this.resumeAudioContext(), { once: true });
+            document.addEventListener('keydown', () => this.resumeAudioContext(), { once: true });
             
             console.log('音频管理器初始化成功');
         } catch (error) {

@@ -3,7 +3,7 @@
  * 只保留必要的初始化和Vue应用启动
  */
 
-class TypingGameApp {
+class GameAppController {
     constructor() {
         this.isInitialized = false;
         this.init();
@@ -91,15 +91,23 @@ class TypingGameApp {
     
     // 显示欢迎信息
     showWelcomeMessage() {
-        // 触发Vue应用的通知
+        // 使用GameStore显示通知
         setTimeout(() => {
-            const event = new CustomEvent('app-notification', {
-                detail: {
-                    message: '欢迎来到键盘打字竞速游戏！选择模式开始练习吧 🎮',
-                    type: 'info'
-                }
-            });
-            document.dispatchEvent(event);
+            if (window.gameStore) {
+                window.gameStore.actions.showNotification(
+                    '欢迎来到键盘打字竞速游戏！选择模式开始练习吧 🎮',
+                    'info'
+                );
+            } else {
+                // 后备方法：使用自定义事件
+                const event = new CustomEvent('app-notification', {
+                    detail: {
+                        message: '欢迎来到键盘打字竞速游戏！选择模式开始练习吧 🎮',
+                        type: 'info'
+                    }
+                });
+                document.dispatchEvent(event);
+            }
         }, 1000);
         
         // 检查是否是首次访问
@@ -124,13 +132,20 @@ class TypingGameApp {
         
         const showNextStep = () => {
             if (currentStep < tutorialSteps.length) {
-                const event = new CustomEvent('app-notification', {
-                    detail: {
-                        message: tutorialSteps[currentStep],
-                        type: 'info'
-                    }
-                });
-                document.dispatchEvent(event);
+                if (window.gameStore) {
+                    window.gameStore.actions.showNotification(
+                        tutorialSteps[currentStep],
+                        'info'
+                    );
+                } else {
+                    const event = new CustomEvent('app-notification', {
+                        detail: {
+                            message: tutorialSteps[currentStep],
+                            type: 'info'
+                        }
+                    });
+                    document.dispatchEvent(event);
+                }
                 currentStep++;
                 setTimeout(showNextStep, 3500);
             }
@@ -187,7 +202,7 @@ class TypingGameApp {
 }
 
 // 创建并启动应用
-const typingGameApp = new TypingGameApp();
+const typingGameApp = new GameAppController();
 
 // 将应用实例暴露到全局
 window.typingGameApp = typingGameApp;

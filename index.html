@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/vue-components.css">
     <link rel="stylesheet" href="css/defense-mode.css">
     <link rel="stylesheet" href="css/racing-mode.css">
+    <link rel="stylesheet" href="css/mode-indicator.css">
     <!-- Vue.js 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
@@ -38,33 +39,15 @@
 
         <!-- Vue App Container -->
         <div id="vue-app">
-            <!-- Vue组件将在这里渲染,包括: -->
-                <!-- 游戏模式选择 -->
-                <!-- 统计面板 -->
-                <!-- 游戏区域 -->
-            <!-- 文本显示区域 -->
-            <div class="text-display" id="textDisplay">
-                <div class="text-content" id="textContent">
-                    点击开始按钮或直接开始输入来开始游戏...
-                </div>
-            </div>
-
-            <!-- 输入区域 -->
-            <div class="input-area">
-                <textarea 
-                    id="textInput" 
-                    class="text-input" 
-                    placeholder="在这里输入文本..."
-                    disabled
-                ></textarea>
-            </div>
-
-            <!-- 游戏控制按钮 -->
-            <div class="game-controls">
-                <button class="btn btn-primary" id="startBtn">开始游戏</button>
-                <button class="btn btn-secondary" id="pauseBtn" disabled>暂停</button>
-                <button class="btn btn-secondary" id="resetBtn">结束游戏</button>
-            </div>
+            <!-- Vue组件将在这里渲染，包括所有游戏功能 -->
+            <!-- 核心游戏界面已经仅在vue-app.js中定义，包括：
+                - 游戏模式选择
+                - 统计面板
+                - 游戏区域
+                - 文本显示区域
+                - 输入区域
+                - 游戏控制按钮
+            -->
         </div>
 
         <!-- 结果面板/模态框 -->
@@ -87,7 +70,7 @@
                 <!-- 基础模式设置 -->
                 <div class="setting-section">
                     <h4>🎯 基础模式设置</h4>
-                    <p class="setting-desc">适用于经典模式、单词模式和无尽模式</p>
+                    <p class="setting-desc">适用于经典模式、单词模式</p>
                     
                     <div class="setting-group">
                         <label for="difficultySelect">游戏难度:</label>
@@ -162,9 +145,17 @@
 
     <!-- JavaScript文件 -->
     <script src="js/utils.js"></script>
+    
+    <!-- 优化模块 (高优先级) -->
+    <script src="js/utils/error-handler.js"></script>
+    <script src="js/utils/performance-monitor.js"></script>
+    <script src="js/stores/game-store.js"></script>
+    
+    <!-- 核心模块 -->
     <script src="js/api-client.js"></script>
     <script src="js/audio-manager.js"></script>
     <script src="js/stats-manager.js"></script>
+    <script src="js/ui-manager.js"></script>
     <script src="js/game-engine.js"></script>
     <script src="js/defense-engine.js"></script>
     
@@ -180,15 +171,5 @@
     
     <!-- 主应用 -->
     <script src="js/main.js"></script>
-    
-    <!-- 初始化Vue应用 -->
-    <script>
-        // 在所有脚本加载完成后初始化Vue应用
-        window.addEventListener('load', () => {
-            if (window.initVueApp) {
-                window.initVueApp();
-            }
-        });
-    </script>
 </body>
 </html>

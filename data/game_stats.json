@@ -30,5 +30,37 @@
     "errors": 578,
     "mode": "endless",
     "timestamp": "2025-06-08T14:50:39.874609"
+  },
+  {
+    "wpm": 0.0,
+    "accuracy": 100.0,
+    "time_taken": 5,
+    "errors": 0,
+    "mode": "classic",
+    "timestamp": "2025-07-18T10:29:34.380063"
+  },
+  {
+    "wpm": 41.0,
+    "accuracy": 99.0,
+    "time_taken": 29,
+    "errors": 1,
+    "mode": "classic",
+    "timestamp": "2025-07-18T12:37:33.346715"
+  },
+  {
+    "wpm": 47.0,
+    "accuracy": 99.0,
+    "time_taken": 35,
+    "errors": 1,
+    "mode": "classic",
+    "timestamp": "2025-07-18T12:55:26.596063"
+  },
+  {
+    "wpm": 33.0,
+    "accuracy": 96.0,
+    "time_taken": 39,
+    "errors": 4,
+    "mode": "endless",
+    "timestamp": "2025-07-18T12:58:21.134769"
   }
 ]

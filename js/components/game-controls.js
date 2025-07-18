@@ -9,15 +9,14 @@ const GameControls = {
     },
     emits: ['mode-changed', 'start-game', 'pause-game', 'reset-game'],
     setup(props, { emit }) {
-        const { ref, computed, watch, onMounted, onUnmounted } = Vue;
+        const { ref, computed } = Vue;
         
         // 游戏模式配置
         const gameModes = ref([
             { key: 'classic', label: '经典模式', icon: '📝', type: 'basic' },
             { key: 'words', label: '单词模式', icon: '🔤', type: 'basic' },
             { key: 'racing', label: '赛车追逐', icon: '🏎️', type: 'special' },
-            { key: 'defense', label: '植物防御', icon: '🌱', type: 'special' },
-            { key: 'endless', label: '无尽模式', icon: '♾️', type: 'basic' }
+            { key: 'defense', label: '植物防御', icon: '🌱', type: 'special' }
         ]);
         
         // 计算属性
