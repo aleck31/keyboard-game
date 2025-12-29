@@ -103,6 +103,17 @@ const DefenseGame = {
             return !gameState.isPlaying;
         });
         
+        // 时间统计
+        const startTime = ref(null);
+        const elapsedTime = ref(0);
+        let timeInterval = null;
+        
+        const formattedTime = computed(() => {
+            const minutes = Math.floor(elapsedTime.value / 60);
+            const seconds = elapsedTime.value % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+        
         // 方法
         const selectDifficulty = (difficulty) => {
             if (canStartGame.value && defenseEngine) {
@@ -121,6 +132,14 @@ const DefenseGame = {
             console.log('🌱 开始防御游戏');
             if (defenseEngine && canStartGame.value) {
                 defenseEngine.startGame();
+                // 启动计时器
+                startTime.value = Date.now();
+                elapsedTime.value = 0;
+                timeInterval = setInterval(() => {
+                    if (gameState.isPlaying && !gameState.isPaused) {
+                        elapsedTime.value = Math.floor((Date.now() - startTime.value) / 1000);
+                    }
+                }, 1000);
             } else {
                 // 如果引擎未初始化，先模拟开始
                 gameState.isPlaying = true;
@@ -131,6 +150,14 @@ const DefenseGame = {
         const pauseGame = () => {
             if (defenseEngine) {
                 defenseEngine.togglePause();
+            }
+        };
+        
+        const stopGame = () => {
+            // 停止计时器
+            if (timeInterval) {
+                clearInterval(timeInterval);
+                timeInterval = null;
             }
         };
         
@@ -396,6 +423,7 @@ const DefenseGame = {
             typedPart,
             remainingPart,
             canStartGame,
+            formattedTime,
             
             // 方法
             selectDifficulty,
@@ -407,32 +435,34 @@ const DefenseGame = {
     template: `
         <div class="defense-container" v-show="isVisible">
             <!-- 游戏状态栏 -->
-            <div class="defense-header">
-                <div class="defense-title">🌱 植物防御模式</div>
-                <div class="defense-stats">
-                    <div class="stat-item">
-                        <span class="stat-icon">❤️</span>
-                        <span class="stat-label">血量</span>
-                        <div class="health-bar">
-                            <div class="health-fill" :style="healthBarStyle"></div>
-                        </div>
-                        <span class="health-text">{{ healthText }}</span>
+            <div class="defense-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">❤️</span>
+                    <span class="stat-label">血量</span>
+                    <div class="health-bar">
+                        <div class="health-fill" :style="healthBarStyle"></div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-icon">🌊</span>
-                        <span class="stat-label">波次</span>
-                        <span class="stat-value">{{ waveText }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-icon">🧟‍♂️</span>
-                        <span class="stat-label">僵尸</span>
-                        <span class="stat-value">{{ zombiesLeftCount }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-icon">⭐</span>
-                        <span class="stat-label">分数</span>
-                        <span class="stat-value">{{ gameState.score }}</span>
-                    </div>
+                    <span class="health-text">{{ healthText }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🌊</span>
+                    <span class="stat-label">波次</span>
+                    <span class="stat-value">{{ waveText }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🧟‍♂️</span>
+                    <span class="stat-label">僵尸</span>
+                    <span class="stat-value">{{ zombiesLeftCount }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-label">分数</span>
+                    <span class="stat-value">{{ gameState.score }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-label">时长</span>
+                    <span class="stat-value">{{ formattedTime }}</span>
                 </div>
             </div>
             

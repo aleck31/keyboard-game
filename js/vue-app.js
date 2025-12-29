@@ -6,7 +6,9 @@
 const VueTypingGameApp = {
     name: 'TypingGameApp',
     components: {
-        GameControls: window.GameControls,
+        ModeSelector: window.ModeSelector,
+        DifficultySelector: window.DifficultySelector,
+        GameButtons: window.GameButtons,
         GameStats: window.GameStats,
         RacingTrack: window.RacingTrack,
         DefenseGame: window.DefenseGame,
@@ -41,9 +43,12 @@ const VueTypingGameApp = {
             const newRacingState = gameStore.getState('racing');
             const newUiState = gameStore.getState('ui');
             
-            // 强制更新状态
+            // 更新状态，但不覆盖userInput（由v-model管理）
             gameState.value = { ...newGameState };
-            textState.value = { ...newTextState };
+            textState.value = { 
+                ...newTextState,
+                userInput: textState.value.userInput // 保留Vue管理的userInput
+            };
             statsState.value = { ...newStatsState };
             wordsState.value = { ...newWordsState };
             racingState.value = { ...newRacingState };
@@ -55,8 +60,15 @@ const VueTypingGameApp = {
             }
         };
         
-        // 订阅 GameStore 状态变化
-        gameStore.subscribe(updateVueState);
+        // 订阅 GameStore 状态变化 - 完全同步
+        gameStore.subscribe(() => {
+            gameState.value = { ...gameStore.getState('game') };
+            textState.value = { ...gameStore.getState('text') };
+            statsState.value = { ...gameStore.getState('stats') };
+            wordsState.value = { ...gameStore.getState('words') };
+            racingState.value = { ...gameStore.getState('racing') };
+            uiState.value = { ...gameStore.getState('ui') };
+        });
         
         // 模式计算属性
         const isBasicMode = computed(() => {
@@ -70,8 +82,17 @@ const VueTypingGameApp = {
         const isDefenseMode = computed(() => gameState.value.mode === 'defense');
         const isRacingMode = computed(() => gameState.value.mode === 'racing');
         
+        const formattedTime = computed(() => {
+            const gameState = gameStore.getState('game');
+            if (!gameState.startTime) return '0:00';
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+        
         // 事件处理器
-        const handleModeChanged = (mode) => {
+        const handleModeChanged = async (mode) => {
             if (gameState.value.isPlaying) {
                 console.log('⛔ 无法切换模式，游戏正在进行中');
                 return;
@@ -79,34 +100,29 @@ const VueTypingGameApp = {
             
             console.log(`🎮 切换到 ${mode} 模式`);
             
-            // 先更新模式
-            gameStore.actions.setMode(mode);
-            
-            // 立即更新UI状态，确保界面切换
-            if (['classic', 'words'].includes(mode)) {
-                // 基础模式
-                gameStore.updateState('ui.showRacing', false);
-                gameStore.updateState('ui.showDefense', false);
-                loadBasicModeData(); // 加载基础模式数据
-            } else if (mode === 'racing') {
-                // 赛车模式
-                gameStore.updateState('ui.showRacing', true);
-                gameStore.updateState('ui.showDefense', false);
-                initRacingMode(); // 初始化赛车模式
-            } else if (mode === 'defense') {
-                // 防御模式
-                gameStore.updateState('ui.showRacing', false);
-                gameStore.updateState('ui.showDefense', true);
-                initDefenseMode(); // 初始化防御模式
+            // 统一由game-engine处理模式切换
+            if (window.gameEngine) {
+                window.gameEngine.setMode(mode);
+            } else {
+                // 后备方案
+                gameStore.actions.setMode(mode);
             }
             
-            // 立即强制更新Vue状态
-            updateVueState();
+            // 更新UI状态
+            if (mode === 'racing') {
+                gameStore.updateState('ui.showRacing', true);
+                gameStore.updateState('ui.showDefense', false);
+            } else if (mode === 'defense') {
+                gameStore.updateState('ui.showRacing', false);
+                gameStore.updateState('ui.showDefense', true);
+            } else {
+                gameStore.updateState('ui.showRacing', false);
+                gameStore.updateState('ui.showDefense', false);
+            }
             
-            // 再次确保状态同步
-            setTimeout(() => {
-                updateVueState();
-            }, 100);
+            // 强制更新Vue状态
+            await Vue.nextTick();
+            updateVueState();
         };
         
         const handleStartGame = () => {
@@ -138,28 +154,16 @@ const VueTypingGameApp = {
             // 隐藏特殊模式UI
             gameStore.updateState('ui.showRacing', false);
             gameStore.updateState('ui.showDefense', false);
-            
-            // 禁用输入
-            const textInput = document.getElementById('textInput');
-            if (textInput) {
-                textInput.disabled = true;
-                textInput.value = '';
-            }
         };
         
-        const handleTextInput = (event) => {
-            if (!gameState.value.isPlaying || gameState.value.isPaused) return;
-            
-            const inputValue = event.target.value;
-            gameStore.actions.setUserInput(inputValue);
-            
-            // 使用游戏引擎处理输入
-            if (window.gameEngine) {
-                window.gameEngine.processInput(inputValue);
-            }
-            
-            // 更新文本显示
-            updateTextDisplay();
+        const handleDifficultyChanged = (difficulty) => {
+            console.log(`🎯 难度切换到: ${difficulty}`);
+            gameStore.updateState('game.difficulty', difficulty);
+        };
+        
+        const handleTimeLimitChanged = (timeLimit) => {
+            console.log(`⏱️ 时间限制切换到: ${timeLimit}秒`);
+            gameStore.updateState('game.timeLimit', timeLimit);
         };
         
         // 游戏逻辑方法
@@ -167,25 +171,21 @@ const VueTypingGameApp = {
             try {
                 console.log(`🎮 开始${gameState.value.mode}模式游戏`);
                 
-                // 确保数据已加载
-                if (!textState.value.currentText) {
-                    await loadBasicModeData();
-                }
-                
-                // 启动游戏
-                gameStore.actions.startGame();
-                
-                // 启用输入
-                const textInput = document.getElementById('textInput');
-                if (textInput) {
-                    textInput.disabled = false;
-                    textInput.focus();
-                    textInput.value = '';
-                }
-                
-                // 使用游戏引擎启动
+                // 统一由game-engine处理启动逻辑
                 if (window.gameEngine) {
                     window.gameEngine.startGame();
+                } else {
+                    console.error('❌ GameEngine未初始化');
+                    gameStore.actions.showNotification('游戏引擎未初始化', 'error');
+                    return;
+                }
+                
+                // 等待Vue更新DOM后聚焦输入框
+                await Vue.nextTick();
+                
+                const textInput = document.getElementById('textInput');
+                if (textInput) {
+                    textInput.focus();
                 }
                 
                 console.log('✅ 游戏启动成功');
@@ -243,50 +243,6 @@ const VueTypingGameApp = {
             }
         };
         
-        const loadBasicModeData = async () => {
-            try {
-                console.log(`📝 加载${gameState.value.mode}模式数据`);
-                
-                if (gameState.value.mode === 'classic') {
-                    const response = await fetch('/api/texts');
-                    const result = await response.json();
-                    const texts = result.data || result;
-                    const randomText = texts[Math.floor(Math.random() * texts.length)];
-                    gameStore.actions.setText(randomText);
-                    
-                    console.log('📝 已加载文本:', randomText.substring(0, 50) + '...');
-                    
-                } else if (gameState.value.mode === 'words') {
-                    const response = await fetch('/api/words');
-                    const result = await response.json();
-                    const words = result.data || result;
-                    const selectedWords = words.slice(0, 50);
-                    
-                    // 更新单词状态
-                    gameStore.updateState('words', {
-                        wordsList: selectedWords,
-                        totalWords: selectedWords.length,
-                        currentWordIndex: 0,
-                        wordsCompleted: 0
-                    });
-                    
-                    const firstWord = selectedWords[0] || 'test';
-                    gameStore.actions.setText(firstWord);
-                    
-                    console.log('📝 已加载单词模式，第一个单词:', firstWord);
-                }
-                
-                // 更新文本显示
-                updateTextDisplay();
-                
-                console.log(`✅ ${gameState.value.mode}模式数据加载成功`);
-                
-            } catch (error) {
-                console.error('数据加载失败:', error);
-                gameStore.actions.showNotification('数据加载失败', 'error');
-            }
-        };
-        
         const updateTextDisplay = () => {
             try {
                 // 使用游戏商店的文本高亮功能
@@ -330,37 +286,19 @@ const VueTypingGameApp = {
             console.log('✅ 植物防御模式初始化完成');
         };
         
-        // 定期更新Vue状态以确保同步
-        let stateUpdateInterval = null;
-        
         // 生命周期钩子
         onMounted(() => {
             console.log('🎮 Vue 应用已挂载');
             
-            // 初始化默认模式数据
-            if (isBasicMode.value) {
-                loadBasicModeData();
-            }
-            
-            // 设置定期状态更新
-            stateUpdateInterval = setInterval(updateVueState, 100); // 每100ms更新一次
-            
             // 暴露全局Vue应用实例
             window.vueApp = {
                 eventBus,
-                instance: null,
-                updateState: updateVueState // 暴露手动更新方法
+                instance: null
             };
         });
         
         onUnmounted(() => {
             console.log('🎮 Vue 应用卸载');
-            
-            // 清理定时器
-            if (stateUpdateInterval) {
-                clearInterval(stateUpdateInterval);
-                stateUpdateInterval = null;
-            }
         });
         
         return {
@@ -383,7 +321,9 @@ const VueTypingGameApp = {
             handleStartGame,
             handlePauseGame,
             handleResetGame,
-            handleTextInput
+            handleDifficultyChanged,
+            handleTimeLimitChanged,
+            formattedTime
         };
     },
     template: `
@@ -394,17 +334,11 @@ const VueTypingGameApp = {
                 {{ uiState.notification.message }}
             </div>
 
-            <!-- 游戏控制组件 -->
-            <game-controls 
+            <!-- 模式选择器 -->
+            <mode-selector 
                 :game-state="gameState"
                 @mode-changed="handleModeChanged"
-                @start-game="handleStartGame"
-                @pause-game="handlePauseGame"
-                @reset-game="handleResetGame"
             />
-            
-            <!-- 游戏统计组件 -->
-            <game-stats :game-state="gameState" />
             
             <!-- 赛车追逐组件 -->
             <racing-track 
@@ -421,35 +355,39 @@ const VueTypingGameApp = {
             />
             
             <!-- 基础游戏区域 -->
-            <div v-if="isBasicMode" class="basic-game-area">
+            <div v-if="isBasicMode" class="basic-game-container">
+                <!-- 游戏统计信息（复用GameStats组件） -->
+                <game-stats :game-state="gameState" class="basic-stats-inline" />
+                
                 <!-- 文本显示区域 -->
                 <div class="text-display">
                     <div class="text-content">
-
-                        
                         <div v-if="textState.highlightedText" 
                              v-html="textState.highlightedText">
                         </div>
                         <div v-else-if="textState.currentText">
                             {{ textState.currentText }}
                         </div>
-                        <div v-else>
+                        <div v-else class="text-placeholder">
                             点击开始按钮开始游戏...
                         </div>
                     </div>
                 </div>
                 
-                <!-- 输入区域 -->
-                <div class="input-area">
-                    <textarea
-                        id="textInput"
-                        class="text-input" 
-                        placeholder="在这里输入文本..."
-                        :disabled="!gameState.isPlaying"
-                        v-model="textState.userInput"
-                        @input="handleTextInput"
-                    ></textarea>
-                </div>
+                <!-- 难度选择器 -->
+                <difficulty-selector
+                    :game-state="gameState"
+                    @difficulty-changed="handleDifficultyChanged"
+                    @time-limit-changed="handleTimeLimitChanged"
+                />
+                
+                <!-- 游戏控制按钮 -->
+                <game-buttons
+                    :game-state="gameState"
+                    @start-game="handleStartGame"
+                    @pause-game="handlePauseGame"
+                    @reset-game="handleResetGame"
+                />
             </div>
             
             <!-- AppUtils组件 -->

@@ -34,15 +34,24 @@ const GameStats = {
         });
         
         const progressPercentage = computed(() => {
-            // 不同游戏模式下的进度计算
-            if (props.gameState.mode === 'words' && props.gameState.totalWords > 0) {
-                // 单词模式：基于完成的单词数
-                return Math.min(100, Math.round((props.gameState.wordsCompleted / props.gameState.totalWords) * 100));
-            } else if (props.gameState.currentText && props.gameState.currentText.length > 0) {
-                // 经典模式：基于当前文本进度
-                return Math.min(100, Math.round((stats.currentIndex / props.gameState.currentText.length) * 100));
+            const mode = props.gameState.mode;
+            
+            if (mode === 'words') {
+                // 单词模式：基于时间进度
+                const timeLimit = props.gameState.timeLimit;
+                const elapsed = stats.timeElapsed;
+                if (!timeLimit) return 0;
+                return Math.min(100, Math.round((elapsed / timeLimit) * 100));
+            } else {
+                // 经典模式：基于输入进度 - 从 gameStore 获取 text 状态
+                if (window.gameStore) {
+                    const textState = window.gameStore.getState('text');
+                    if (textState.currentText && textState.currentText.length > 0) {
+                        return Math.min(100, Math.round((textState.userInput.length / textState.currentText.length) * 100));
+                    }
+                }
+                return 0;
             }
-            return 0;
         });
         
         const progressWidth = computed(() => {
@@ -153,33 +162,39 @@ const GameStats = {
         };
     },
     template: `
-        <div class="stats-container">           
+        <div class="basic-stats">
             <!-- 统计面版 -->
-            <div class="stats-panel">
-                <div class="stat-item">
-                    <span class="stat-label">CPM</span>
-                    <span class="stat-value">{{ formattedCPM }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">WPM</span>
-                    <span class="stat-value">{{ formattedWPM }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">错误</span>
-                    <span class="stat-value">{{ stats.errors }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">准确率</span>
-                    <span class="stat-value">{{ formattedAccuracy }}%</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">时间</span>
-                    <span class="stat-value">{{ formattedTime }}</span>
-                </div>
+            <div class="stat-item">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-label">WPM</span>
+                <span class="stat-value">{{ formattedWPM }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">📝</span>
+                <span class="stat-label">CPM</span>
+                <span class="stat-value">{{ formattedCPM }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">❌</span>
+                <span class="stat-label">错误</span>
+                <span class="stat-value">{{ stats.errors }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🎯</span>
+                <span class="stat-label">准确率</span>
+                <span class="stat-value">{{ formattedAccuracy }}%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">时间</span>
+                <span class="stat-value">{{ formattedTime }}</span>
             </div>
             <!-- 进度条 -->
-            <div class="progress-container" :title="\`进度: \${Math.round(progressPercentage)}%\`">
-                <div class="progress-bar" :style="{ width: progressWidth }"></div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+                </div>
+                <div class="progress-text">{{ progressPercentage }}%</div>
             </div>
         </div>
     `

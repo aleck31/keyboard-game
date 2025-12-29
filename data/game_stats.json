@@ -62,5 +62,133 @@
     "errors": 4,
     "mode": "endless",
     "timestamp": "2025-07-18T12:58:21.134769"
+  },
+  {
+    "wpm": 0.0,
+    "accuracy": 100.0,
+    "time_taken": 1,
+    "errors": 1,
+    "mode": "words",
+    "timestamp": "2025-12-28T18:35:31.999820"
+  },
+  {
+    "wpm": 0.0,
+    "accuracy": 100.0,
+    "time_taken": 1,
+    "errors": 1,
+    "mode": "classic",
+    "timestamp": "2025-12-29T21:55:44.214523"
+  },
+  {
+    "wpm": 0.0,
+    "accuracy": 100.0,
+    "time_taken": 1,
+    "errors": 1,
+    "mode": "classic",
+    "timestamp": "2025-12-29T21:56:03.901951"
+  },
+  {
+    "wpm": 0.0,
+    "accuracy": 100.0,
+    "time_taken": 2,
+    "errors": 1,
+    "mode": "classic",
+    "timestamp": "2025-12-29T21:56:36.139166"
+  },
+  {
+    "wpm": 0.0,
+    "accuracy": 100.0,
+    "time_taken": 1,
+    "errors": 1,
+    "mode": "classic",
+    "timestamp": "2025-12-29T22:01:22.124932"
+  },
+  {
+    "wpm": 43.0,
+    "accuracy": 100.0,
+    "time_taken": 31,
+    "errors": 0,
+    "mode": "classic",
+    "timestamp": "2025-12-29T22:02:36.737210"
+  },
+  {
+    "wpm": 48.0,
+    "accuracy": 100.0,
+    "time_taken": 2,
+    "errors": 0,
+    "mode": "words",
+    "timestamp": "2025-12-29T22:02:47.244633"
+  },
+  {
+    "wpm": 22.0,
+    "accuracy": 100.0,
+    "time_taken": 5,
+    "errors": 0,
+    "mode": "words",
+    "timestamp": "2025-12-29T22:03:10.931305"
+  },
+  {
+    "wpm": 36.0,
+    "accuracy": 100.0,
+    "time_taken": 2,
+    "errors": 0,
+    "mode": "words",
+    "timestamp": "2025-12-29T22:03:42.605738"
+  },
+  {
+    "wpm": 38.0,
+    "accuracy": 70.0,
+    "time_taken": 26,
+    "errors": 35,
+    "mode": "classic",
+    "timestamp": "2025-12-29T22:15:22.246777"
+  },
+  {
+    "wpm": 44.0,
+    "accuracy": 100.0,
+    "time_taken": 30,
+    "errors": 0,
+    "mode": "classic",
+    "timestamp": "2025-12-29T22:34:34.136233"
+  },
+  {
+    "wpm": 24.0,
+    "accuracy": 35.0,
+    "time_taken": 17,
+    "errors": 65,
+    "mode": "classic",
+    "timestamp": "2025-12-29T22:51:02.652798"
+  },
+  {
+    "wpm": 38.0,
+    "accuracy": 94.0,
+    "time_taken": 29,
+    "errors": 6,
+    "mode": "classic",
+    "timestamp": "2025-12-29T23:24:45.680609"
+  },
+  {
+    "wpm": 38.0,
+    "accuracy": 97.0,
+    "time_taken": 35,
+    "errors": 3,
+    "mode": "classic",
+    "timestamp": "2025-12-30T00:54:06.958996"
+  },
+  {
+    "wpm": 28.0,
+    "accuracy": 98.0,
+    "time_taken": 60,
+    "errors": 2,
+    "mode": "words",
+    "timestamp": "2025-12-30T01:14:09.566116"
+  },
+  {
+    "wpm": 33.0,
+    "accuracy": 100.0,
+    "time_taken": 30,
+    "errors": 0,
+    "mode": "words",
+    "timestamp": "2025-12-30T02:08:43.609148"
   }
 ]

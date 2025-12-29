@@ -55,7 +55,10 @@
 
         <!-- Footer -->
         <footer class="game-footer">
-            <p>&copy; 2025 键盘打字竞速游戏</p>
+            <p>&copy; 2025 键盘打字竞速游戏 | v2.1.0</p>
+            <p style="margin-top: 8px; font-size: 12px; opacity: 0.7;">
+                ⚡ 提升打字速度 | 🎮 趣味游戏模式 | 🏆 挑战自我
+            </p>
         </footer>
     </div>
 
@@ -67,31 +70,6 @@
                 <button class="modal-close" id="closeSettings">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- 基础模式设置 -->
-                <div class="setting-section">
-                    <h4>🎯 基础模式设置</h4>
-                    <p class="setting-desc">适用于经典模式、单词模式</p>
-                    
-                    <div class="setting-group">
-                        <label for="difficultySelect">游戏难度:</label>
-                        <select id="difficultySelect">
-                            <option value="easy">🟢 简单 - 较短文本</option>
-                            <option value="normal" selected>🟡 普通 - 标准难度</option>
-                            <option value="hard">🔴 困难 - 较长文本</option>
-                            <option value="expert">🟣 专家 - 挑战你的极限</option>
-                        </select>
-                    </div>
-                    
-                    <div class="setting-group">
-                        <label for="timeLimitSelect">时间限制 (秒):</label>
-                        <select id="timeLimitSelect">
-                            <option value="30">30秒</option>
-                            <option value="60" selected>60秒</option>
-                            <option value="120">120秒</option>
-                            <option value="300">300秒</option>
-                        </select>
-                    </div>
-                </div>
                 
                 <!-- 音频设置 -->
                 <div class="setting-section">
@@ -146,6 +124,9 @@
     <!-- JavaScript文件 -->
     <script src="js/utils.js"></script>
     
+    <!-- 日志管理器 (最高优先级) -->
+    <script src="js/utils/logger.js"></script>
+    
     <!-- 优化模块 (高优先级) -->
     <script src="js/utils/error-handler.js"></script>
     <script src="js/utils/performance-monitor.js"></script>
@@ -160,11 +141,13 @@
     <script src="js/defense-engine.js"></script>
     
     <!-- Vue组件 -->
-    <script src="js/components/game-controls.js"></script>
     <script src="js/components/game-stats.js"></script>
     <script src="js/components/racing-track.js"></script>
     <script src="js/components/defense-game.js"></script>
     <script src="js/components/app-utils.js"></script>
+    <script src="js/components/mode-selector.js"></script>
+    <script src="js/components/difficulty-selector.js"></script>
+    <script src="js/components/game-buttons.js"></script>
     
     <!-- Vue应用 -->
     <script src="js/vue-app.js"></script>

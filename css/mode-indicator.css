@@ -1,36 +1,45 @@
 /* 游戏模式指示器样式 */
 .mode-indicator {
     text-align: center;
-    margin: 10px 0;
+    margin: 15px 0;
     padding: 5px;
 }
 
 .mode-badge {
     display: inline-block;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    animation: fadeIn 0.5s ease-in-out;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
+}
+
+.mode-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow-color);
 }
 
 .mode-badge.classic {
-    background-color: #4caf50;
+    background: var(--primary-gradient);
     color: white;
 }
 
 .mode-badge.words {
-    background-color: #2196f3;
+    background: var(--accent-gradient);
     color: white;
 }
 
 .mode-badge.racing {
-    background-color: #f44336;
+    background: var(--error-gradient);
     color: white;
 }
 
 .mode-badge.defense {
-    background-color: #ff9800;
+    background: var(--success-gradient);
     color: white;
 }
 

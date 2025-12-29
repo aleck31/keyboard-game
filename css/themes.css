@@ -1,53 +1,69 @@
 /* CSS变量定义 */
 :root {
-    /* 主色调 */
-    --primary-color: #2196F3;
-    --primary-rgb: 33, 150, 243;
-    --secondary-color: #FFC107;
-    --accent-color: #FF5722;
+    /* 主色调 - 现代渐变色 */
+    --primary-color: #667eea;
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-color: #f093fb;
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --accent-color: #4facfe;
+    --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     
-    /* 状态颜色 */
-    --success-color: #4CAF50;
-    --error-color: #F44336;
-    --warning-color: #FF9800;
-    --info-color: #00BCD4;
+    /* 状态颜色 - 柔和版本 */
+    --success-color: #10b981;
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --error-color: #ef4444;
+    --error-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    --warning-color: #f59e0b;
+    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --info-color: #06b6d4;
+    --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
 }
 
-/* 暗色主题 */
+/* 暗色主题 - 更深邃的背景 */
 .theme-dark {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --card-bg: #21262d;
-    --border-color: #30363d;
-    --text-color: #f0f6fc;
-    --text-secondary: #8b949e;
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #151b2e;
+    --card-bg: #1e2538;
+    --card-bg-hover: #252d42;
+    --border-color: #2d3548;
+    --text-color: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --shadow-color: rgba(0, 0, 0, 0.5);
     
-    background-color: var(--bg-primary);
+    background: linear-gradient(135deg, #0a0e1a 0%, #151b2e 100%);
     color: var(--text-color);
 }
 
-/* 亮色主题 */
+/* 亮色主题 - 清新明亮 */
 .theme-light {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f6f8fa;
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
     --card-bg: #ffffff;
-    --border-color: #d0d7de;
-    --text-color: #24292f;
-    --text-secondary: #656d76;
+    --card-bg-hover: #f8fafc;
+    --border-color: #e2e8f0;
+    --text-color: #1e293b;
+    --text-secondary: #64748b;
+    --shadow-color: rgba(0, 0, 0, 0.1);
     
-    background-color: var(--bg-primary);
+    background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
     color: var(--text-color);
 }
 
-/* 蓝色主题 */
+/* 蓝色主题 - 科技感 */
 .theme-blue {
-    --primary-color: #0066cc;
-    --bg-primary: #001122;
-    --bg-secondary: #002244;
-    --card-bg: #003366;
-    --border-color: #004488;
-    --text-color: #e6f3ff;
-    --text-secondary: #99ccff;
+    --primary-color: #3b82f6;
+    --bg-primary: #0c1222;
+    --bg-secondary: #1a2332;
+    --card-bg: #1e2a3f;
+    --card-bg-hover: #2a3650;
+    --border-color: #2d3f5f;
+    --text-color: #dbeafe;
+    --text-secondary: #93c5fd;
+    --shadow-color: rgba(59, 130, 246, 0.3);
+    
+    background: linear-gradient(135deg, #0c1222 0%, #1e3a8a 100%);
+    color: var(--text-color);
+}
     
     background-color: var(--bg-primary);
     color: var(--text-color);

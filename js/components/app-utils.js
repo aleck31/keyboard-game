@@ -202,16 +202,6 @@ const AppUtils = {
             });
             
             // 更新表单元素
-            const timeLimitSelect = document.getElementById('timeLimitSelect');
-            if (timeLimitSelect) {
-                timeLimitSelect.value = settings.timeLimit || 60;
-            }
-            
-            const difficultySelect = document.getElementById('difficultySelect');
-            if (difficultySelect) {
-                difficultySelect.value = settings.difficulty || 'normal';
-            }
-            
             const enableSounds = document.getElementById('enableSounds');
             if (enableSounds) {
                 enableSounds.checked = settings.enableSounds !== false;
@@ -235,8 +225,6 @@ const AppUtils = {
         
         // 保存设置
         const saveSettings = () => {
-            const timeLimitSelect = document.getElementById('timeLimitSelect');
-            const difficultySelect = document.getElementById('difficultySelect');
             const enableSounds = document.getElementById('enableSounds');
             const enableMusic = document.getElementById('enableMusic');
             const highlightErrors = document.getElementById('highlightErrors');
@@ -244,8 +232,6 @@ const AppUtils = {
             
             const settings = {
                 theme: themeSelectModal?.value || 'dark',
-                timeLimit: parseInt(timeLimitSelect?.value) || 60,
-                difficulty: difficultySelect?.value || 'normal',
                 enableSounds: enableSounds?.checked !== false,
                 enableMusic: enableMusic?.checked !== false,
                 highlightErrors: highlightErrors?.checked !== false

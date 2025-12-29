@@ -80,7 +80,7 @@ class GameEngine extends Utils.EventEmitter {
     
     // 绑定事件监听器
     bindEvents() {
-        // 监听自定义游戏事件 - 使用新的事件机制
+        // 监听游戏事件
         document.addEventListener('game:startGame', () => this.startGame());
         document.addEventListener('game:pauseGame', () => this.togglePause());
         document.addEventListener('game:resetGame', () => this.resetGame());
@@ -96,6 +96,9 @@ class GameEngine extends Utils.EventEmitter {
             }
         });
         
+        // 全局键盘监听（替代textarea）
+        document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        
         // 向后兼容：仍然监听uiManager事件
         if (window.uiManager) {
             window.uiManager.on('startGame', () => this.startGame());
@@ -106,14 +109,9 @@ class GameEngine extends Utils.EventEmitter {
             window.uiManager.on('settingsChanged', (settings) => this.applySettings(settings));
         }
         
-        // 监听键盘输入
-        document.addEventListener('keydown', (e) => this.handleKeyDown(e));
-        document.addEventListener('input', (e) => this.handleInput(e));
-        
         // 监听统计管理器事件
         if (window.statsManager) {
             window.statsManager.on('achievementUnlocked', (achievement) => {
-                // 将成就解锁事件传递给游戏商店和自定义事件
                 if (window.gameStore) {
                     window.gameStore.actions.showNotification(
                         `🏆 解锁成就: ${achievement.title}`, 
@@ -121,12 +119,10 @@ class GameEngine extends Utils.EventEmitter {
                     );
                 }
                 
-                // 触发自定义事件
                 document.dispatchEvent(new CustomEvent('game:achievement', {
                     detail: achievement
                 }));
                 
-                // 向后兼容：仍然使用uiManager
                 if (window.uiManager) {
                     window.uiManager.showAchievement(achievement);
                 }
@@ -139,7 +135,6 @@ class GameEngine extends Utils.EventEmitter {
         const gameState = this.gameStore.getState('game');
         if (!gameState.isPlaying) {
             this.gameStore.actions.setMode(mode);
-            this.generateText();
         }
     }
     
@@ -152,12 +147,6 @@ class GameEngine extends Utils.EventEmitter {
     applySettings(settings) {
         this.gameStore.updateState('game.timeLimit', settings.timeLimit || 60);
         this.gameStore.updateState('game.difficulty', settings.difficulty || 'normal');
-        
-        // 如果游戏未开始，重新生成文本
-        const gameState = this.gameStore.getState('game');
-        if (!gameState.isPlaying) {
-            this.generateText();
-        }
         
         console.log('游戏设置已应用:', settings);
     }
@@ -398,7 +387,12 @@ class GameEngine extends Utils.EventEmitter {
     startGame() {
         return this.errorHandler.wrapSync(() => {
             const gameState = this.gameStore.getState('game');
-            if (gameState.isPlaying) return;
+            if (gameState.isPlaying) {
+                console.log('游戏已在进行中');
+                return;
+            }
+            
+            console.log('🎮 GameEngine.startGame() 开始');
             
             // 重置游戏状态（通过统一状态管理）
             this.gameStore.actions.resetGame();
@@ -415,11 +409,6 @@ class GameEngine extends Utils.EventEmitter {
                 this.gameStore.updateState('racing.raceStartTime', Date.now());
             }
             
-            // 开始统计
-            if (window.statsManager) {
-                window.statsManager.startGame(gameState.mode);
-            }
-            
             // 开始背景音乐
             if (window.audioManager) {
                 window.audioManager.resumeAudioContext();
@@ -433,16 +422,11 @@ class GameEngine extends Utils.EventEmitter {
             // 开始更新循环
             this.startUpdateLoop();
             
-            // 聚焦输入框 - 通过事件系统
+            // 触发聚焦事件（Vue会处理输入框的启用/禁用）
             document.dispatchEvent(new CustomEvent('game:focusInput'));
-            // 依然保留直接操作作为后备
-            const textInput = document.getElementById('textInput');
-            if (textInput) {
-                textInput.focus();
-            }
-            
             this.emit('gameStarted');
-            console.log('游戏开始');
+            
+            console.log('✅ GameEngine.startGame() 完成');
         }, { context: 'startGame' })();
     }
     
@@ -455,12 +439,21 @@ class GameEngine extends Utils.EventEmitter {
         this.gameStore.updateState('game.isPaused', isPaused);
         
         if (isPaused) {
+            // 暂停：记录暂停开始时间
+            this.gameStore.updateState('game.pauseStartTime', Date.now());
             this.stopUpdateLoop();
             if (window.audioManager) {
                 window.audioManager.stopBackgroundMusic();
             }
             console.log('游戏暂停');
         } else {
+            // 继续：调整 startTime，推迟暂停的时长
+            const pauseStartTime = gameState.pauseStartTime;
+            if (pauseStartTime && gameState.startTime) {
+                const pauseDuration = Date.now() - pauseStartTime;
+                this.gameStore.updateState('game.startTime', gameState.startTime + pauseDuration);
+            }
+            this.gameStore.updateState('game.pauseStartTime', null);
             this.startUpdateLoop();
             if (window.audioManager) {
                 const audioStatus = window.audioManager.getStatus();
@@ -527,7 +520,6 @@ class GameEngine extends Utils.EventEmitter {
             }
             
             // 结束统计
-            let finalStats = null;
             if (window.statsManager) {
                 finalStats = window.statsManager.endGame(true);
             }
@@ -564,21 +556,34 @@ class GameEngine extends Utils.EventEmitter {
     // 处理键盘按下事件
     handleKeyDown(e) {
         const gameState = this.gameStore.getState('game');
-        if (!gameState.isPlaying || gameState.isPaused || gameState.isCompleted) {
+        const textState = this.gameStore.getState('text');
+        
+        // 只在基础模式且游戏进行中处理
+        if (!['classic', 'words'].includes(gameState.mode)) return;
+        if (!gameState.isPlaying || gameState.isPaused || gameState.isCompleted) return;
+        
+        const key = e.key;
+        
+        // 记录按键
+        this.gameStore.actions.recordKeystroke();
+        
+        // 处理退格键
+        if (key === 'Backspace') {
+            e.preventDefault();
+            this.gameStore.actions.recordBackspace();
+            
+            if (textState.userInput.length > 0) {
+                const newInput = textState.userInput.slice(0, -1);
+                this.gameStore.actions.setUserInput(newInput);
+            }
             return;
         }
         
-        // 记录按键
-        if (window.statsManager) {
-            window.statsManager.recordKeystroke();
-        }
-        
-        // 处理特殊键
-        if (e.key === 'Backspace') {
-            this.handleBackspace();
-            if (window.statsManager) {
-                window.statsManager.recordBackspace();
-            }
+        // 处理可打印字符
+        if (key.length === 1) {
+            e.preventDefault();
+            const newInput = textState.userInput + key;
+            this.gameStore.actions.setUserInput(newInput);
         }
     }
     
@@ -603,22 +608,54 @@ class GameEngine extends Utils.EventEmitter {
         }
     }
     
-    // 处理输入
+    // 处理输入逻辑（只处理业务逻辑：音效、错误记录、完成检查）
+    handleInputLogic(input) {
+        return this.errorHandler.wrapSync(() => {
+            const textState = this.gameStore.getState('text');
+            const currentText = textState.currentText;
+            
+            // 播放音效和记录错误
+            if (input.length > 0) {
+                const lastIndex = input.length - 1;
+                const expectedChar = currentText[lastIndex];
+                const actualChar = input[lastIndex];
+                
+                if (expectedChar === actualChar) {
+                    if (window.audioManager) {
+                        window.audioManager.playSound('keyPress');
+                    }
+                } else {
+                    if (window.audioManager) {
+                        window.audioManager.playSound('keyError');
+                    }
+                    this.gameStore.actions.recordError(lastIndex, expectedChar, actualChar);
+                }
+            }
+            
+            // 检查完成：输入长度等于文本长度即可完成
+            if (input.length === currentText.length) {
+                const gameState = this.gameStore.getState('game');
+                if (gameState.mode === 'words') {
+                    this.handleWordCompletion();
+                } else {
+                    this.completeGame();
+                }
+            }
+        }, { context: 'handleInputLogic' })();
+    }
+    
+    // 处理输入（保留用于向后兼容，但标记为废弃）
     processInput(input) {
         return this.errorHandler.wrapSync(() => {
             const textState = this.gameStore.getState('text');
             const currentText = textState.currentText;
             
-            // 检查输入长度
+            // 检查输入长度，限制不超过文本长度
             if (input.length > currentText.length) {
-                // 限制输入长度
                 input = input.substring(0, currentText.length);
-                // 通过状态管理更新输入值
+                // 只在需要截断时更新
                 this.gameStore.actions.setUserInput(input);
             }
-            
-            // 更新统一状态中的输入
-            this.gameStore.actions.setUserInput(input);
             
             // 计算正确和错误字符数
             let correctChars = 0;
@@ -632,17 +669,14 @@ class GameEngine extends Utils.EventEmitter {
                 }
             }
             
-            // 检查最后输入的字符
+            // 检查最后输入的字符（如果有输入）
             if (input.length > 0) {
                 const lastIndex = input.length - 1;
                 const expectedChar = currentText[lastIndex];
                 const actualChar = input[lastIndex];
                 
                 if (expectedChar === actualChar) {
-                    // 更新输入值 - 使用状态管理而非直接DOM操作
-                    this.gameStore.actions.setUserInput(input);
-                    
-                    // 播放声音
+                    // 正确输入，播放声音
                     if (window.audioManager) {
                         window.audioManager.playSound('keyPress');
                     }
@@ -651,24 +685,8 @@ class GameEngine extends Utils.EventEmitter {
                     if (window.audioManager) {
                         window.audioManager.playSound('keyError');
                     }
-                    
-                    // 记录错误
-                    if (window.statsManager) {
-                        window.statsManager.recordError(lastIndex, expectedChar, actualChar);
-                    }
+                    this.gameStore.actions.recordError(lastIndex, expectedChar, actualChar);
                 }
-            }
-            
-            // 更新统计数据
-            const statsData = {
-                totalChars: input.length,
-                correctChars: correctChars,
-                incorrectChars: incorrectChars,
-                currentIndex: input.length
-            };
-            
-            if (window.statsManager) {
-                window.statsManager.updateStats(statsData);
             }
             
             // 检查是否完成当前文本
@@ -686,6 +704,25 @@ class GameEngine extends Utils.EventEmitter {
     // 处理单词完成
     handleWordCompletion() {
         const wordsState = this.gameStore.getState('words');
+        const textState = this.gameStore.getState('text');
+        const statsState = this.gameStore.getState('stats');
+        
+        // 累积当前单词的统计
+        const currentWordLength = textState.currentText.length;
+        let currentCorrectChars = 0;
+        for (let i = 0; i < textState.userInput.length; i++) {
+            if (textState.userInput[i] === textState.currentText[i]) {
+                currentCorrectChars++;
+            }
+        }
+        
+        // 更新累积统计
+        this.gameStore.actions.updateStats({
+            totalChars: statsState.totalChars + currentWordLength,
+            correctChars: statsState.correctChars + currentCorrectChars,
+            errors: statsState.errors + (currentWordLength - currentCorrectChars)
+        });
+        
         const newWordsCompleted = wordsState.wordsCompleted + 1;
         const newCurrentWordIndex = wordsState.currentWordIndex + 1;
         
@@ -700,20 +737,7 @@ class GameEngine extends Utils.EventEmitter {
             // 显示下一个单词
             const nextWord = wordsState.wordsList[newCurrentWordIndex];
             this.gameStore.actions.setText(nextWord);
-            this.gameStore.actions.setUserInput("");
-            
-            // 清除输入框 - 使用状态管理
             this.gameStore.actions.setUserInput('');
-            // 依然保留直接操作作为后备
-            const textInput = document.getElementById('textInput');
-            if (textInput) {
-                textInput.value = '';
-            }
-            
-            // 播放完成音效
-            if (window.audioManager) {
-                window.audioManager.playSound('keyPress');
-            }
             
             console.log(`单词完成: ${newWordsCompleted}/${wordsState.totalWords}`);
         } else {
@@ -738,6 +762,16 @@ class GameEngine extends Utils.EventEmitter {
         this.updateInterval = setInterval(() => {
             const gameState = this.gameStore.getState('game');
             if (gameState.isPlaying && !gameState.isPaused) {
+                // 检查单词模式时间限制
+                if (gameState.mode === 'words' && gameState.startTime) {
+                    const elapsed = (Date.now() - gameState.startTime) / 1000;
+                    
+                    if (elapsed >= gameState.timeLimit) {
+                        this.completeGame();
+                        return;
+                    }
+                }
+                
                 // 检查赛车追逐模式
                 if (gameState.mode === 'racing' && gameState.startTime) {
                     const elapsed = (Date.now() - gameState.startTime) / 1000;

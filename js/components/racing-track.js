@@ -277,12 +277,35 @@ const RacingTrack = {
     },
     template: `
         <div class="racing-container" v-show="isVisible">
-            <!-- 赛车追逐标题 -->
-            <div class="racing-title">🏎️ 赛车追逐模式</div>
-            
-            <!-- 时间显示 -->
-            <div class="racing-timer" :class="{ warning: isTimeWarning }">
-                ⏱️ {{ timeDisplay }}
+            <!-- 赛车统计 -->
+            <div class="racing-stats">
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">⚡</div>
+                    <div class="racing-stat-label">当前速度</div>
+                    <div class="racing-stat-value">{{ gameState.wpm || 0 }} WPM</div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">🚀</div>
+                    <div class="racing-stat-label">超越次数</div>
+                    <div class="racing-stat-value">{{ raceState.overtakeCount }}</div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">🏁</div>
+                    <div class="racing-stat-label">当前排名</div>
+                    <div class="racing-stat-value">
+                        {{ currentRankings.find(car => car.type === 'player')?.rank || 4 }}/4
+                    </div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">📊</div>
+                    <div class="racing-stat-label">完成进度</div>
+                    <div class="racing-stat-value">{{ Math.round(playerProgress) }}%</div>
+                </div>
+                <div class="racing-stat-item">
+                    <div class="racing-stat-icon">⏱️</div>
+                    <div class="racing-stat-label">剩余时间</div>
+                    <div class="racing-stat-value" :class="{ warning: isTimeWarning }">{{ timeDisplay }}</div>
+                </div>
             </div>
             
             <!-- 赛道 -->
@@ -315,32 +338,6 @@ const RacingTrack = {
                     :style="{ left: aiProgress.fast + '%' }"
                 >
                     {{ racingConfig.cars.fast.icon }}
-                </div>
-            </div>
-            
-            <!-- 赛车统计 -->
-            <div class="racing-stats">
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">⚡</div>
-                    <div class="racing-stat-label">当前速度</div>
-                    <div class="racing-stat-value">{{ gameState.wpm || 0 }} WPM</div>
-                </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">🚀</div>
-                    <div class="racing-stat-label">超越次数</div>
-                    <div class="racing-stat-value">{{ raceState.overtakeCount }}</div>
-                </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">📊</div>
-                    <div class="racing-stat-label">完成进度</div>
-                    <div class="racing-stat-value">{{ Math.round(playerProgress) }}%</div>
-                </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">🏁</div>
-                    <div class="racing-stat-label">当前排名</div>
-                    <div class="racing-stat-value">
-                        {{ currentRankings.find(car => car.type === 'player')?.rank || 4 }}/4
-                    </div>
                 </div>
             </div>
             

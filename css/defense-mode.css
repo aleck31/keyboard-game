@@ -4,7 +4,7 @@
 .defense-container {
     background: linear-gradient(135deg, #2d5016, #3d6b1f);
     border-radius: 16px;
-    padding: 20px;
+    padding: 25px;
     margin-bottom: 20px;
     border: 3px solid #4a7c23;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -25,12 +25,7 @@
 
 /* 防御头部 */
 .defense-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
     position: relative;
     z-index: 1;
 }
@@ -46,19 +41,29 @@
 }
 
 .defense-stats {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .defense-stats .stat-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.defense-stats .stat-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--shadow-color);
+    border-color: var(--success-color);
 }
 
 .stat-icon {

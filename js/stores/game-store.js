@@ -17,7 +17,9 @@ class GameStore extends Utils.EventEmitter {
         // 设置响应式代理
         this.reactiveState = this.createReactiveProxy();
         
-        console.log('🏪 GameStore 初始化完成');
+        // 使用logger
+        this.logger = window.logger || console;
+        this.logger.success?.('GameStore 初始化完成') || console.log('🏪 GameStore 初始化完成');
     }
     
     /**
@@ -34,7 +36,8 @@ class GameStore extends Utils.EventEmitter {
                 startTime: null,
                 endTime: null,
                 timeLimit: 60,
-                difficulty: 'normal'
+                difficulty: 'normal',
+                pauseStartTime: null  // 暂停开始时间
             },
             
             // 文本和输入状态
@@ -168,20 +171,25 @@ class GameStore extends Utils.EventEmitter {
                     errorPositions: []
                 });
                 
-                // 确保重置文本状态后立即更新文本高亮
-                this.resetTextState();
+                // 只重置userInput，不清空currentText
+                this.updateState('text.userInput', '');
+                this.updateState('text.currentIndex', 0);
                 this.updateTextHighlight();
                 this.emit('gameStarted');
             },
             
             pauseGame: () => {
-                this.updateState('game.isPaused', true);
-                this.emit('gamePaused');
+                // 委托给 GameEngine 处理
+                if (window.gameEngine) {
+                    window.gameEngine.togglePause();
+                }
             },
             
             resumeGame: () => {
-                this.updateState('game.isPaused', false);
-                this.emit('gameResumed');
+                // 委托给 GameEngine 处理
+                if (window.gameEngine) {
+                    window.gameEngine.togglePause();
+                }
             },
             
             endGame: () => {
@@ -194,9 +202,8 @@ class GameStore extends Utils.EventEmitter {
             },
             
             resetGame: () => {
-                // 获取当前模式以便调试
                 const currentMode = this.state.game.mode;
-                console.log(`[重置游戏] 当前模式: ${currentMode}，仅重置游戏状态而不改变模式`);
+                (window.logger || console).debug?.(`重置游戏 - 当前模式: ${currentMode}`);
                 
                 // 重置游戏属性，但保持模式不变
                 this.updateState('game', {
@@ -247,28 +254,22 @@ class GameStore extends Utils.EventEmitter {
                     raceStartTime: null
                 });
                 
-                console.log(`[重置游戏] 游戏状态已重置，维持模式为: ${this.state.game.mode}`);
+                (window.logger || console).debug?.(`游戏状态已重置，维持模式: ${this.state.game.mode}`);
                 this.emit('gameReset');
             },
             
             // 模式切换
             setMode: (mode) => {
-                console.log(`[模式切换] 尝试切换到 ${mode} 模式`);
+                (window.logger || console).debug?.(`切换到 ${mode} 模式`);
                 
                 if (this.state.game.isPlaying) {
-                    console.log(`[模式切换] 失败: 游戏正在进行中`);
+                    (window.logger || console).warn?.('无法切换模式，游戏正在进行中');
                     return;
                 }
                 
-                console.log(`[模式切换] 更新前的当前模式: ${this.state.game.mode}`);
                 this.updateState('game.mode', mode);
-                console.log(`[模式切换] 更新后的当前模式: ${this.state.game.mode}`);
-                
                 this.updateUIForMode(mode);
-                console.log(`[模式切换] UI 已更新为 ${mode} 模式`);
-                
                 this.emit('modeChanged', mode);
-                console.log(`[模式切换] 已触发 modeChanged 事件`); 
             },
             
             // 文本处理
@@ -283,8 +284,17 @@ class GameStore extends Utils.EventEmitter {
                 this.updateState('text.userInput', input);
                 this.updateState('text.currentIndex', input.length);
                 this.updateState('text.renderKey', this.state.text.renderKey + 1);
-                // 同时更新高亮文本
+                
+                // 更新高亮文本
                 this.updateTextHighlight();
+                
+                // 计算统计
+                this.calculateStats();
+                
+                // 处理业务逻辑
+                if (window.gameEngine) {
+                    window.gameEngine.handleInputLogic(input);
+                }
             },
             
             // 记录按键和错误
@@ -407,6 +417,7 @@ class GameStore extends Utils.EventEmitter {
      */
     resetTextState() {
         this.updateState('text', {
+            currentText: '',  // 清除当前文本
             userInput: '',
             currentIndex: 0,
             highlightedText: '',
@@ -431,6 +442,8 @@ class GameStore extends Utils.EventEmitter {
             const currentText = this.state.text.currentText;
             const userInput = this.state.text.userInput || '';
             const now = performance.now();
+            
+            console.log('🔍 [updateTextHighlight] 被调用，userInput长度:', userInput.length);
             
             // 如果没有文本，则直接清除高亮状态
             if (!currentText) {
@@ -527,8 +540,9 @@ class GameStore extends Utils.EventEmitter {
             // 性能优化：使用join而不是累加字符串
             const highlightedHTML = chunks.join('');
             
-            // 日志输出帮助调试
-            console.log(`文本高亮已生成: ${highlightedHTML.substring(0, 100)}...`);
+            // 调试日志
+            const logger = window.logger || console;
+            logger.debug?.(`文本高亮已生成 (${highlightedHTML.length}字符)`);
             
             // 更新缓存信息
             this._lastRenderInfo = {
@@ -576,14 +590,74 @@ class GameStore extends Utils.EventEmitter {
                 highlightedHTML += `<span class="${cssClass}">${displayChar}</span>`;
             }
             
-            // 直接更新状态，确保显示
-            console.log(`简单文本高亮已生成: ${highlightedHTML.substring(0, 100)}...`);
+            // 直接更新状态
+            const logger = window.logger || console;
+            logger.debug?.(`简单文本高亮已生成 (${highlightedHTML.length}字符)`);
             this.updateState('text.highlightedText', highlightedHTML);
             
         } catch (error) {
             console.error('简单文本高亮出错:', error);
             this.updateState('text.highlightedText', currentText || '');
         }
+    }
+    
+    /**
+     * 计算实时统计
+     */
+    calculateStats() {
+        const { currentText, userInput } = this.state.text;
+        const { mode, startTime, isPlaying } = this.state.game;
+        
+        if (!isPlaying || !currentText) return;
+        
+        // 计算当前输入的正确字符数
+        let currentCorrect = 0;
+        for (let i = 0; i < userInput.length; i++) {
+            if (i < currentText.length && userInput[i] === currentText[i]) {
+                currentCorrect++;
+            }
+        }
+        
+        // 根据模式决定统计方式
+        let totalChars, correctChars;
+        if (mode === 'words') {
+            // 单词模式：已完成单词的累积统计 + 当前单词（仅用于显示）
+            const completedTotal = this.state.stats.totalChars || 0;
+            const completedCorrect = this.state.stats.correctChars || 0;
+            totalChars = completedTotal + userInput.length;
+            correctChars = completedCorrect + currentCorrect;
+        } else {
+            // 经典模式：只统计当前文本
+            totalChars = userInput.length;
+            correctChars = currentCorrect;
+        }
+        
+        // 计算时间相关指标
+        const timeElapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
+        const timeInMinutes = timeElapsed / 60;
+        
+        let wpm = 0, cpm = 0, accuracy = 100;
+        
+        if (timeInMinutes > 0) {
+            wpm = Math.round((correctChars / 5) / timeInMinutes) || 0;
+            cpm = Math.round(correctChars / timeInMinutes) || 0;
+        }
+        
+        if (totalChars > 0) {
+            accuracy = Math.round((correctChars / totalChars) * 100);
+        }
+        
+        // 更新统计状态
+        const statsUpdate = { wpm, cpm, accuracy, errors: totalChars - correctChars };
+        
+        // 经典模式：更新totalChars/correctChars
+        // 单词模式：不更新（由handleWordCompletion管理累积值）
+        if (mode !== 'words') {
+            statsUpdate.totalChars = totalChars;
+            statsUpdate.correctChars = correctChars;
+        }
+        
+        this.updateState('stats', { ...this.state.stats, ...statsUpdate });
     }
     
     /**
