@@ -356,7 +356,9 @@ const DefenseGame = {
             if (container) {
                 container.appendChild(effect);
                 setTimeout(() => {
-                    container.removeChild(effect);
+                    if (container.contains(effect)) {
+                        container.removeChild(effect);
+                    }
                 }, 600);
             }
         };
@@ -479,27 +481,26 @@ const DefenseGame = {
                 </div>
                 
                 <!-- 僵尸 -->
-                <div 
-                    v-for="zombie in zombies" 
+                <div
+                    v-for="zombie in zombies"
                     :key="zombie.id"
                     class="zombie"
-                    :class="zombie.type"
-                    :style="{ 
-                        left: zombie.position.x + 'px', 
-                        top: zombie.position.y + 'px' 
+                    :class="[zombie.type, { 'low-health': zombie.health / zombie.maxHealth <= 0.3 }]"
+                    :style="{
+                        left: zombie.position.x + 'px',
+                        top: zombie.position.y + 'px'
                     }"
                 >
                     <div class="zombie-icon">{{ zombie.icon }}</div>
-                    <div class="zombie-word">{{ zombie.word }}</div>
-                    <div class="zombie-health">
-                        <div 
-                            v-for="i in zombie.maxHealth" 
-                            :key="i"
-                            class="health-dot"
-                            :style="{ 
-                                opacity: i <= zombie.health ? 1 : 0.3 
+                    <div class="zombie-word-container">
+                        <div
+                            class="zombie-word-health"
+                            :style="{
+                                width: (zombie.health / zombie.maxHealth * 100) + '%',
+                                backgroundColor: zombie.health / zombie.maxHealth > 0.5 ? 'rgba(74, 222, 128, 0.6)' : zombie.health / zombie.maxHealth > 0.2 ? 'rgba(251, 191, 36, 0.6)' : 'rgba(239, 68, 68, 0.6)'
                             }"
                         ></div>
+                        <span class="zombie-word">{{ zombie.word }}</span>
                     </div>
                 </div>
                 

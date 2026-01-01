@@ -109,30 +109,47 @@
 /* 战场 */
 .battlefield {
     position: relative;
-    height: 300px;
+    width: 100%;
+    height: 350px;
+    margin-bottom: 20px;
     background: linear-gradient(180deg, #87ceeb 0%, #98fb98 30%, #90ee90 100%);
     border-radius: 12px;
     border: 2px solid #4a7c23;
     overflow: hidden;
-    margin-bottom: 20px;
     box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* 道路分隔线 - 5条车道，均匀分布，每条70px高 */
+/* 战场350px，车道边界: 0, 70, 140, 210, 280, 350 */
 .battlefield::before {
     content: '';
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
-    height: 40px;
-    background: repeating-linear-gradient(
-        90deg,
-        #228b22 0px,
-        #228b22 20px,
-        #32cd32 20px,
-        #32cd32 40px
-    );
-    opacity: 0.3;
+    bottom: 0;
+    background:
+        linear-gradient(to bottom,
+            transparent 0px,
+            transparent 69px,
+            rgba(0, 0, 0, 0.12) 69px,
+            rgba(0, 0, 0, 0.12) 71px,
+            transparent 71px,
+            transparent 139px,
+            rgba(0, 0, 0, 0.12) 139px,
+            rgba(0, 0, 0, 0.12) 141px,
+            transparent 141px,
+            transparent 209px,
+            rgba(0, 0, 0, 0.12) 209px,
+            rgba(0, 0, 0, 0.12) 211px,
+            transparent 211px,
+            transparent 279px,
+            rgba(0, 0, 0, 0.12) 279px,
+            rgba(0, 0, 0, 0.12) 281px,
+            transparent 281px
+        );
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* 植物防御者 */
@@ -179,74 +196,95 @@
     100% { transform: translateY(-50%) scale(1); }
 }
 
-/* 僵尸 */
+/* 僵尸 - 紧凑设计 */
 .zombie {
     position: absolute;
-    right: -60px;
     display: flex;
     flex-direction: column;
     align-items: center;
     z-index: 5;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.15s ease;
 }
 
 .zombie:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .zombie-icon {
-    font-size: 2.5rem;
-    margin-bottom: 5px;
-    animation: zombieWalk 1s ease-in-out infinite;
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+    font-size: 2.2rem;
+    line-height: 1;
+    animation: zombieWalk 0.8s ease-in-out infinite;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 @keyframes zombieWalk {
-    0%, 100% { transform: translateX(0px); }
+    0%, 100% { transform: translateX(0); }
     50% { transform: translateX(-2px); }
 }
 
+/* 单词容器 - 血量背景融合 */
+.zombie-word-container {
+    position: relative;
+    margin-top: 2px;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* 血量背景 */
+.zombie-word-health {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+/* 单词文字 */
 .zombie-word {
-    background: rgba(0, 0, 0, 0.8);
+    position: relative;
+    display: block;
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 1px 4px;
+    font-size: 11px;
     font-weight: 600;
     font-family: 'JetBrains Mono', monospace;
-    border: 1px solid rgba(255, 255, 255, 0.3);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
 }
 
-.zombie-health {
-    display: flex;
-    gap: 2px;
-    margin-top: 2px;
+/* 低血量闪烁 */
+.zombie.low-health .zombie-word-container {
+    animation: lowHealthPulse 0.5s ease-in-out infinite;
 }
 
-.health-dot {
-    width: 6px;
-    height: 6px;
-    background: #ff4444;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+@keyframes lowHealthPulse {
+    0%, 100% { border-color: rgba(239, 68, 68, 0.5); }
+    50% { border-color: rgba(239, 68, 68, 1); }
 }
 
 /* 僵尸类型样式 */
 .zombie.basic .zombie-icon { color: #8b4513; }
 .zombie.medium .zombie-icon { color: #ff6347; }
 .zombie.strong .zombie-icon { color: #dc143c; }
-.zombie.boss .zombie-icon { 
-    color: #8b0000; 
-    font-size: 3rem;
-    animation: bossZombie 0.8s ease-in-out infinite;
+.zombie.boss .zombie-icon {
+    color: #8b0000;
+    font-size: 2.2rem;
+    animation: bossZombie 0.6s ease-in-out infinite;
 }
 
 @keyframes bossZombie {
-    0%, 100% { transform: translateX(0px) scale(1); }
-    50% { transform: translateX(-3px) scale(1.05); }
+    0%, 100% { transform: translateX(0) scale(1); }
+    50% { transform: translateX(-2px) scale(1.08); }
+}
+
+.zombie.boss .zombie-word {
+    font-size: 12px;
+    font-weight: 700;
 }
 
 /* 子弹 */
@@ -443,11 +481,16 @@
     }
     
     .plant-icon {
-        font-size: 2.5rem;
-    }
-    
-    .zombie-icon {
         font-size: 2rem;
+    }
+
+    .zombie-icon {
+        font-size: 1.8rem;
+    }
+
+    .zombie-word {
+        font-size: 10px;
+        padding: 1px 3px;
     }
     
     .target-word {

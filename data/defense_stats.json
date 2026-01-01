@@ -1,0 +1,24 @@
+[
+  {
+    "score": 325,
+    "wave": 4,
+    "total_waves": 4,
+    "zombies_killed": 6,
+    "plant_health": 100,
+    "difficulty": "easy",
+    "victory": true,
+    "play_time": 69.056,
+    "timestamp": "2026-01-01T17:38:50.921831"
+  },
+  {
+    "score": 330,
+    "wave": 4,
+    "total_waves": 4,
+    "zombies_killed": 6,
+    "plant_health": 100,
+    "difficulty": "easy",
+    "victory": true,
+    "play_time": 60.687,
+    "timestamp": "2026-01-01T18:04:09.458372"
+  }
+]

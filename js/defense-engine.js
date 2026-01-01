@@ -25,6 +25,19 @@ class DefenseEngine extends EventEmitter {
             isAlive: true
         };
         
+        // 道路系统 (5条道路，均匀分布)
+        // 车道位置会根据战场实际高度动态计算
+        this.lanes = {
+            count: 5,
+            zombieHeight: 60 // 僵尸元素大约高度（icon + word-container）
+        };
+
+        // 战场尺寸（会在游戏开始时动态获取）
+        this.battlefield = {
+            width: 800,   // 默认值，会被动态更新
+            height: 350   // 高度固定
+        };
+        
         // 僵尸系统
         this.zombies = new Map();
         this.zombieIdCounter = 0;
@@ -81,35 +94,33 @@ class DefenseEngine extends EventEmitter {
             }
         };
         
-        // 僵尸类型配置 (将从API获取)
+        // 僵尸类型配置
+        // 血量由单词长度决定，这里只配置其他属性
+        // 单词越长，僵尸越难击杀，但移动速度越慢，分数越高
         this.zombieTypes = {
             basic: {
-                health: 1,
-                speed: 25,
-                damage: 10,
-                points: 10,
+                speed: 30,      // 移动速度（像素/秒）
+                damage: 10,     // 对植物伤害
+                points: 10,     // 击杀得分
                 icon: '🧟‍♂️',
                 color: '#8b4513'
             },
             medium: {
-                health: 2,
-                speed: 18,
+                speed: 22,
                 damage: 15,
                 points: 25,
                 icon: '🧟‍♀️',
                 color: '#ff6347'
             },
             strong: {
-                health: 3,
-                speed: 12,
+                speed: 15,
                 damage: 25,
                 points: 50,
                 icon: '🧟',
                 color: '#dc143c'
             },
             boss: {
-                health: 5,
-                speed: 8,
+                speed: 10,
                 damage: 40,
                 points: 100,
                 icon: '👹',
@@ -136,23 +147,20 @@ class DefenseEngine extends EventEmitter {
     
     // 加载单词数据
     async loadWordsData() {
+        // 立即设置默认数据，避免异步加载期间的空值
+        this.useDefaultWords();
+        console.log('📚 使用默认单词数据');
+        
         try {
             if (window.apiClient) {
                 const response = await window.apiClient.getDefenseWords();
-                if (response.status === 'success') {
+                if (response.status === 'success' && response.data) {
                     this.wordsData = response.data;
-                    console.log('📚 植物防御单词数据已加载', this.wordsData);
-                } else {
-                    console.warn('⚠️ 加载单词数据失败，使用默认数据');
-                    this.useDefaultWords();
+                    console.log('📚 从API加载单词数据成功');
                 }
-            } else {
-                console.warn('⚠️ API客户端未找到，使用默认数据');
-                this.useDefaultWords();
             }
         } catch (error) {
-            console.error('❌ 加载单词数据出错:', error);
-            this.useDefaultWords();
+            console.warn('⚠️ API加载失败，继续使用默认数据');
         }
     }
     
@@ -186,31 +194,45 @@ class DefenseEngine extends EventEmitter {
         }
     }
     
+    // 动态更新战场尺寸
+    updateBattlefieldSize() {
+        const battlefieldEl = document.querySelector('.battlefield');
+        if (battlefieldEl) {
+            const rect = battlefieldEl.getBoundingClientRect();
+            this.battlefield.width = rect.width;
+            this.battlefield.height = rect.height;
+            console.log(`📐 战场尺寸: ${this.battlefield.width}x${this.battlefield.height}`);
+        }
+    }
+
     // 开始游戏
     startGame() {
         if (this.gameState.isPlaying) return;
-        
+
         console.log('🌱 植物防御游戏开始！');
-        
+
+        // 动态获取战场尺寸
+        this.updateBattlefieldSize();
+
         // 重置游戏状态
         this.resetGame();
-        
+
         // 设置游戏状态
         this.gameState.isPlaying = true;
         this.gameState.isPaused = false;
         this.gameState.isCompleted = false;
         this.gameState.startTime = Date.now();
-        
+
         // 重置植物状态
         this.plant.health = this.plant.maxHealth;
         this.plant.isAlive = true;
-        
+
         // 开始第一波
         this.startWave(1);
-        
+
         // 开始游戏循环
         this.startGameLoop();
-        
+
         // 播放开始音效
         if (window.audioManager) {
             window.audioManager.playSound('gameStart');
@@ -282,30 +304,51 @@ class DefenseEngine extends EventEmitter {
     
     // 生成僵尸
     spawnZombie(type) {
-        if (!this.wordsData) {
-            console.warn('⚠️ 单词数据未加载，延迟生成僵尸');
-            setTimeout(() => this.spawnZombie(type), 100);
+        const zombieConfig = this.zombieTypes[type];
+        if (!zombieConfig) {
+            console.error(`❌ 未知的僵尸类型: ${type}`);
             return;
         }
-        
-        const zombieConfig = this.zombieTypes[type];
-        const typeWords = this.wordsData[type] || this.wordsData.basic || ['error'];
+
+        const typeWords = this.wordsData?.[type] || this.wordsData?.basic || ['error'];
         const word = Utils.randomChoice(typeWords);
-        
+
+        // 血量 = 单词长度（每输入正确一个字母扣1点血）
+        const health = word.length;
+
+        // 根据难度调整速度
+        const speedMultiplier = {
+            easy: 0.8,
+            medium: 1.0,
+            hard: 1.3
+        }[this.gameState.difficulty] || 1.0;
+
+        // 随机选择一条道路
+        const laneIndex = Math.floor(Math.random() * this.lanes.count);
+
+        // 计算车道Y位置（按比例，使僵尸居中在车道内）
+        // 5条车道均匀分布，车道高度 = 战场高度/5
+        const laneHeight = this.battlefield.height / this.lanes.count;
+        const laneY = laneIndex * laneHeight + (laneHeight - this.lanes.zombieHeight) / 2;
+
+        // 僵尸生成位置：从战场右侧边缘开始（留出80px使其可见）
+        const spawnX = this.battlefield.width - 80;
+
         const zombie = {
             id: ++this.zombieIdCounter,
             type: type,
             word: word,
-            health: zombieConfig.health,
-            maxHealth: zombieConfig.health,
-            speed: zombieConfig.speed,
+            health: health,
+            maxHealth: health,
+            speed: zombieConfig.speed * speedMultiplier,
             damage: zombieConfig.damage,
             points: zombieConfig.points,
             icon: zombieConfig.icon,
             color: zombieConfig.color,
+            lane: laneIndex, // 记录所在道路
             position: {
-                x: 800, // 从右侧开始
-                y: 120 + Math.random() * 160 // 随机Y位置
+                x: spawnX,  // 从战场右侧开始
+                y: laneY    // 居中在车道内
             },
             isAlive: true,
             lastMove: Date.now()
@@ -318,7 +361,7 @@ class DefenseEngine extends EventEmitter {
             this.setTarget(zombie);
         }
         
-        console.log(`🧟‍♂️ 生成${type}僵尸: ${word} (血量: ${zombie.health})`);
+        console.log(`🧟‍♂️ 生成${type}僵尸: "${word}" (血量: ${zombie.health}, 速度: ${zombie.speed.toFixed(1)})`);
         
         this.emit('zombieSpawned', zombie);
         return zombie;
@@ -371,6 +414,9 @@ class DefenseEngine extends EventEmitter {
                 window.audioManager.playSound('keyPress');
             }
             
+            // 每输入正确一个字母就射击
+            this.shootZombie(this.currentTarget);
+            
             // 检查是否完成单词
             if (this.userInput === targetWord) {
                 this.completeWord();
@@ -406,11 +452,6 @@ class DefenseEngine extends EventEmitter {
     completeWord() {
         if (!this.currentTarget) return;
         
-        const zombie = this.currentTarget;
-        
-        // 射击僵尸
-        this.shootZombie(zombie);
-        
         // 重置输入
         this.userInput = '';
         
@@ -421,13 +462,19 @@ class DefenseEngine extends EventEmitter {
     // 射击僵尸
     shootZombie(zombie) {
         // 创建子弹
+        const startX = this.plant.position.x + 40;
+        const startY = this.plant.position.y;
+
         const bullet = {
             id: ++this.bulletIdCounter,
-            startX: this.plant.position.x + 40,
-            startY: this.plant.position.y,
+            startX: startX,
+            startY: startY,
             targetX: zombie.position.x,
             targetY: zombie.position.y,
-            speed: 300, // 像素/秒
+            currentX: startX,  // 初始位置
+            currentY: startY,  // 初始位置
+            targetZombieId: zombie.id, // 记录目标僵尸ID
+            progress: 0,       // 飞行进度
             damage: 1,
             startTime: Date.now()
         };
@@ -589,47 +636,52 @@ class DefenseEngine extends EventEmitter {
     // 更新子弹
     updateBullets(deltaTime) {
         const currentTime = Date.now();
-        const bulletsToRemove = [];
-        
+
         for (const bullet of this.bullets.values()) {
             const elapsed = currentTime - bullet.startTime;
-            const progress = Math.min(elapsed / 1000, 1); // 1秒飞行时间
-            
+            const flightTime = 400; // 0.4秒飞行时间
+            const progress = Math.min(elapsed / flightTime, 1);
+
             // 更新子弹位置
             bullet.currentX = bullet.startX + (bullet.targetX - bullet.startX) * progress;
             bullet.currentY = bullet.startY + (bullet.targetY - bullet.startY) * progress;
-            
-            // 检查是否到达目标
-            if (progress >= 1) {
-                bulletsToRemove.push(bullet.id);
-            }
+            bullet.progress = progress; // 保存进度供碰撞检测使用
         }
-        
-        // 移除到达的子弹
-        bulletsToRemove.forEach(id => {
-            this.bullets.delete(id);
-        });
+        // 注意：不在这里删除子弹，由 checkCollisions 统一处理
     }
     
     // 检查碰撞
     checkCollisions() {
+        const bulletsToRemove = [];
+
         for (const bullet of this.bullets.values()) {
-            for (const zombie of this.zombies.values()) {
-                if (!zombie.isAlive) continue;
-                
-                // 简单的碰撞检测
-                const dx = bullet.currentX - zombie.position.x;
-                const dy = bullet.currentY - zombie.position.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 30) {
-                    // 碰撞发生
-                    this.hitZombie(zombie, bullet);
-                    this.bullets.delete(bullet.id);
-                    break;
-                }
+            // 获取子弹的目标僵尸
+            const targetZombie = this.zombies.get(bullet.targetZombieId);
+
+            if (!targetZombie || !targetZombie.isAlive) {
+                // 目标已死亡或不存在，移除子弹
+                bulletsToRemove.push(bullet.id);
+                continue;
+            }
+
+            // 更新子弹目标位置（追踪僵尸）
+            bullet.targetX = targetZombie.position.x;
+            bullet.targetY = targetZombie.position.y;
+
+            // 检测碰撞：子弹到达目标位置 或 接近目标僵尸
+            const dx = bullet.currentX - targetZombie.position.x;
+            const dy = bullet.currentY - targetZombie.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // 当子弹飞行完成(progress >= 1)或接近目标时，命中
+            if (bullet.progress >= 1 || distance < 40) {
+                this.hitZombie(targetZombie, bullet);
+                bulletsToRemove.push(bullet.id);
             }
         }
+
+        // 移除已命中或无效的子弹
+        bulletsToRemove.forEach(id => this.bullets.delete(id));
     }
     
     // 击中僵尸
