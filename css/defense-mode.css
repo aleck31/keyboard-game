@@ -165,9 +165,14 @@
 }
 
 .plant-icon {
-    font-size: 3rem;
     animation: plantIdle 2s ease-in-out infinite;
     filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.plant-icon .peashooter-img {
+    width: 60px;
+    height: 75px;
+    object-fit: contain;
 }
 
 @keyframes plantIdle {
@@ -287,18 +292,41 @@
     font-weight: 700;
 }
 
+/* Boss阶段指示器 */
+.boss-phase-indicator {
+    position: absolute;
+    right: -1px;
+    background: linear-gradient(135deg, #8b0000, #dc143c);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+    animation: bossPhaseGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes bossPhaseGlow {
+    0%, 100% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+    50% { box-shadow: 0 2px 8px rgba(220, 20, 60, 0.6); }
+}
+
 /* 子弹 */
 .bullet {
     position: absolute;
     font-size: 1rem;
     z-index: 8;
-    animation: bulletFly 0.5s linear;
     pointer-events: none;
+    /* 子弹位置完全由JavaScript控制，只添加轻微旋转动画 */
+    animation: bulletSpin 0.3s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(139, 90, 43, 0.6));
 }
 
-@keyframes bulletFly {
-    from { transform: translateX(0px) rotate(0deg); }
-    to { transform: translateX(200px) rotate(360deg); }
+@keyframes bulletSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* 特效 */

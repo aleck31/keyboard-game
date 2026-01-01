@@ -197,7 +197,8 @@ const DefenseGame = {
                 defenseEngine.on('wordProgress', handleWordProgress);
                 defenseEngine.on('inputError', handleInputError);
                 defenseEngine.on('gameUpdate', handleGameUpdate);
-                
+                defenseEngine.on('bossPhaseChange', handleBossPhaseChange);
+
                 console.log('🌱 植物防御引擎已初始化');
             }
         };
@@ -243,11 +244,11 @@ const DefenseGame = {
             gameState.isCompleted = false;
             gameState.currentWave = 1;
             gameState.score = 0;
-            
+
             plant.health = plant.maxHealth;
             plant.isAlive = true;
             plant.isShooting = false;
-            
+
             currentTarget.value = null;
             userInput.value = '';
             zombies.value = [];
@@ -275,30 +276,22 @@ const DefenseGame = {
         };
         
         const handleZombieSpawned = (zombie) => {
-            zombies.value.push(zombie);
+            // 仅记录日志，数据同步由 handleGameUpdate 统一处理
             console.log(`🧟‍♂️ 僵尸生成: ${zombie.word}`);
         };
-        
+
         const handleZombieKilled = (data) => {
             gameState.score = data.score;
-            
-            // 从数组中移除僵尸
-            const index = zombies.value.findIndex(z => z.id === data.zombie.id);
-            if (index !== -1) {
-                zombies.value.splice(index, 1);
-            }
-            
+            // 数据同步由 handleGameUpdate 统一处理
             emit('score-changed', data.score);
         };
-        
+
         const handleZombieHit = (data) => {
-            // 更新僵尸血量
-            const zombie = zombies.value.find(z => z.id === data.zombie.id);
-            if (zombie) {
-                zombie.health = data.zombie.health;
+            // 立即从UI中移除已命中的子弹（避免穿透效果）
+            if (data.bulletId) {
+                bullets.value = bullets.value.filter(b => b.id !== data.bulletId);
             }
-            
-            // 显示击中特效
+            // 在子弹命中位置显示爆炸特效
             showHitEffect(data.position);
         };
         
@@ -324,8 +317,9 @@ const DefenseGame = {
         };
         
         const handleTargetChanged = (data) => {
-            currentTarget.value = data.zombie;
-            userInput.value = '';
+            // 创建新对象以确保Vue检测到变化（修复Boss多阶段时word不更新的问题）
+            currentTarget.value = data.zombie ? { ...data.zombie } : null;
+            userInput.value = data.typed || '';
         };
         
         const handleWordProgress = (data) => {
@@ -338,9 +332,21 @@ const DefenseGame = {
         };
         
         const handleGameUpdate = (data) => {
-            // 更新游戏对象位置
-            zombies.value = data.zombies;
-            bullets.value = data.bullets;
+            // 使用展开运算符创建新数组，确保Vue响应式更新
+            zombies.value = [...data.zombies];
+            bullets.value = [...data.bullets];
+        };
+
+        const handleBossPhaseChange = (data) => {
+            console.log(`👹 Boss阶段变化: ${data.phase}/${data.totalPhases} - ${data.word}`);
+            // 显示阶段转换通知
+            if (window.uiManager) {
+                window.uiManager.showNotification(
+                    `👹 Boss进入第${data.phase}阶段: ${data.word.toUpperCase()}`,
+                    'warning',
+                    2000
+                );
+            }
         };
         
         // 特效函数
@@ -476,7 +482,10 @@ const DefenseGame = {
                     id="plantDefender"
                     :class="{ shooting: plant.isShooting, dead: !plant.isAlive }"
                 >
-                    <div class="plant-icon">{{ plant.isAlive ? '🌻' : '💀' }}</div>
+                    <div class="plant-icon">
+                        <img v-if="plant.isAlive" src="/assets/images/peashooter.svg" alt="豌豆射手" class="peashooter-img">
+                        <span v-else>💀</span>
+                    </div>
                     <div class="plant-weapon" v-show="plant.isShooting">🌰</div>
                 </div>
                 
@@ -492,6 +501,10 @@ const DefenseGame = {
                     }"
                 >
                     <div class="zombie-icon">{{ zombie.icon }}</div>
+                    <!-- Boss阶段指示器 -->
+                    <div v-if="zombie.isBoss && zombie.totalPhases" class="boss-phase-indicator">
+                        {{ zombie.currentPhase + 1 }}/{{ zombie.totalPhases }}
+                    </div>
                     <div class="zombie-word-container">
                         <div
                             class="zombie-word-health"

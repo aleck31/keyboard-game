@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- 茎 -->
+  <ellipse cx="32" cy="54" rx="12" ry="6" fill="#228B22"/>
+  <rect x="28" y="32" width="8" height="24" rx="3" fill="#32CD32"/>
+
+  <!-- 叶子左 -->
+  <ellipse cx="20" cy="42" rx="10" ry="5" fill="#228B22" transform="rotate(-30 20 42)"/>
+
+  <!-- 叶子右 -->
+  <ellipse cx="44" cy="42" rx="10" ry="5" fill="#228B22" transform="rotate(30 44 42)"/>
+
+  <!-- 头部(圆形) -->
+  <circle cx="32" cy="22" r="18" fill="#32CD32"/>
+  <circle cx="32" cy="22" r="15" fill="#3CB371"/>
+
+  <!-- 眼睛 -->
+  <ellipse cx="26" cy="18" rx="5" ry="6" fill="white"/>
+  <ellipse cx="38" cy="18" rx="5" ry="6" fill="white"/>
+  <circle cx="27" cy="19" r="2.5" fill="#1a1a1a"/>
+  <circle cx="39" cy="19" r="2.5" fill="#1a1a1a"/>
+  <!-- 眼睛高光 -->
+  <circle cx="28" cy="17" r="1" fill="white"/>
+  <circle cx="40" cy="17" r="1" fill="white"/>
+
+  <!-- 嘴巴/炮管 -->
+  <ellipse cx="50" cy="24" rx="10" ry="7" fill="#228B22"/>
+  <ellipse cx="52" cy="24" rx="6" ry="4" fill="#1a1a1a"/>
+
+  <!-- 嘴唇 -->
+  <path d="M 42 18 Q 46 16 50 18" stroke="#1B5E20" stroke-width="2" fill="none"/>
+  <path d="M 42 30 Q 46 32 50 30" stroke="#1B5E20" stroke-width="2" fill="none"/>
+</svg>

@@ -58,39 +58,53 @@ class DefenseEngine extends EventEmitter {
         };
         
         // 难度配置
+        // 波次递进：每波的僵尸类型分布会随波次变化
         this.difficultyConfig = {
             easy: {
                 waves: 4,
                 zombiesPerWave: [3, 4, 5, 6],
-                zombieTypes: {
-                    basic: 0.7,
-                    medium: 0.25,
-                    strong: 0.05,
-                    boss: 0
-                },
-                spawnInterval: 2000
+                // 按波次的僵尸类型分布（递进感）
+                zombieTypesByWave: [
+                    { basic: 0.9, medium: 0.1, strong: 0, boss: 0 },      // 波1: 主要基础
+                    { basic: 0.7, medium: 0.3, strong: 0, boss: 0 },      // 波2
+                    { basic: 0.5, medium: 0.4, strong: 0.1, boss: 0 },    // 波3: 出现强力
+                    { basic: 0.4, medium: 0.4, strong: 0.15, boss: 0.05 } // 波4: 最终波有Boss
+                ],
+                spawnInterval: 2500,
+                speedMultiplier: 1.0
             },
             medium: {
                 waves: 7,
                 zombiesPerWave: [4, 5, 6, 7, 8, 9, 10],
-                zombieTypes: {
-                    basic: 0.5,
-                    medium: 0.35,
-                    strong: 0.13,
-                    boss: 0.02
-                },
-                spawnInterval: 1500
+                zombieTypesByWave: [
+                    { basic: 0.7, medium: 0.3, strong: 0, boss: 0 },
+                    { basic: 0.6, medium: 0.35, strong: 0.05, boss: 0 },
+                    { basic: 0.5, medium: 0.4, strong: 0.1, boss: 0 },
+                    { basic: 0.4, medium: 0.4, strong: 0.15, boss: 0.05 },
+                    { basic: 0.3, medium: 0.4, strong: 0.2, boss: 0.1 },
+                    { basic: 0.2, medium: 0.4, strong: 0.3, boss: 0.1 },
+                    { basic: 0.2, medium: 0.3, strong: 0.35, boss: 0.15 }  // 最终波Boss概率高
+                ],
+                spawnInterval: 2000,
+                speedMultiplier: 1.2
             },
             hard: {
                 waves: 10,
-                zombiesPerWave: [5, 6, 8, 10, 12, 14, 16, 18, 20, 25],
-                zombieTypes: {
-                    basic: 0.3,
-                    medium: 0.4,
-                    strong: 0.25,
-                    boss: 0.05
-                },
-                spawnInterval: 1000
+                zombiesPerWave: [5, 6, 7, 8, 9, 10, 12, 14, 16, 20],
+                zombieTypesByWave: [
+                    { basic: 0.5, medium: 0.4, strong: 0.1, boss: 0 },
+                    { basic: 0.4, medium: 0.4, strong: 0.2, boss: 0 },
+                    { basic: 0.3, medium: 0.4, strong: 0.25, boss: 0.05 },
+                    { basic: 0.3, medium: 0.35, strong: 0.25, boss: 0.1 },
+                    { basic: 0.2, medium: 0.35, strong: 0.3, boss: 0.15 },
+                    { basic: 0.2, medium: 0.3, strong: 0.35, boss: 0.15 },
+                    { basic: 0.15, medium: 0.3, strong: 0.35, boss: 0.2 },
+                    { basic: 0.1, medium: 0.3, strong: 0.4, boss: 0.2 },
+                    { basic: 0.1, medium: 0.25, strong: 0.4, boss: 0.25 },
+                    { basic: 0.1, medium: 0.2, strong: 0.4, boss: 0.3 }   // 最终波30%Boss
+                ],
+                spawnInterval: 1500,
+                speedMultiplier: 1.5
             }
         };
         
@@ -120,13 +134,26 @@ class DefenseEngine extends EventEmitter {
                 color: '#dc143c'
             },
             boss: {
-                speed: 10,
-                damage: 40,
-                points: 100,
+                speed: 18,      // Boss速度提升（比medium稍慢但比之前快）
+                damage: 50,     // Boss伤害提升
+                points: 200,    // Boss得分提升（多阶段总分）
                 icon: '👹',
-                color: '#8b0000'
+                color: '#8b0000',
+                isMultiPhase: true  // 标记为多阶段Boss
             }
         };
+
+        // Boss多阶段单词组合（每个Boss由多个单词组成）
+        this.bossWordCombos = [
+            ['magic', 'amazing', 'wonderful'],
+            ['quick', 'powerful', 'fantastic'],
+            ['brave', 'champion', 'unstoppable'],
+            ['sweet', 'sunshine', 'happiness'],
+            ['smart', 'brilliant', 'extraordinary'],
+            ['dance', 'butterfly', 'magnificent'],
+            ['light', 'rainbow', 'celebration'],
+            ['dream', 'adventure', 'discovering']
+        ];
         
         // 单词数据 (将从API加载)
         this.wordsData = null;
@@ -267,23 +294,29 @@ class DefenseEngine extends EventEmitter {
     // 生成波次僵尸
     spawnWaveZombies(count) {
         const config = this.difficultyConfig[this.gameState.difficulty];
+        const currentWave = this.waveSystem.current;
+
+        // 获取当前波次的僵尸类型分布（波次递进）
+        const waveIndex = Math.min(currentWave - 1, config.zombieTypesByWave.length - 1);
+        const typeDistribution = config.zombieTypesByWave[waveIndex];
+
         let spawnedCount = 0;
-        
+
         const spawnNext = () => {
             if (spawnedCount >= count || !this.gameState.isPlaying) return;
-            
-            // 根据概率选择僵尸类型
-            const zombieType = this.selectZombieType(config.zombieTypes);
+
+            // 根据当前波次的概率分布选择僵尸类型
+            const zombieType = this.selectZombieType(typeDistribution);
             this.spawnZombie(zombieType);
-            
+
             spawnedCount++;
-            
+
             // 继续生成下一个僵尸
             if (spawnedCount < count) {
                 setTimeout(spawnNext, config.spawnInterval + Math.random() * 1000);
             }
         };
-        
+
         spawnNext();
     }
     
@@ -310,59 +343,87 @@ class DefenseEngine extends EventEmitter {
             return;
         }
 
-        const typeWords = this.wordsData?.[type] || this.wordsData?.basic || ['error'];
-        const word = Utils.randomChoice(typeWords);
-
-        // 血量 = 单词长度（每输入正确一个字母扣1点血）
-        const health = word.length;
-
-        // 根据难度调整速度
-        const speedMultiplier = {
-            easy: 0.8,
-            medium: 1.0,
-            hard: 1.3
-        }[this.gameState.difficulty] || 1.0;
+        // 从难度配置获取速度倍率
+        const config = this.difficultyConfig[this.gameState.difficulty];
+        const speedMultiplier = config.speedMultiplier || 1.0;
 
         // 随机选择一条道路
         const laneIndex = Math.floor(Math.random() * this.lanes.count);
-
-        // 计算车道Y位置（按比例，使僵尸居中在车道内）
-        // 5条车道均匀分布，车道高度 = 战场高度/5
         const laneHeight = this.battlefield.height / this.lanes.count;
         const laneY = laneIndex * laneHeight + (laneHeight - this.lanes.zombieHeight) / 2;
-
-        // 僵尸生成位置：从战场右侧边缘开始（留出80px使其可见）
         const spawnX = this.battlefield.width - 80;
 
-        const zombie = {
-            id: ++this.zombieIdCounter,
-            type: type,
-            word: word,
-            health: health,
-            maxHealth: health,
-            speed: zombieConfig.speed * speedMultiplier,
-            damage: zombieConfig.damage,
-            points: zombieConfig.points,
-            icon: zombieConfig.icon,
-            color: zombieConfig.color,
-            lane: laneIndex, // 记录所在道路
-            position: {
-                x: spawnX,  // 从战场右侧开始
-                y: laneY    // 居中在车道内
-            },
-            isAlive: true,
-            lastMove: Date.now()
-        };
+        let zombie;
+
+        // Boss多阶段机制
+        if (type === 'boss' && zombieConfig.isMultiPhase) {
+            const wordCombo = Utils.randomChoice(this.bossWordCombos);
+            const firstWord = wordCombo[0];
+
+            zombie = {
+                id: ++this.zombieIdCounter,
+                type: type,
+                // 多阶段Boss属性
+                words: wordCombo,           // 所有阶段的单词
+                currentPhase: 0,            // 当前阶段（0, 1, 2）
+                totalPhases: wordCombo.length,
+                word: firstWord,            // 当前单词
+                health: firstWord.length,
+                maxHealth: firstWord.length,
+                // 基础属性
+                speed: zombieConfig.speed * speedMultiplier,
+                damage: zombieConfig.damage,
+                points: Math.floor(zombieConfig.points / wordCombo.length), // 每阶段得分
+                totalPoints: zombieConfig.points,  // 总得分
+                icon: zombieConfig.icon,
+                color: zombieConfig.color,
+                lane: laneIndex,
+                position: { x: spawnX, y: laneY },
+                isAlive: true,
+                isBoss: true,
+                lastMove: Date.now()
+            };
+
+            console.log(`👹 生成多阶段Boss: [${wordCombo.join(' → ')}]`);
+        } else {
+            // 普通僵尸
+            const typeWords = this.wordsData?.[type] || this.wordsData?.basic || ['error'];
+            const word = Utils.randomChoice(typeWords);
+            const health = word.length;
+
+            zombie = {
+                id: ++this.zombieIdCounter,
+                type: type,
+                word: word,
+                health: health,
+                maxHealth: health,
+                speed: zombieConfig.speed * speedMultiplier,
+                damage: zombieConfig.damage,
+                points: zombieConfig.points,
+                icon: zombieConfig.icon,
+                color: zombieConfig.color,
+                lane: laneIndex,
+                position: { x: spawnX, y: laneY },
+                isAlive: true,
+                isBoss: false,
+                lastMove: Date.now()
+            };
+        }
         
         this.zombies.set(zombie.id, zombie);
-        
+
         // 如果没有当前目标，设置为目标
         if (!this.currentTarget) {
             this.setTarget(zombie);
         }
-        
-        console.log(`🧟‍♂️ 生成${type}僵尸: "${word}" (血量: ${zombie.health}, 速度: ${zombie.speed.toFixed(1)})`);
-        
+
+        // 日志输出
+        if (zombie.isBoss && zombie.words) {
+            console.log(`🧟‍♂️ 生成Boss僵尸: [${zombie.words.join(' → ')}] (阶段1/${zombie.totalPhases}, 血量: ${zombie.health}, 速度: ${zombie.speed.toFixed(1)})`);
+        } else {
+            console.log(`🧟‍♂️ 生成${type}僵尸: "${zombie.word}" (血量: ${zombie.health}, 速度: ${zombie.speed.toFixed(1)})`);
+        }
+
         this.emit('zombieSpawned', zombie);
         return zombie;
     }
@@ -530,22 +591,38 @@ class DefenseEngine extends EventEmitter {
     
     // 开始游戏循环
     startGameLoop() {
-        this.lastUpdate = Date.now();
-        
+        // 使用 performance.now() 保持时间基准一致
+        // （requestAnimationFrame 的 currentTime 也是基于 performance.now()）
+        this.lastUpdate = performance.now();
+
+        // 立即触发一次游戏更新，确保第一个僵尸立即可见
+        this.emitGameUpdate();
+
         const gameLoop = (currentTime) => {
             if (!this.gameState.isPlaying) return;
-            
+
             const deltaTime = currentTime - this.lastUpdate;
             this.lastUpdate = currentTime;
-            
+
             // 更新游戏逻辑
             this.updateGame(deltaTime);
-            
+
             // 继续循环
             this.gameLoop = requestAnimationFrame(gameLoop);
         };
-        
+
         this.gameLoop = requestAnimationFrame(gameLoop);
+    }
+
+    // 发送游戏状态更新事件
+    emitGameUpdate() {
+        this.emit('gameUpdate', {
+            plant: this.plant,
+            zombies: Array.from(this.zombies.values()),
+            bullets: Array.from(this.bullets.values()),
+            gameState: this.gameState,
+            waveSystem: this.waveSystem
+        });
     }
     
     // 更新游戏逻辑
@@ -568,13 +645,7 @@ class DefenseEngine extends EventEmitter {
         this.checkGameEnd();
         
         // 发送更新事件
-        this.emit('gameUpdate', {
-            plant: this.plant,
-            zombies: Array.from(this.zombies.values()),
-            bullets: Array.from(this.bullets.values()),
-            gameState: this.gameState,
-            waveSystem: this.waveSystem
-        });
+        this.emitGameUpdate();
     }
     
     // 更新僵尸
@@ -687,13 +758,16 @@ class DefenseEngine extends EventEmitter {
     // 击中僵尸
     hitZombie(zombie, bullet) {
         zombie.health -= bullet.damage;
-        
+
         console.log(`🎯 击中僵尸 ${zombie.word}！剩余血量: ${zombie.health}`);
-        
+
+        // 发送命中事件，包含子弹ID用于立即移除
         this.emit('zombieHit', {
             zombie: zombie,
             damage: bullet.damage,
-            position: { x: zombie.position.x, y: zombie.position.y }
+            bulletId: bullet.id,
+            // 爆炸位置使用子弹当前位置（更准确）
+            position: { x: bullet.currentX, y: bullet.currentY }
         });
         
         // 检查僵尸是否死亡
@@ -704,27 +778,76 @@ class DefenseEngine extends EventEmitter {
     
     // 杀死僵尸
     killZombie(zombie) {
+        // Boss多阶段机制：检查是否有更多阶段
+        if (zombie.isBoss && zombie.words && zombie.currentPhase < zombie.totalPhases - 1) {
+            // 进入下一阶段
+            zombie.currentPhase++;
+            const nextWord = zombie.words[zombie.currentPhase];
+
+            // 重置血量和单词
+            zombie.word = nextWord;
+            zombie.health = nextWord.length;
+            zombie.maxHealth = nextWord.length;
+
+            // 获得阶段分数
+            this.gameState.score += zombie.points;
+
+            console.log(`👹 Boss进入第${zombie.currentPhase + 1}阶段: "${nextWord}" (血量: ${zombie.health})`);
+
+            // 播放阶段转换音效
+            if (window.audioManager) {
+                window.audioManager.playSound('achievement');
+            }
+
+            // 发送阶段转换事件
+            this.emit('bossPhaseChange', {
+                zombie: zombie,
+                phase: zombie.currentPhase + 1,
+                totalPhases: zombie.totalPhases,
+                word: nextWord,
+                score: this.gameState.score
+            });
+
+            // 强制将目标锁定到这个Boss（修复：completeWord可能已经切换到其他目标）
+            this.currentTarget = zombie;
+            this.userInput = '';
+            this.emit('targetChanged', {
+                zombie: zombie,
+                word: zombie.word,
+                typed: '',
+                remaining: zombie.word
+            });
+
+            return; // 不击杀，继续存活
+        }
+
+        // 普通击杀逻辑（包括Boss最后阶段）
         zombie.isAlive = false;
         this.zombies.delete(zombie.id);
-        
+
         // 增加分数
-        this.gameState.score += zombie.points;
-        
+        const pointsEarned = zombie.isBoss ? zombie.points : zombie.points; // Boss最后阶段也获得阶段分
+        this.gameState.score += pointsEarned;
+
         // 增加击杀计数
         this.waveSystem.zombiesKilled++;
-        
-        console.log(`💀 僵尸 ${zombie.word} 被击杀！获得 ${zombie.points} 分`);
-        
+
+        if (zombie.isBoss) {
+            console.log(`💀 Boss ${zombie.words ? zombie.words.join('→') : zombie.word} 被完全击杀！获得 ${pointsEarned} 分（总分: ${this.gameState.score}）`);
+        } else {
+            console.log(`💀 僵尸 ${zombie.word} 被击杀！获得 ${pointsEarned} 分`);
+        }
+
         // 如果这是当前目标，寻找新目标
         if (this.currentTarget && this.currentTarget.id === zombie.id) {
             this.findNextTarget();
         }
-        
+
         // 播放击杀音效
         if (window.audioManager) {
             window.audioManager.playSound('achievement');
         }
-        
+
         this.emit('zombieKilled', {
             zombie: zombie,
             score: this.gameState.score,
