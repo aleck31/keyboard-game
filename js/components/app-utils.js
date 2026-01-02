@@ -264,26 +264,48 @@ const AppUtils = {
             showNotification('设置已保存', 'success');
             console.log('设置已保存:', settings);
         };
-        
+
+        // 从API加载默认配置
+        const loadDefaultConfig = async () => {
+            try {
+                if (window.apiClient) {
+                    const response = await window.apiClient.getConfig();
+                    if (response.status === 'success' && response.data) {
+                        return response.data;
+                    }
+                }
+            } catch (error) {
+                console.warn('加载默认配置失败，使用内置默认值');
+            }
+            return {
+                defaultMode: 'classic',
+                theme: 'dark',
+                enableKeyboardSound: true,
+                enableBackgroundMusic: true
+            };
+        };
+
         // 重置设置
-        const resetSettings = () => {
+        const resetSettings = async () => {
             if (confirm('确定要重置所有设置为默认值吗？')) {
+                // 从API获取默认配置
+                const defaultConfig = await loadDefaultConfig();
                 const defaultSettings = {
-                    theme: 'dark',
+                    theme: defaultConfig.theme || 'dark',
                     timeLimit: 60,
                     difficulty: 'normal',
-                    enableSounds: true,
-                    enableMusic: true,
+                    enableSounds: defaultConfig.enableKeyboardSound !== false,
+                    enableMusic: defaultConfig.enableBackgroundMusic !== false,
                     highlightErrors: true
                 };
-                
+
                 Utils.Storage.set('gameSettings', defaultSettings);
                 loadCurrentSettings();
-                
+
                 // 应用默认主题
-                currentTheme.value = 'dark';
-                applyTheme('dark');
-                
+                currentTheme.value = defaultSettings.theme;
+                applyTheme(defaultSettings.theme);
+
                 showNotification('设置已重置为默认值', 'success');
             }
         };
@@ -418,9 +440,23 @@ const AppUtils = {
         };
         
         // 生命周期
-        onMounted(() => {
-            // 加载保存的主题设置
-            const settings = Utils.Storage.get('gameSettings', {});
+        onMounted(async () => {
+            // 加载保存的主题设置，若无则从API获取默认配置
+            let settings = Utils.Storage.get('gameSettings', null);
+            if (!settings) {
+                const defaultConfig = await loadDefaultConfig();
+                settings = {
+                    theme: defaultConfig.theme || 'dark',
+                    enableSounds: defaultConfig.enableKeyboardSound !== false,
+                    enableMusic: defaultConfig.enableBackgroundMusic !== false,
+                    timeLimit: 60,
+                    difficulty: 'normal',
+                    highlightErrors: true
+                };
+                Utils.Storage.set('gameSettings', settings);
+                console.log('⚙️ 已从API加载默认配置');
+            }
+
             if (settings.theme && themes.includes(settings.theme)) {
                 currentTheme.value = settings.theme;
                 applyTheme(settings.theme);

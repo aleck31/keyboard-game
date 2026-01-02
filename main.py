@@ -64,7 +64,7 @@ def save_stats(filename: str, stats):
         
         all_stats.append(stats.dict())
         
-        os.makedirs("data", exist_ok=True)
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(all_stats, f, ensure_ascii=False, indent=2)
         
@@ -73,6 +73,18 @@ def save_stats(filename: str, stats):
         return False
 
 # 注册路由
+@app.get("/api/config")
+async def get_general_config():
+    """获取通用配置"""
+    default_config = {
+        "defaultMode": "classic",
+        "theme": "dark",
+        "enableKeyboardSound": True,
+        "enableBackgroundMusic": True
+    }
+    config = load_json_file("data/config/general.json", default_config)
+    return {"status": "success", "data": config}
+
 @app.get("/api/texts")
 async def get_practice_texts():
     """获取练习文本"""
@@ -82,7 +94,7 @@ async def get_practice_texts():
         "FastAPI makes building APIs fast and easy.",
         "Practice makes perfect in typing speed."
     ]
-    texts = load_json_file("data/texts.json", default_texts)
+    texts = load_json_file("data/content/texts.json", default_texts)
     return {"status": "success", "data": texts}
 
 @app.get("/api/words")
@@ -92,7 +104,7 @@ async def get_practice_words():
         "hello", "world", "python", "javascript", "typing", "speed",
         "keyboard", "practice", "game", "fast", "accurate", "skill"
     ]
-    words = load_json_file("data/words.json", default_words)
+    words = load_json_file("data/content/words.json", default_words)
     return {"status": "success", "data": words}
 
 @app.get("/api/defense/words")
@@ -104,14 +116,25 @@ async def get_defense_words():
         "strong": ["computer", "keyboard", "beautiful", "wonderful"],
         "boss": ["extraordinary", "incomprehensible", "unbelievable"]
     }
-    words = load_json_file("data/defense_words.json", default_words)
+    words = load_json_file("data/content/defense_words.json", default_words)
     return {"status": "success", "data": words}
+
+@app.get("/api/defense/config")
+async def get_defense_config():
+    """获取植物防御模式配置"""
+    default_config = {
+        "difficulty": {},
+        "zombieTypes": {},
+        "bossWordCombos": []
+    }
+    config = load_json_file("data/config/defense.json", default_config)
+    return {"status": "success", "data": config}
 
 @app.post("/api/defense/wave")
 async def generate_defense_wave(config: DefenseWaveConfig):
     """生成植物防御波次"""
     try:
-        all_words = load_json_file("data/defense_words.json", {})
+        all_words = load_json_file("data/content/defense_words.json", {})
         
         configs = {
             "easy": {"waves": 4, "zombies": [3, 4, 5, 6], "types": {"basic": 0.7, "medium": 0.3}},
@@ -153,25 +176,10 @@ async def generate_defense_wave(config: DefenseWaveConfig):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成波次失败: {str(e)}")
 
-@app.get("/api/defense/config/{difficulty}")
-async def get_defense_config(difficulty: str):
-    """获取植物防御难度配置"""
-    configs = {
-        "easy": {"waves": 4, "name": "简单", "description": "4波基础僵尸，适合新手"},
-        "medium": {"waves": 7, "name": "中等", "description": "7波混合僵尸，平衡挑战"},
-        "hard": {"waves": 10, "name": "困难", "description": "10波强力僵尸，极限挑战"}
-    }
-    
-    config = configs.get(difficulty)
-    if not config:
-        raise HTTPException(status_code=404, detail="难度配置不存在")
-    
-    return {"status": "success", "data": config}
-
 @app.post("/api/stats")
 async def save_game_stats(stats: GameStats):
     """保存游戏统计"""
-    success = save_stats("data/game_stats.json", stats)
+    success = save_stats("userdata/game_stats.json", stats)
     if success:
         return {"status": "success", "message": "统计数据已保存"}
     else:
@@ -180,7 +188,7 @@ async def save_game_stats(stats: GameStats):
 @app.post("/api/defense/stats")
 async def save_defense_stats(stats: DefenseGameStats):
     """保存植物防御模式统计"""
-    success = save_stats("data/defense_stats.json", stats)
+    success = save_stats("userdata/defense_stats.json", stats)
     if success:
         return {"status": "success", "message": "植物防御统计数据已保存"}
     else:
@@ -190,7 +198,7 @@ async def save_defense_stats(stats: DefenseGameStats):
 async def get_game_stats():
     """获取游戏统计"""
     try:
-        stats = load_json_file("data/game_stats.json", [])
+        stats = load_json_file("userdata/game_stats.json", [])
         return {"status": "success", "data": stats}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取统计数据失败: {str(e)}")
@@ -198,7 +206,7 @@ async def get_game_stats():
 @app.get("/api/defense/stats")
 async def get_defense_stats():
     try:
-        stats = load_json_file("data/defense_stats.json", [])
+        stats = load_json_file("userdata/defense_stats.json", [])
         return {"status": "success", "data": stats}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取植物防御统计失败: {str(e)}")
@@ -207,7 +215,7 @@ async def get_defense_stats():
 async def get_leaderboard():
     """获取排行榜"""
     try:
-        all_stats = load_json_file("data/game_stats.json", [])
+        all_stats = load_json_file("userdata/game_stats.json", [])
         leaderboard = sorted(all_stats, key=lambda x: x['wpm'], reverse=True)[:10]
         return {"status": "success", "data": leaderboard}
     except Exception as e:
@@ -217,7 +225,7 @@ async def get_leaderboard():
 async def get_defense_leaderboard():
     """获取植物防御排行榜"""
     try:
-        all_stats = load_json_file("data/defense_stats.json", [])
+        all_stats = load_json_file("userdata/defense_stats.json", [])
         leaderboard = sorted(all_stats, key=lambda x: x['score'], reverse=True)[:10]
         return {"status": "success", "data": leaderboard}
     except Exception as e:
@@ -227,8 +235,8 @@ async def get_defense_leaderboard():
 async def get_game_analytics():
     """获取游戏分析数据"""
     try:
-        traditional_stats = load_json_file("data/game_stats.json", [])
-        defense_stats = load_json_file("data/defense_stats.json", [])
+        traditional_stats = load_json_file("userdata/game_stats.json", [])
+        defense_stats = load_json_file("userdata/defense_stats.json", [])
         
         analytics = {
             "total_games": len(traditional_stats) + len(defense_stats),

@@ -80,9 +80,8 @@ dev-docs/
 .env.test.local
 .env.production.local
 
-# 统计和分析文件（可选，根据需要）
-# data/game_stats.json
-# data/defense_stats.json
+# 用户数据目录
+userdata/
 
 # 媒体文件（如果很大的话）
 # assets/audio/

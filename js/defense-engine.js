@@ -170,6 +170,7 @@ class DefenseEngine extends EventEmitter {
         console.log('🌱 植物防御引擎初始化');
         this.bindEvents();
         this.loadWordsData();
+        this.loadConfig();
     }
     
     // 加载单词数据
@@ -200,7 +201,31 @@ class DefenseEngine extends EventEmitter {
             boss: ['extraordinary', 'incomprehensible', 'unbelievable']
         };
     }
-    
+
+    // 加载游戏配置
+    async loadConfig() {
+        try {
+            if (window.apiClient) {
+                const response = await window.apiClient.getDefenseConfig();
+                if (response.status === 'success' && response.data) {
+                    const config = response.data;
+                    if (config.difficulty) {
+                        this.difficultyConfig = config.difficulty;
+                    }
+                    if (config.zombieTypes) {
+                        this.zombieTypes = config.zombieTypes;
+                    }
+                    if (config.bossWordCombos) {
+                        this.bossWordCombos = config.bossWordCombos;
+                    }
+                    console.log('⚙️ 从API加载游戏配置成功');
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ 配置加载失败，使用默认配置');
+        }
+    }
+
     bindEvents() {
         // 监听键盘输入
         document.addEventListener('keydown', (e) => {

@@ -28,6 +28,11 @@ class APIClient {
         }
     }
     
+    // 获取通用配置
+    async getConfig() {
+        return await this.request('/config');
+    }
+
     // 获取练习文本
     async getTexts() {
         return await this.request('/texts');
@@ -54,9 +59,9 @@ class APIClient {
         });
     }
     
-    // 获取植物防御难度配置
-    async getDefenseConfig(difficulty) {
-        return await this.request(`/defense/config/${difficulty}`);
+    // 获取植物防御配置
+    async getDefenseConfig() {
+        return await this.request('/defense/config');
     }
     
     // 保存游戏统计
