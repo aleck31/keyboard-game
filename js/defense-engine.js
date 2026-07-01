@@ -227,14 +227,9 @@ class DefenseEngine extends EventEmitter {
     }
 
     bindEvents() {
-        // 监听键盘输入
-        document.addEventListener('keydown', (e) => {
-            if (this.gameState.isPlaying && !this.gameState.isPaused) {
-                this.handleKeyInput(e);
-            }
-        });
+        // 键盘输入由 GameEngine 统一路由到 handleKeyInput()，不在此处自行监听
     }
-    
+
     // 设置难度
     setDifficulty(difficulty) {
         if (!this.gameState.isPlaying) {
@@ -1066,5 +1061,6 @@ class DefenseEngine extends EventEmitter {
     }
 }
 
-// 导出
+// 导出（单例：defense-game.js 组件复用同一个实例，避免重复挂载/泄漏）
 window.DefenseEngine = DefenseEngine;
+window.defenseEngine = new DefenseEngine();

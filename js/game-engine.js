@@ -343,24 +343,31 @@ class GameEngine extends Utils.EventEmitter {
                 console.log('游戏已在进行中');
                 return;
             }
-            
+
             console.log('🎮 GameEngine.startGame() 开始');
-            
+
             // 重置游戏状态（通过统一状态管理）
             this.gameStore.actions.resetGame();
-            
-            // 生成文本
-            this.generateText();
-            
+
+            // 防御模式没有打字文本，由 defenseEngine 驱动自己的模拟
+            if (gameState.mode !== 'defense') {
+                this.generateText();
+            }
+
             // 启动游戏（通过统一状态管理）
             this.gameStore.actions.startGame();
-            
+
             // 如果是赛车追逐模式，初始化赛车数据
             if (gameState.mode === 'racing') {
                 this.initRacingMode();
                 this.gameStore.updateState('racing.raceStartTime', Date.now());
             }
-            
+
+            // 防御模式：启动引擎自身的模拟循环
+            if (gameState.mode === 'defense' && window.defenseEngine) {
+                window.defenseEngine.startGame();
+            }
+
             // 开始背景音乐
             if (window.audioManager) {
                 window.audioManager.resumeAudioContext();
@@ -370,16 +377,16 @@ class GameEngine extends Utils.EventEmitter {
                 }
                 window.audioManager.playSound('gameStart');
             }
-            
+
             // 开始更新循环
             this.startUpdateLoop();
 
             this.emit('gameStarted');
-            
+
             console.log('✅ GameEngine.startGame() 完成');
         }, { context: 'startGame' })();
     }
-    
+
     // 暂停/继续游戏
     togglePause() {
         const gameState = this.gameStore.getState('game');
@@ -413,16 +420,30 @@ class GameEngine extends Utils.EventEmitter {
             }
             console.log('游戏继续');
         }
-        
+
+        // 防御模式：同步引擎自身的暂停状态
+        if (gameState.mode === 'defense' && window.defenseEngine) {
+            window.defenseEngine.togglePause();
+        }
+
         this.emit('gamePaused', isPaused);
     }
     
     // 重置游戏
     resetGame() {
+        const gameState = this.gameStore.getState('game');
+
         this.stopGame();
         this.gameStore.actions.resetGame();
-        this.generateText();
-        
+
+        if (gameState.mode !== 'defense') {
+            this.generateText();
+        }
+
+        if (gameState.mode === 'defense' && window.defenseEngine) {
+            window.defenseEngine.resetGame();
+        }
+
         this.emit('gameReset');
         console.log('游戏重置');
     }
@@ -489,11 +510,20 @@ class GameEngine extends Utils.EventEmitter {
     handleKeyDown(e) {
         const gameState = this.gameStore.getState('game');
         const textState = this.gameStore.getState('text');
-        
-        // 只在基础模式且游戏进行中处理
-        if (!['classic', 'words'].includes(gameState.mode)) return;
+
         if (!gameState.isPlaying || gameState.isPaused || gameState.isCompleted) return;
-        
+
+        // 防御模式：路由给 defenseEngine 自己的单词匹配逻辑
+        if (gameState.mode === 'defense') {
+            if (window.defenseEngine) {
+                window.defenseEngine.handleKeyInput(e);
+            }
+            return;
+        }
+
+        // 其余模式（classic/words）走统一输入路径
+        if (!['classic', 'words'].includes(gameState.mode)) return;
+
         const key = e.key;
         
         // 记录按键

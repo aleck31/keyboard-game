@@ -34,41 +34,24 @@ const VueTypingGameApp = {
         const racingState = ref(gameStore.getState('racing'));
         const uiState = ref(gameStore.getState('ui'));
         
-        // 监听 GameStore 状态变化并更新 Vue 状态
+        // 监听 GameStore 状态变化并更新 Vue 状态（唯一同步入口）
         const updateVueState = () => {
             const newGameState = gameStore.getState('game');
-            const newTextState = gameStore.getState('text');
-            const newStatsState = gameStore.getState('stats');
-            const newWordsState = gameStore.getState('words');
-            const newRacingState = gameStore.getState('racing');
-            const newUiState = gameStore.getState('ui');
-            
-            // 更新状态，但不覆盖userInput（由v-model管理）
+
+            // 更新状态，但不覆盖userInput（若未来引入v-model输入框，由其管理）
             gameState.value = { ...newGameState };
-            textState.value = { 
-                ...newTextState,
-                userInput: textState.value.userInput // 保留Vue管理的userInput
+            textState.value = {
+                ...gameStore.getState('text'),
+                userInput: textState.value.userInput
             };
-            statsState.value = { ...newStatsState };
-            wordsState.value = { ...newWordsState };
-            racingState.value = { ...newRacingState };
-            uiState.value = { ...newUiState };
-            
-            // 只在模式切换时输出日志
-            if (newGameState.mode !== gameState.value?.mode) {
-                console.log('🔄 模式已切换到:', newGameState.mode);
-            }
-        };
-        
-        // 订阅 GameStore 状态变化 - 完全同步
-        gameStore.subscribe(() => {
-            gameState.value = { ...gameStore.getState('game') };
-            textState.value = { ...gameStore.getState('text') };
             statsState.value = { ...gameStore.getState('stats') };
             wordsState.value = { ...gameStore.getState('words') };
             racingState.value = { ...gameStore.getState('racing') };
             uiState.value = { ...gameStore.getState('ui') };
-        });
+        };
+
+        // 订阅 GameStore 状态变化 - 完全同步
+        gameStore.subscribe(updateVueState);
         
         // 模式计算属性
         const isBasicMode = computed(() => {
@@ -92,37 +75,21 @@ const VueTypingGameApp = {
         });
         
         // 事件处理器
-        const handleModeChanged = async (mode) => {
+        const handleModeChanged = (mode) => {
             if (gameState.value.isPlaying) {
                 console.log('⛔ 无法切换模式，游戏正在进行中');
                 return;
             }
-            
+
             console.log(`🎮 切换到 ${mode} 模式`);
-            
-            // 统一由game-engine处理模式切换
+
+            // 统一由game-engine处理模式切换（其内部会调用 gameStore.actions.setMode，
+            // 该 action 已经会更新 ui.showRacing/showDefense，无需在此重复）
             if (window.gameEngine) {
                 window.gameEngine.setMode(mode);
             } else {
-                // 后备方案
                 gameStore.actions.setMode(mode);
             }
-            
-            // 更新UI状态
-            if (mode === 'racing') {
-                gameStore.updateState('ui.showRacing', true);
-                gameStore.updateState('ui.showDefense', false);
-            } else if (mode === 'defense') {
-                gameStore.updateState('ui.showRacing', false);
-                gameStore.updateState('ui.showDefense', true);
-            } else {
-                gameStore.updateState('ui.showRacing', false);
-                gameStore.updateState('ui.showDefense', false);
-            }
-            
-            // 强制更新Vue状态
-            await Vue.nextTick();
-            updateVueState();
         };
         
         const handleStartGame = () => {

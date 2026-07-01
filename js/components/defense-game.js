@@ -12,9 +12,9 @@ const DefenseGame = {
         const { ref, reactive, computed, watch, onMounted, onUnmounted } = Vue;
         console.log('🌱 DefenseGame组件初始化', props);
         
-        // 游戏引擎实例
-        let defenseEngine = null;
-        
+        // 游戏引擎单例（在 defense-engine.js 加载时创建，所有组件实例共用）
+        const defenseEngine = window.defenseEngine;
+
         // 响应式数据
         const gameState = reactive({
             isPlaying: false,
@@ -116,10 +116,10 @@ const DefenseGame = {
         
         // 方法
         const selectDifficulty = (difficulty) => {
-            if (canStartGame.value && defenseEngine) {
+            if (canStartGame.value) {
                 gameState.difficulty = difficulty;
                 defenseEngine.setDifficulty(difficulty);
-                
+
                 // 更新总波数
                 const config = difficulties.value.find(d => d.key === difficulty);
                 if (config) {
@@ -127,32 +127,32 @@ const DefenseGame = {
                 }
             }
         };
-        
+
         const startGame = () => {
             console.log('🌱 开始防御游戏');
-            if (defenseEngine && canStartGame.value) {
-                defenseEngine.startGame();
-                // 启动计时器
-                startTime.value = Date.now();
-                elapsedTime.value = 0;
-                timeInterval = setInterval(() => {
-                    if (gameState.isPlaying && !gameState.isPaused) {
-                        elapsedTime.value = Math.floor((Date.now() - startTime.value) / 1000);
-                    }
-                }, 1000);
-            } else {
-                // 如果引擎未初始化，先模拟开始
-                gameState.isPlaying = true;
-                console.log('🌱 游戏已开始（模拟模式）');
+            if (window.gameEngine) {
+                window.gameEngine.startGame();
             }
+            // 启动计时器
+            startTime.value = Date.now();
+            elapsedTime.value = 0;
+            timeInterval = setInterval(() => {
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    elapsedTime.value = Math.floor((Date.now() - startTime.value) / 1000);
+                }
+            }, 1000);
         };
-        
+
         const pauseGame = () => {
-            if (defenseEngine) {
-                defenseEngine.togglePause();
+            if (window.gameStore) {
+                if (gameState.isPlaying) {
+                    window.gameStore.actions.pauseGame();
+                } else if (gameState.isPaused) {
+                    window.gameStore.actions.resumeGame();
+                }
             }
         };
-        
+
         const stopGame = () => {
             // 停止计时器
             if (timeInterval) {
@@ -160,49 +160,52 @@ const DefenseGame = {
                 timeInterval = null;
             }
         };
-        
-        const resetGame = () => {
-            if (defenseEngine) {
-                defenseEngine.resetGame();
-            } else {
-                // 模拟重置
-                gameState.isPlaying = false;
-                gameState.isPaused = false;
-                gameState.isCompleted = false;
-                gameState.score = 0;
-                plant.health = plant.maxHealth;
-                console.log('🌱 游戏已重置（模拟模式）');
-            }
-        };
-        
-        // 初始化游戏引擎
-        const initDefenseEngine = () => {
-            if (window.DefenseEngine) {
-                defenseEngine = new window.DefenseEngine();
-                console.log('🌱 植物防御引擎已初始化');
-                
-                // 监听游戏事件
-                defenseEngine.on('gameStarted', handleGameStarted);
-                defenseEngine.on('gameOver', handleGameOver);
-                defenseEngine.on('gamePaused', handleGamePaused);
-                defenseEngine.on('gameReset', handleGameReset);
-                defenseEngine.on('waveStarted', handleWaveStarted);
-                defenseEngine.on('waveCompleted', handleWaveCompleted);
-                defenseEngine.on('zombieSpawned', handleZombieSpawned);
-                defenseEngine.on('zombieKilled', handleZombieKilled);
-                defenseEngine.on('zombieHit', handleZombieHit);
-                defenseEngine.on('plantDamaged', handlePlantDamaged);
-                defenseEngine.on('plantShoot', handlePlantShoot);
-                defenseEngine.on('targetChanged', handleTargetChanged);
-                defenseEngine.on('wordProgress', handleWordProgress);
-                defenseEngine.on('inputError', handleInputError);
-                defenseEngine.on('gameUpdate', handleGameUpdate);
-                defenseEngine.on('bossPhaseChange', handleBossPhaseChange);
 
-                console.log('🌱 植物防御引擎已初始化');
+        const resetGame = () => {
+            if (window.gameEngine) {
+                window.gameEngine.resetGame();
             }
         };
-        
+
+        // 注册引擎事件监听（单例引擎，卸载时必须逐一 off，否则重新挂载会重复触发）
+        const registerEngineEvents = () => {
+            defenseEngine.on('gameStarted', handleGameStarted);
+            defenseEngine.on('gameOver', handleGameOver);
+            defenseEngine.on('gamePaused', handleGamePaused);
+            defenseEngine.on('gameReset', handleGameReset);
+            defenseEngine.on('waveStarted', handleWaveStarted);
+            defenseEngine.on('waveCompleted', handleWaveCompleted);
+            defenseEngine.on('zombieSpawned', handleZombieSpawned);
+            defenseEngine.on('zombieKilled', handleZombieKilled);
+            defenseEngine.on('zombieHit', handleZombieHit);
+            defenseEngine.on('plantDamaged', handlePlantDamaged);
+            defenseEngine.on('plantShoot', handlePlantShoot);
+            defenseEngine.on('targetChanged', handleTargetChanged);
+            defenseEngine.on('wordProgress', handleWordProgress);
+            defenseEngine.on('inputError', handleInputError);
+            defenseEngine.on('gameUpdate', handleGameUpdate);
+            defenseEngine.on('bossPhaseChange', handleBossPhaseChange);
+        };
+
+        const unregisterEngineEvents = () => {
+            defenseEngine.off('gameStarted', handleGameStarted);
+            defenseEngine.off('gameOver', handleGameOver);
+            defenseEngine.off('gamePaused', handleGamePaused);
+            defenseEngine.off('gameReset', handleGameReset);
+            defenseEngine.off('waveStarted', handleWaveStarted);
+            defenseEngine.off('waveCompleted', handleWaveCompleted);
+            defenseEngine.off('zombieSpawned', handleZombieSpawned);
+            defenseEngine.off('zombieKilled', handleZombieKilled);
+            defenseEngine.off('zombieHit', handleZombieHit);
+            defenseEngine.off('plantDamaged', handlePlantDamaged);
+            defenseEngine.off('plantShoot', handlePlantShoot);
+            defenseEngine.off('targetChanged', handleTargetChanged);
+            defenseEngine.off('wordProgress', handleWordProgress);
+            defenseEngine.off('inputError', handleInputError);
+            defenseEngine.off('gameUpdate', handleGameUpdate);
+            defenseEngine.off('bossPhaseChange', handleBossPhaseChange);
+        };
+
         // 事件处理函数
         const handleGameStarted = () => {
             gameState.isPlaying = true;
@@ -391,19 +394,17 @@ const DefenseGame = {
         // 生命周期
         onMounted(() => {
             console.log('🌱 DefenseGame组件已挂载');
-            initDefenseEngine();
+            registerEngineEvents();
         });
-        
+
         onUnmounted(() => {
-            if (defenseEngine) {
-                defenseEngine.resetGame();
-                defenseEngine = null;
-            }
+            unregisterEngineEvents();
+            defenseEngine.resetGame();
         });
-        
+
         // 监听可见性变化
         watch(() => props.isVisible, (visible) => {
-            if (!visible && defenseEngine) {
+            if (!visible) {
                 defenseEngine.resetGame();
             }
         });
