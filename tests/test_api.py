@@ -30,24 +30,24 @@ class TestAPI:
         os.chdir(self.temp_dir)
         
         # 创建测试数据目录
-        os.makedirs("data", exist_ok=True)
-        
+        os.makedirs("data/content", exist_ok=True)
+
         # 创建测试数据文件
         test_texts = ["Hello world", "Python is great", "FastAPI rocks"]
-        with open("data/texts.json", "w", encoding="utf-8") as f:
+        with open("data/content/texts.json", "w", encoding="utf-8") as f:
             json.dump(test_texts, f)
-        
+
         test_words = ["hello", "world", "python", "test"]
-        with open("data/words.json", "w", encoding="utf-8") as f:
+        with open("data/content/words.json", "w", encoding="utf-8") as f:
             json.dump(test_words, f)
-        
+
         test_defense_words = {
             "basic": ["cat", "dog"],
             "medium": ["house", "water"],
             "strong": ["computer"],
             "boss": ["extraordinary"]
         }
-        with open("data/defense_words.json", "w", encoding="utf-8") as f:
+        with open("data/content/defense_words.json", "w", encoding="utf-8") as f:
             json.dump(test_defense_words, f)
         
         print("✅ 测试环境设置完成")
@@ -92,14 +92,26 @@ class TestAPI:
     
     def test_defense_config(self):
         """测试植物防御配置"""
-        for difficulty in ["easy", "medium", "hard"]:
-            response = self.client.get(f"/api/defense/config/{difficulty}")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "success"
-            assert "waves" in data["data"]
-            assert "name" in data["data"]
+        response = self.client.get("/api/defense/config")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert "difficulty" in data["data"]
+        assert "zombieTypes" in data["data"]
+        assert "bossWordCombos" in data["data"]
         print("✅ 植物防御配置测试通过")
+
+    def test_racing_config(self):
+        """测试赛车模式配置"""
+        response = self.client.get("/api/racing/config")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert "trackLength" in data["data"]
+        assert "difficulty" in data["data"]
+        assert "cars" in data["data"]
+        assert "gameplay" in data["data"]
+        print("✅ 赛车模式配置测试通过")
     
     def test_defense_wave_generation(self):
         """测试植物防御波次生成"""
@@ -187,6 +199,7 @@ class TestAPI:
             self.test_get_words()
             self.test_get_defense_words()
             self.test_defense_config()
+            self.test_racing_config()
             self.test_defense_wave_generation()
             self.test_save_game_stats()
             self.test_save_defense_stats()

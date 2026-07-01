@@ -130,6 +130,18 @@ async def get_defense_config():
     config = load_json_file("data/config/defense.json", default_config)
     return {"status": "success", "data": config}
 
+@app.get("/api/racing/config")
+async def get_racing_config():
+    """获取赛车模式配置"""
+    default_config = {
+        "trackLength": 100,
+        "difficulty": {},
+        "cars": {},
+        "gameplay": {}
+    }
+    config = load_json_file("data/config/racing.json", default_config)
+    return {"status": "success", "data": config}
+
 @app.post("/api/defense/wave")
 async def generate_defense_wave(config: DefenseWaveConfig):
     """生成植物防御波次"""

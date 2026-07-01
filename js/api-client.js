@@ -63,7 +63,12 @@ class APIClient {
     async getDefenseConfig() {
         return await this.request('/defense/config');
     }
-    
+
+    // 获取赛车模式配置
+    async getRacingConfig() {
+        return await this.request('/racing/config');
+    }
+
     // 保存游戏统计
     async saveGameStats(stats) {
         return await this.request('/stats', {
