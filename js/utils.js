@@ -2,10 +2,6 @@
  * 工具函数集合
  */
 
-// DOM操作工具
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
-
 // 格式化时间 (秒 -> MM:SS)
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
@@ -310,7 +306,6 @@ const Performance = {
 
 // 导出全局变量
 window.Utils = {
-    $, $$,
     formatTime,
     calculateWPM,
     calculateAccuracy,

@@ -70,14 +70,10 @@ class GameAppController {
         // 页面卸载前的提示
         window.addEventListener('beforeunload', (e) => {
             // 检查是否有游戏正在进行
-            const vueApp = document.querySelector('#vue-app').__vue_app__;
-            if (vueApp && vueApp._instance) {
-                const gameState = vueApp._instance.ctx.gameState;
-                if (gameState && gameState.isPlaying) {
-                    e.preventDefault();
-                    e.returnValue = '游戏正在进行中，确定要离开吗？';
-                    return e.returnValue;
-                }
+            if (window.gameStore && window.gameStore.getState('game').isPlaying) {
+                e.preventDefault();
+                e.returnValue = '游戏正在进行中，确定要离开吗？';
+                return e.returnValue;
             }
         });
         
@@ -93,21 +89,10 @@ class GameAppController {
     showWelcomeMessage() {
         // 使用GameStore显示通知
         setTimeout(() => {
-            if (window.gameStore) {
-                window.gameStore.actions.showNotification(
-                    '欢迎来到键盘打字竞速游戏！选择模式开始练习吧 🎮',
-                    'info'
-                );
-            } else {
-                // 后备方法：使用自定义事件
-                const event = new CustomEvent('app-notification', {
-                    detail: {
-                        message: '欢迎来到键盘打字竞速游戏！选择模式开始练习吧 🎮',
-                        type: 'info'
-                    }
-                });
-                document.dispatchEvent(event);
-            }
+            window.gameStore.actions.showNotification(
+                '欢迎来到键盘打字竞速游戏！选择模式开始练习吧 🎮',
+                'info'
+            );
         }, 1000);
         
         // 检查是否是首次访问
@@ -132,20 +117,10 @@ class GameAppController {
         
         const showNextStep = () => {
             if (currentStep < tutorialSteps.length) {
-                if (window.gameStore) {
-                    window.gameStore.actions.showNotification(
-                        tutorialSteps[currentStep],
-                        'info'
-                    );
-                } else {
-                    const event = new CustomEvent('app-notification', {
-                        detail: {
-                            message: tutorialSteps[currentStep],
-                            type: 'info'
-                        }
-                    });
-                    document.dispatchEvent(event);
-                }
+                window.gameStore.actions.showNotification(
+                    tutorialSteps[currentStep],
+                    'info'
+                );
                 currentStep++;
                 setTimeout(showNextStep, 3500);
             }

@@ -127,13 +127,9 @@ const VueTypingGameApp = {
         
         const handleStartGame = () => {
             console.log(`🎮 开始${gameState.value.mode}模式游戏`);
-            
+
             if (isBasicMode.value) {
                 startBasicGame();
-            } else if (isRacingMode.value) {
-                startRacingGame();
-            } else if (isDefenseMode.value) {
-                startDefenseGame();
             }
         };
         
@@ -180,66 +176,14 @@ const VueTypingGameApp = {
                     return;
                 }
                 
-                // 等待Vue更新DOM后聚焦输入框
+                // 等待Vue更新DOM
                 await Vue.nextTick();
-                
-                const textInput = document.getElementById('textInput');
-                if (textInput) {
-                    textInput.focus();
-                }
-                
+
                 console.log('✅ 游戏启动成功');
                 
             } catch (error) {
                 console.error('游戏启动失败:', error);
                 gameStore.actions.showNotification('游戏启动失败', 'error');
-            }
-        };
-        
-        const startRacingGame = async () => {
-            try {
-                console.log('🏎️ 启动赛车追逐模式');
-                
-                // 设置赛车模式的文本
-                const response = await fetch('/api/texts');
-                const result = await response.json();
-                const texts = result.data || result;
-                const shortText = texts.find(text => text.length < 200) || texts[0];
-                gameStore.actions.setText(shortText);
-                
-                // 启动游戏
-                gameStore.actions.startGame();
-                gameStore.updateState('ui.showRacing', true);
-                
-                // 启用输入
-                const textInput = document.getElementById('textInput');
-                if (textInput) {
-                    textInput.disabled = false;
-                    textInput.focus();
-                    textInput.value = '';
-                }
-                
-                console.log('✅ 赛车模式启动成功');
-                
-            } catch (error) {
-                console.error('赛车模式启动失败:', error);
-                gameStore.actions.showNotification('赛车模式启动失败', 'error');
-            }
-        };
-        
-        const startDefenseGame = async () => {
-            try {
-                console.log('🌱 启动植物防御模式');
-                
-                // 启动游戏
-                gameStore.actions.startGame();
-                gameStore.updateState('ui.showDefense', true);
-                
-                console.log('✅ 植物防御模式启动成功');
-                
-            } catch (error) {
-                console.error('植物防御模式启动失败:', error);
-                gameStore.actions.showNotification('植物防御模式启动失败', 'error');
             }
         };
         
@@ -252,38 +196,6 @@ const VueTypingGameApp = {
             } catch (error) {
                 console.error('更新文本显示失败:', error);
             }
-        };
-        
-        // 初始化赛车模式
-        const initRacingMode = () => {
-            console.log('🏎️ 初始化赛车追逐模式');
-            
-            // 清除基础模式的文本
-            gameStore.actions.setText('');
-            gameStore.updateState('text.userInput', '');
-            gameStore.updateState('text.highlightedText', '');
-            
-            // 设置赛车模式UI状态
-            gameStore.updateState('ui.showRacing', true);
-            gameStore.updateState('ui.showDefense', false);
-            
-            console.log('✅ 赛车模式初始化完成');
-        };
-        
-        // 初始化防御模式
-        const initDefenseMode = () => {
-            console.log('🌱 初始化植物防御模式');
-            
-            // 清除基础模式的文本
-            gameStore.actions.setText('');
-            gameStore.updateState('text.userInput', '');
-            gameStore.updateState('text.highlightedText', '');
-            
-            // 设置防御模式UI状态
-            gameStore.updateState('ui.showRacing', false);
-            gameStore.updateState('ui.showDefense', true);
-            
-            console.log('✅ 植物防御模式初始化完成');
         };
         
         // 生命周期钩子

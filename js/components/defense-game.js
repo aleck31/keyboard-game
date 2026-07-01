@@ -223,11 +223,10 @@ const DefenseGame = {
                 : `💀 失败！坚持到第${results.wave}波，得分${results.score}`;
             
             // 通过全局通知系统显示
-            if (window.uiManager) {
-                window.uiManager.showNotification(
-                    message, 
-                    results.victory ? 'success' : 'error', 
-                    5000
+            if (window.gameStore) {
+                window.gameStore.actions.showNotification(
+                    message,
+                    results.victory ? 'success' : 'error'
                 );
             }
             
@@ -266,11 +265,10 @@ const DefenseGame = {
             console.log(`✅ 第${data.wave}波完成`);
             
             // 显示波次完成通知
-            if (window.uiManager) {
-                window.uiManager.showNotification(
-                    `🌊 第${data.wave}波完成！`, 
-                    'success', 
-                    2000
+            if (window.gameStore) {
+                window.gameStore.actions.showNotification(
+                    `🌊 第${data.wave}波完成！`,
+                    'success'
                 );
             }
         };
@@ -340,11 +338,10 @@ const DefenseGame = {
         const handleBossPhaseChange = (data) => {
             console.log(`👹 Boss阶段变化: ${data.phase}/${data.totalPhases} - ${data.word}`);
             // 显示阶段转换通知
-            if (window.uiManager) {
-                window.uiManager.showNotification(
+            if (window.gameStore) {
+                window.gameStore.actions.showNotification(
                     `👹 Boss进入第${data.phase}阶段: ${data.word.toUpperCase()}`,
-                    'warning',
-                    2000
+                    'warning'
                 );
             }
         };

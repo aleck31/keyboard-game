@@ -110,11 +110,9 @@ const AppUtils = {
         
         // 通知显示 (简化版，与Vue应用的通知系统配合)
         const showNotification = (message, type = 'info') => {
-            // 触发Vue应用的通知系统
-            const event = new CustomEvent('app-notification', {
-                detail: { message, type }
-            });
-            document.dispatchEvent(event);
+            if (window.gameStore) {
+                window.gameStore.actions.showNotification(message, type);
+            }
         };
         
         // 主题切换 - 参考原UIManager实现
@@ -353,19 +351,6 @@ const AppUtils = {
             }
         };
         
-        // 页面可见性处理
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                // 页面隐藏时的处理
-                const event = new CustomEvent('page-hidden');
-                document.dispatchEvent(event);
-            } else {
-                // 页面可见时的处理
-                const event = new CustomEvent('page-visible');
-                document.dispatchEvent(event);
-            }
-        };
-        
         // 错误记录
         const logError = (type, error) => {
             const errorData = {
@@ -514,8 +499,7 @@ const AppUtils = {
             
             // 绑定全局事件
             document.addEventListener('keydown', handleKeyboardShortcuts);
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-            
+
             // 全局错误处理
             window.addEventListener('error', (e) => {
                 logError('GlobalError', e.error);
@@ -551,7 +535,6 @@ const AppUtils = {
             }
             
             document.removeEventListener('keydown', handleKeyboardShortcuts);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
         });
         
         return {
