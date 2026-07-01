@@ -106,11 +106,12 @@ const VueTypingGameApp = {
         
         const handleResetGame = () => {
             console.log(`🔄 重置${gameState.value.mode}模式游戏`);
-            gameStore.actions.resetGame();
-            
-            // 隐藏特殊模式UI
-            gameStore.updateState('ui.showRacing', false);
-            gameStore.updateState('ui.showDefense', false);
+            // 统一走模式控制器（停更新循环、按模式重置引擎/重新生成文本）
+            if (window.gameEngine) {
+                window.gameEngine.resetGame();
+            } else {
+                gameStore.actions.resetGame();
+            }
         };
         
         const handleDifficultyChanged = (difficulty) => {

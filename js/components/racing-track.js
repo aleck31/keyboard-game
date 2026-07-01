@@ -200,6 +200,9 @@ const RacingTrack = {
             const deltaTime = (now - lastUpdateTime.value) / 1000;
             lastUpdateTime.value = now;
 
+            // 玩家位置每帧重算：公式依赖持续增长的 timeElapsed，
+            // 不能只靠 wpm 变化的 watch 驱动（wpm 平稳时车会冻结）
+            updatePlayerPosition(props.statsState.wpm || 0);
             updateAICars(deltaTime);
             checkOvertakes();
 
@@ -288,8 +291,10 @@ const RacingTrack = {
                 raceState.value.overtakeCount++;
                 raceState.value.score += config.value.gameplay.overtakeBonus;
 
+                // 被超越的车：上一帧占据玩家新名次的那辆（rank 1-based → index rank-1）
+                const overtakenCar = previousRankings.find(car => car.rank === playerCurrentRank && car.type !== 'player');
                 emit('car-overtaken', {
-                    overtakenCar: previousRankings[playerCurrentRank]?.name || '未知',
+                    overtakenCar: overtakenCar?.name || '未知',
                     newRank: playerCurrentRank,
                     totalOvertakes: raceState.value.overtakeCount
                 });
@@ -376,13 +381,6 @@ const RacingTrack = {
                 animationFrame.value = null;
             }
         };
-
-        // 监听游戏状态（wpm 由 GameStore.stats 派生，随 gameEngine 的更新循环持续推进）
-        watch(() => props.statsState.wpm, (newWpm) => {
-            if (raceState.value.isRunning) {
-                updatePlayerPosition(newWpm);
-            }
-        });
 
         watch(() => props.gameState.isPlaying, (isPlaying) => {
             if (isPlaying && props.gameState.mode === 'racing' && !raceState.value.isRunning) {

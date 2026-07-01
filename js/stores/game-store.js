@@ -596,9 +596,10 @@ class GameStore extends Utils.EventEmitter {
         }
         
         // 根据模式决定统计方式
+        const isCumulative = mode === 'words' || mode === 'racing';
         let totalChars, correctChars;
-        if (mode === 'words') {
-            // 单词模式：已完成单词的累积统计 + 当前单词（仅用于显示）
+        if (isCumulative) {
+            // 单词/赛车模式：已完成段落的累积统计 + 当前段（仅用于显示）
             const completedTotal = this.state.stats.totalChars || 0;
             const completedCorrect = this.state.stats.correctChars || 0;
             totalChars = completedTotal + userInput.length;
@@ -628,8 +629,8 @@ class GameStore extends Utils.EventEmitter {
         const statsUpdate = { wpm, cpm, accuracy, errors: totalChars - correctChars };
         
         // 经典模式：更新totalChars/correctChars
-        // 单词模式：不更新（由handleWordCompletion管理累积值）
-        if (mode !== 'words') {
+        // 单词/赛车模式：不更新（累积值由段落完成时统一入账）
+        if (!isCumulative) {
             statsUpdate.totalChars = totalChars;
             statsUpdate.correctChars = correctChars;
         }

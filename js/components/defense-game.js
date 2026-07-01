@@ -133,7 +133,8 @@ const DefenseGame = {
             if (window.gameEngine) {
                 window.gameEngine.startGame();
             }
-            // 启动计时器
+            // 启动计时器（先清旧的，重开一局不叠加）
+            stopGame();
             startTime.value = Date.now();
             elapsedTime.value = 0;
             timeInterval = setInterval(() => {
@@ -399,6 +400,7 @@ const DefenseGame = {
 
         onUnmounted(() => {
             unregisterEngineEvents();
+            stopGame();
             defenseEngine.resetGame();
         });
 

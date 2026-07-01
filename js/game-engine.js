@@ -94,6 +94,15 @@ class GameEngine extends Utils.EventEmitter {
                 }
             });
         }
+
+        // 防御引擎结束时桥接回统一生命周期，否则 store 的 isPlaying 卡在 true、
+        // 模式切换按钮永久禁用、defense 战绩不进本地历史
+        // （bindEvents 在 loadGameData 的 await 之后执行，defenseEngine 单例此时已创建）
+        if (window.defenseEngine) {
+            window.defenseEngine.on('gameOver', (results) => {
+                this.completeGame({ defenseResults: results });
+            });
+        }
     }
     
     // 设置游戏模式
@@ -439,7 +448,8 @@ class GameEngine extends Utils.EventEmitter {
                 if (gameState.mode === 'words') {
                     this.handleWordCompletion();
                 } else if (gameState.mode === 'racing') {
-                    // 赛车模式打完一段就续下一段，比赛本身由racing-track的计时器结束
+                    // 赛车模式打完一段：先把本段统计入账（累积模式），再续下一段
+                    this.bankCurrentTextStats();
                     this.gameStore.actions.setText(this.generateRacingText());
                     this.gameStore.actions.setUserInput('');
                 } else {
@@ -449,28 +459,33 @@ class GameEngine extends Utils.EventEmitter {
         }, { context: 'handleInputLogic' })();
     }
     
-    // 处理单词完成
-    handleWordCompletion() {
-        const wordsState = this.gameStore.getState('words');
+    // 把当前文本段的统计入账到累积值（words/racing 共用）
+    // 只入账 totals；errors 由 calculateStats 从 totals 派生，此处再加会双重计数
+    bankCurrentTextStats() {
         const textState = this.gameStore.getState('text');
         const statsState = this.gameStore.getState('stats');
-        
-        // 累积当前单词的统计
-        const currentWordLength = textState.currentText.length;
+
+        const currentLength = textState.currentText.length;
         let currentCorrectChars = 0;
         for (let i = 0; i < textState.userInput.length; i++) {
             if (textState.userInput[i] === textState.currentText[i]) {
                 currentCorrectChars++;
             }
         }
-        
-        // 更新累积统计
+
         this.gameStore.actions.updateStats({
-            totalChars: statsState.totalChars + currentWordLength,
-            correctChars: statsState.correctChars + currentCorrectChars,
-            errors: statsState.errors + (currentWordLength - currentCorrectChars)
+            totalChars: statsState.totalChars + currentLength,
+            correctChars: statsState.correctChars + currentCorrectChars
         });
-        
+    }
+
+    // 处理单词完成
+    handleWordCompletion() {
+        const wordsState = this.gameStore.getState('words');
+
+        // 累积当前单词的统计
+        this.bankCurrentTextStats();
+
         const newWordsCompleted = wordsState.wordsCompleted + 1;
         const newCurrentWordIndex = wordsState.currentWordIndex + 1;
         
