@@ -124,30 +124,21 @@ const GameStats = {
             updateStats(); // 模式变化时立即更新统计
         });
         
-        // 定时器 - 提高更新频率到每30ms更新一次
-        let updateInterval = null;
-        
+        // 订阅 GameStore 状态变化（gameEngine 的更新循环每 100ms 驱动一次 calculateStats）
+        let unsubscribe = null;
+
         onMounted(() => {
             // 初始化更新
             updateStats();
-            
-            // 设置更频繁的更新以获得更平滑的显示体验
-            updateInterval = setInterval(updateStats, 30);
-            
-            // 添加事件监听
-            if (window.statsManager) {
-                window.statsManager.on('statsUpdated', updateStats);
+
+            if (window.gameStore) {
+                unsubscribe = window.gameStore.subscribe(updateStats);
             }
         });
-        
+
         onUnmounted(() => {
-            if (updateInterval) {
-                clearInterval(updateInterval);
-            }
-            
-            // 移除事件监听
-            if (window.statsManager) {
-                window.statsManager.off('statsUpdated', updateStats);
+            if (unsubscribe) {
+                unsubscribe();
             }
         });
         

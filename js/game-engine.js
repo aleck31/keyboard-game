@@ -445,28 +445,28 @@ class GameEngine extends Utils.EventEmitter {
     }
     
     // 完成游戏
-    completeGame() {
+    completeGame(extraResults = null) {
         return this.errorHandler.wrapSync(() => {
             const gameState = this.gameStore.getState('game');
             if (!gameState.isPlaying || gameState.isCompleted) return;
-            
-            this.gameStore.updateState('game.isCompleted', true);
-            this.gameStore.updateState('game.isPlaying', false);
-            this.gameStore.updateState('game.endTime', Date.now());
-            
+
+            // 生命周期变更统一走 GameStore（单次批量更新，emit 一次 gameEnded）
+            this.gameStore.actions.endGame();
+
             this.stopUpdateLoop();
-            
+
             // 播放完成音效
             if (window.audioManager) {
                 window.audioManager.stopBackgroundMusic();
                 window.audioManager.playSound('gameEnd');
             }
-            
-            // 结束统计
+
+            // 结束统计（唯一保存入口）
+            let finalStats = null;
             if (window.statsManager) {
-                finalStats = window.statsManager.endGame(true);
+                finalStats = window.statsManager.endGame(true, extraResults);
             }
-            
+
             // 如果是赛车模式，添加赛车结果
             if (gameState.mode === 'racing') {
                 const racingResults = this.getRacingResults();
@@ -474,12 +474,12 @@ class GameEngine extends Utils.EventEmitter {
                     finalStats.racingResults = racingResults;
                 }
             }
-            
+
             // 更新UI - 通过事件系统
             if (finalStats) {
                 this.emit('resultsUpdated', finalStats);
             }
-            
+
             this.emit('gameCompleted', finalStats);
             console.log('游戏完成');
         }, { context: 'completeGame' })();
@@ -616,6 +616,9 @@ class GameEngine extends Utils.EventEmitter {
         this.updateInterval = setInterval(() => {
             const gameState = this.gameStore.getState('game');
             if (gameState.isPlaying && !gameState.isPaused) {
+                // 驱动实时统计（wpm/cpm/accuracy 随时间推进，即使未打字也会衰减）
+                this.gameStore.calculateStats();
+
                 // 检查单词模式时间限制
                 if (gameState.mode === 'words' && gameState.startTime) {
                     const elapsed = (Date.now() - gameState.startTime) / 1000;

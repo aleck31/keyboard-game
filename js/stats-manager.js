@@ -33,23 +33,15 @@ class StatsManager extends Utils.EventEmitter {
     setupListeners() {
         if (this.gameStore) {
             this.gameStore.on('gameStarted', () => this.onGameStarted());
-            this.gameStore.on('gameEnded', () => this.onGameEnded());
         }
     }
-    
+
     onGameStarted() {
         const gameState = this.gameStore.getState('game');
         console.log(`📊 开始统计 ${gameState.mode} 模式`);
         this.emit('gameStarted', this.getCurrentStats());
     }
-    
-    onGameEnded() {
-        const stats = this.getCurrentStats();
-        this.saveGameResult(stats);
-        this.checkAchievements(stats);
-        this.emit('gameEnded', stats);
-    }
-    
+
     // 获取当前统计（从GameStore读取）
     getCurrentStats() {
         try {
@@ -92,11 +84,12 @@ class StatsManager extends Utils.EventEmitter {
     }
     
     
-    // 结束游戏（由game-engine调用）
-    endGame(completed = true) {
-        const stats = this.getCurrentStats();
+    // 结束游戏（由game-engine调用，唯一的保存入口）
+    endGame(completed = true, extras = null) {
+        const stats = { ...this.getCurrentStats(), ...extras };
         this.saveGameResult(stats);
         this.checkAchievements(stats);
+        this.emit('gameEnded', stats);
         return stats;
     }
     
