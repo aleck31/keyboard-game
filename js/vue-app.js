@@ -15,17 +15,13 @@ const VueTypingGameApp = {
         AppUtils: window.AppUtils
     },
     setup() {
-        const { ref, reactive, computed, watch, onMounted, onUnmounted, provide } = Vue;
-        
+        const { ref, reactive, computed, watch, onMounted, onUnmounted } = Vue;
+
         // 使用统一的游戏状态管理
         const gameStore = window.gameStore;
         const errorHandler = window.errorHandler;
         const performanceMonitor = window.performanceMonitor;
-        
-        // 创建事件总线
-        const eventBus = new Utils.EventEmitter();
-        provide('eventBus', eventBus);
-        
+
         // 响应式状态 - 直接使用 ref 而不是 computed
         const gameState = ref(gameStore.getState('game'));
         const textState = ref(gameStore.getState('text'));
@@ -166,12 +162,6 @@ const VueTypingGameApp = {
         // 生命周期钩子
         onMounted(() => {
             console.log('🎮 Vue 应用已挂载');
-            
-            // 暴露全局Vue应用实例
-            window.vueApp = {
-                eventBus,
-                instance: null
-            };
         });
         
         onUnmounted(() => {
