@@ -31,9 +31,8 @@ const VueTypingGameApp = {
         const textState = ref(gameStore.getState('text'));
         const statsState = ref(gameStore.getState('stats'));
         const wordsState = ref(gameStore.getState('words'));
-        const racingState = ref(gameStore.getState('racing'));
         const uiState = ref(gameStore.getState('ui'));
-        
+
         // 监听 GameStore 状态变化并更新 Vue 状态（唯一同步入口）
         const updateVueState = () => {
             const newGameState = gameStore.getState('game');
@@ -46,7 +45,6 @@ const VueTypingGameApp = {
             };
             statsState.value = { ...gameStore.getState('stats') };
             wordsState.value = { ...gameStore.getState('words') };
-            racingState.value = { ...gameStore.getState('racing') };
             uiState.value = { ...gameStore.getState('ui') };
         };
 
@@ -186,9 +184,8 @@ const VueTypingGameApp = {
             textState,
             statsState,
             wordsState,
-            racingState,
             uiState,
-            
+
             // 计算属性
             isBasicMode,
             isSpecialMode,
@@ -220,9 +217,11 @@ const VueTypingGameApp = {
             />
             
             <!-- 赛车追逐组件 -->
-            <racing-track 
+            <racing-track
                 v-if="isRacingMode"
                 :game-state="gameState"
+                :stats-state="statsState"
+                :text-state="textState"
                 :is-visible="uiState.showRacing"
             />
             

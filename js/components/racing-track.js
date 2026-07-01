@@ -6,6 +6,14 @@ const RacingTrack = {
             type: Object,
             required: true
         },
+        statsState: {
+            type: Object,
+            required: true
+        },
+        textState: {
+            type: Object,
+            required: true
+        },
         isVisible: {
             type: Boolean,
             default: false
@@ -150,7 +158,15 @@ const RacingTrack = {
             console.log(`🏎️ 难度切换: ${difficultyConfig.value.name}`);
         };
 
-        // 开始比赛
+        // “开始比赛”按钮：走统一生命周期，gameEngine.startGame() 会置 isPlaying=true，
+        // 下方的 isPlaying watch 再触发本地模拟的 startRace()
+        const startRaceButtonClick = () => {
+            if (window.gameEngine) {
+                window.gameEngine.startGame();
+            }
+        };
+
+        // 开始比赛（本地模拟）
         const startRace = () => {
             if (raceState.value.isRunning) return;
 
@@ -220,12 +236,14 @@ const RacingTrack = {
             console.log('▶️ 比赛继续');
         };
 
-        // 切换暂停状态
+        // 切换暂停状态（统一走 GameStore，本地 pauseRace/resumeRace 只响应 isPaused 的变化）
         const togglePause = () => {
-            if (raceState.value.isPaused) {
-                resumeRace();
-            } else {
-                pauseRace();
+            if (window.gameStore) {
+                if (props.gameState.isPlaying) {
+                    window.gameStore.actions.pauseGame();
+                } else if (props.gameState.isPaused) {
+                    window.gameStore.actions.resumeGame();
+                }
             }
         };
 
@@ -318,14 +336,22 @@ const RacingTrack = {
             }
             raceState.value.score += Math.round(playerProgress.value * config.value.gameplay.baseScore);
 
-            emit('race-finished', {
+            const racingResults = {
                 finalRank: playerFinalRank,
                 overtakeCount: raceState.value.overtakeCount,
                 finalPosition: raceState.value.playerPosition,
                 score: raceState.value.score,
                 difficulty: currentDifficulty.value,
                 rankings: finalRankings
-            });
+            };
+
+            emit('race-finished', racingResults);
+
+            // 持久化结果（走统一的生命周期+统计单路径）；isRunning 已置 false，
+            // 不会因 completeGame 触发的 isPlaying 变化而重入 finishRace
+            if (window.gameEngine) {
+                window.gameEngine.completeGame({ racingResults });
+            }
         };
 
         // 重置比赛
@@ -351,8 +377,8 @@ const RacingTrack = {
             }
         };
 
-        // 监听游戏状态
-        watch(() => props.gameState.wpm, (newWpm) => {
+        // 监听游戏状态（wpm 由 GameStore.stats 派生，随 gameEngine 的更新循环持续推进）
+        watch(() => props.statsState.wpm, (newWpm) => {
             if (raceState.value.isRunning) {
                 updatePlayerPosition(newWpm);
             }
@@ -363,6 +389,15 @@ const RacingTrack = {
                 startRace();
             } else if (!isPlaying && raceState.value.isRunning) {
                 finishRace();
+            }
+        });
+
+        // 暂停/继续统一由 GameStore 驱动（header 的暂停按钮走这条路径）
+        watch(() => props.gameState.isPaused, (isPaused) => {
+            if (isPaused && raceState.value.isRunning && !raceState.value.isPaused) {
+                pauseRace();
+            } else if (!isPaused && raceState.value.isRunning && raceState.value.isPaused) {
+                resumeRace();
             }
         });
 
@@ -395,6 +430,7 @@ const RacingTrack = {
             timeDisplay,
             isTimeWarning,
             selectDifficulty,
+            startRaceButtonClick,
             startRace,
             pauseRace,
             resumeRace,
@@ -410,7 +446,7 @@ const RacingTrack = {
                 <div class="racing-stat-item">
                     <div class="racing-stat-icon">⚡</div>
                     <div class="racing-stat-label">当前速度</div>
-                    <div class="racing-stat-value">{{ gameState.wpm || 0 }} WPM</div>
+                    <div class="racing-stat-value">{{ statsState.wpm || 0 }} WPM</div>
                 </div>
                 <div class="racing-stat-item">
                     <div class="racing-stat-icon">🚀</div>
@@ -491,7 +527,7 @@ const RacingTrack = {
                     <!-- 暂停遮罩 -->
                     <div class="racing-paused-overlay" v-if="raceState.isPaused">
                         <div class="paused-text">⏸️ 比赛暂停</div>
-                        <button class="racing-resume-btn" @click="resumeRace">▶️ 继续比赛</button>
+                        <button class="racing-resume-btn" @click="togglePause">▶️ 继续比赛</button>
                     </div>
                 </div>
 
@@ -500,6 +536,14 @@ const RacingTrack = {
                     <button class="racing-control-btn pause" @click="togglePause">
                         {{ raceState.isPaused ? '▶️ 继续' : '⏸️ 暂停' }}
                     </button>
+                </div>
+            </div>
+
+            <!-- 打字文本面板 -->
+            <div class="racing-typing-panel" v-if="raceState.isRunning">
+                <div class="text-content">
+                    <div v-if="textState.highlightedText" v-html="textState.highlightedText"></div>
+                    <div v-else>{{ textState.currentText }}</div>
                 </div>
             </div>
 
@@ -519,7 +563,7 @@ const RacingTrack = {
                         <span class="diff-time">{{ diff.raceTime }}秒</span>
                     </button>
                 </div>
-                <button class="racing-start-btn" @click="startRace">
+                <button class="racing-start-btn" @click="startRaceButtonClick">
                     🏎️ 开始比赛
                 </button>
             </div>
@@ -548,7 +592,7 @@ const RacingTrack = {
                     </div>
                     <div class="racing-final-stat">
                         <div class="racing-final-stat-label">平均速度</div>
-                        <div class="racing-final-stat-value">{{ gameState.wpm || 0 }} WPM</div>
+                        <div class="racing-final-stat-value">{{ statsState.wpm || 0 }} WPM</div>
                     </div>
                 </div>
             </div>

@@ -209,132 +209,6 @@ class GameEngine extends Utils.EventEmitter {
         return Utils.randomChoice(selectedTexts);
     }
     
-    // 初始化赛车模式
-    initRacingMode() {
-        const racingData = {
-            aiCars: {
-                slow: { speed: 30, position: 0, name: '慢车' },
-                medium: { speed: 50, position: 0, name: '中速车' },
-                fast: { speed: 70, position: 0, name: '快车' }
-            },
-            playerPosition: 0,
-            overtakenCars: [],
-            currentRank: 4,
-            raceStartTime: null
-        };
-        
-        // 更新统一状态中的赛车数据
-        this.gameStore.updateState('racing', racingData);
-        
-        // 更新UI显示
-        this.updateRacingDisplay();
-    }
-    
-    // 更新赛车显示
-    updateRacingDisplay() {
-        const gameState = this.gameStore.getState('game');
-        const racingState = this.gameStore.getState('racing');
-        
-        if (gameState.mode !== 'racing') return;
-        
-        const stats = window.statsManager?.getCurrentStats();
-        const playerWPM = stats?.wpm || 0;
-        const elapsed = gameState.startTime ? (Date.now() - gameState.startTime) / 1000 : 0;
-        const remaining = Math.max(0, gameState.timeLimit - elapsed);
-        
-        // 计算玩家位置 (基于WPM和时间)
-        const playerPosition = Math.min((playerWPM / 100) * 100, 100);
-        
-        // 计算AI赛车位置 (基于它们的固定速度和时间)
-        const raceTime = elapsed;
-        const updatedAiCars = { ...racingState.aiCars };
-        Object.keys(updatedAiCars).forEach(carKey => {
-            const car = updatedAiCars[carKey];
-            // AI赛车以固定速度前进
-            car.position = Math.min((car.speed / 100) * (raceTime / 60) * 100, 100);
-        });
-        
-        // 更新赛车状态
-        this.gameStore.updateState('racing', {
-            ...racingState,
-            playerPosition,
-            aiCars: updatedAiCars
-        });
-        
-        // 检查超越
-        this.checkOvertakes();
-        
-        // 计算当前排名
-        this.calculateRank();
-    }
-    
-    // 检查超越
-    checkOvertakes() {
-        const racingState = this.gameStore.getState('racing');
-        const playerPos = racingState.playerPosition;
-        const overtaken = racingState.overtakenCars || [];
-        
-        Object.keys(racingState.aiCars).forEach(carKey => {
-            const car = racingState.aiCars[carKey];
-            const carName = car.name;
-            
-            // 如果玩家超越了这辆车且之前没有超越过
-            if (playerPos > car.position && !overtaken.includes(carName)) {
-                overtaken.push(carName);
-                // 显示超越动画 - 只记录
-                console.log(`🏎️ 超越了${carName}！`);
-                console.log(`🏎️ 超越了${carName}！`);
-            }
-        });
-        
-        // 更新超越状态
-        this.gameStore.updateState('racing.overtakenCars', overtaken);
-    }
-    
-    // 计算当前排名
-    calculateRank() {
-        const racingState = this.gameStore.getState('racing');
-        const playerPos = racingState.playerPosition;
-        const aiPositions = Object.values(racingState.aiCars).map(car => car.position);
-        
-        // 计算有多少辆车在玩家前面
-        const carsAhead = aiPositions.filter(pos => pos > playerPos).length;
-        const currentRank = carsAhead + 1;
-        
-        // 更新排名
-        this.gameStore.updateState('racing.currentRank', currentRank);
-    }
-    
-    // 获取最终赛车结果
-    getRacingResults() {
-        const racingState = this.gameStore.getState('racing');
-        const rank = racingState.currentRank;
-        const overtaken = racingState.overtakenCars || [];
-        const playerPos = racingState.playerPosition;
-        
-        let rankText = '';
-        switch (rank) {
-            case 1:
-                rankText = '🥇 第一名 - 冠军！';
-                break;
-            case 2:
-                rankText = '🥈 第二名 - 亚军！';
-                break;
-            case 3:
-                rankText = '🥉 第三名 - 季军！';
-                break;
-            default:
-                rankText = '第四名';
-        }
-        
-        return {
-            finalRank: rank,
-            rankText,
-            overtakenCars: overtaken,
-            playerPosition: playerPos
-        };
-    }
-    
     // 开始游戏
     startGame() {
         return this.errorHandler.wrapSync(() => {
@@ -356,12 +230,6 @@ class GameEngine extends Utils.EventEmitter {
 
             // 启动游戏（通过统一状态管理）
             this.gameStore.actions.startGame();
-
-            // 如果是赛车追逐模式，初始化赛车数据
-            if (gameState.mode === 'racing') {
-                this.initRacingMode();
-                this.gameStore.updateState('racing.raceStartTime', Date.now());
-            }
 
             // 防御模式：启动引擎自身的模拟循环
             if (gameState.mode === 'defense' && window.defenseEngine) {
@@ -482,18 +350,10 @@ class GameEngine extends Utils.EventEmitter {
                 window.audioManager.playSound('gameEnd');
             }
 
-            // 结束统计（唯一保存入口）
+            // 结束统计（唯一保存入口，extraResults 由调用方传入，如赛车模式的名次/得分）
             let finalStats = null;
             if (window.statsManager) {
                 finalStats = window.statsManager.endGame(true, extraResults);
-            }
-
-            // 如果是赛车模式，添加赛车结果
-            if (gameState.mode === 'racing') {
-                const racingResults = this.getRacingResults();
-                if (finalStats) {
-                    finalStats.racingResults = racingResults;
-                }
             }
 
             // 更新UI - 通过事件系统
@@ -521,8 +381,8 @@ class GameEngine extends Utils.EventEmitter {
             return;
         }
 
-        // 其余模式（classic/words）走统一输入路径
-        if (!['classic', 'words'].includes(gameState.mode)) return;
+        // 其余模式（classic/words/racing）走统一输入路径
+        if (!['classic', 'words', 'racing'].includes(gameState.mode)) return;
 
         const key = e.key;
         
@@ -578,6 +438,10 @@ class GameEngine extends Utils.EventEmitter {
                 const gameState = this.gameStore.getState('game');
                 if (gameState.mode === 'words') {
                     this.handleWordCompletion();
+                } else if (gameState.mode === 'racing') {
+                    // 赛车模式打完一段就续下一段，比赛本身由racing-track的计时器结束
+                    this.gameStore.actions.setText(this.generateRacingText());
+                    this.gameStore.actions.setUserInput('');
                 } else {
                     this.completeGame();
                 }
@@ -652,25 +516,15 @@ class GameEngine extends Utils.EventEmitter {
                 // 检查单词模式时间限制
                 if (gameState.mode === 'words' && gameState.startTime) {
                     const elapsed = (Date.now() - gameState.startTime) / 1000;
-                    
+
                     if (elapsed >= gameState.timeLimit) {
                         this.completeGame();
                         return;
                     }
                 }
-                
-                // 检查赛车追逐模式
-                if (gameState.mode === 'racing' && gameState.startTime) {
-                    const elapsed = (Date.now() - gameState.startTime) / 1000;
-                    
-                    // 更新赛车显示
-                    this.updateRacingDisplay();
-                    
-                    if (elapsed >= gameState.timeLimit) {
-                        this.completeGame();
-                        return;
-                    }
-                }
+
+                // 赛车模式的比赛计时由 racing-track.js 组件自己的计时器管理，
+                // 到时后会调用 completeGame()，此处不重复判定
             }
         }, 100); // 每100ms更新一次
     }
@@ -690,7 +544,6 @@ class GameEngine extends Utils.EventEmitter {
             text: this.gameStore.getState('text'),
             stats: this.gameStore.getState('stats'),
             words: this.gameStore.getState('words'),
-            racing: this.gameStore.getState('racing'),
             ui: this.gameStore.getState('ui')
         };
     }

@@ -6,6 +6,15 @@
     margin: 15px 0;
 }
 
+/* 打字文本面板 */
+.racing-typing-panel {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
 /* 底部游戏控制 */
 .racing-game-controls {
     text-align: center;

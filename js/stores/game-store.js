@@ -75,20 +75,10 @@ class GameStore extends Utils.EventEmitter {
                 wordsCompleted: 0,
                 wordsList: []
             },
-            
-            // 赛车模式状态
-            racing: {
-                aiCars: {
-                    slow: { speed: 30, position: 0, name: '慢车' },
-                    medium: { speed: 50, position: 0, name: '中速车' },
-                    fast: { speed: 70, position: 0, name: '快车' }
-                },
-                playerPosition: 0,
-                overtakenCars: [],
-                currentRank: 4,
-                raceStartTime: null
-            },
-            
+
+            // 赛车模式的比赛模拟状态由 racing-track.js 组件自行持有，
+            // 这里只负责 game/text/stats 三个通用切片（wpm 等由 stats 派生）
+
             // UI 状态
             ui: {
                 showRacing: false,
@@ -240,20 +230,7 @@ class GameStore extends Utils.EventEmitter {
                     totalWords: this.state.words.totalWords,
                     wordsList: this.state.words.wordsList
                 });
-                
-                // 重置赛车模式状态
-                this.updateState('racing', {
-                    aiCars: {
-                        slow: { speed: 30, position: 0, name: '慢车' },
-                        medium: { speed: 50, position: 0, name: '中速车' },
-                        fast: { speed: 70, position: 0, name: '快车' }
-                    },
-                    playerPosition: 0,
-                    overtakenCars: [],
-                    currentRank: 4,
-                    raceStartTime: null
-                });
-                
+
                 (window.logger || console).debug?.(`游戏状态已重置，维持模式: ${this.state.game.mode}`);
                 this.emit('gameReset');
             },
