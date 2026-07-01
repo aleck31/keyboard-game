@@ -489,25 +489,31 @@ class DefenseEngine extends EventEmitter {
             // 正确输入
             this.userInput += key;
             this.updateWordProgress();
-            
+
+            if (window.effectsManager) {
+                window.effectsManager.onCorrectKey();
+            }
             // 播放正确音效
             if (window.audioManager) {
                 window.audioManager.playSound('keyPress');
             }
-            
+
             // 每输入正确一个字母就射击
             this.shootZombie(this.currentTarget);
-            
+
             // 检查是否完成单词
             if (this.userInput === targetWord) {
                 this.completeWord();
             }
         } else {
             // 错误输入
+            if (window.effectsManager) {
+                window.effectsManager.onError();
+            }
             if (window.audioManager) {
                 window.audioManager.playSound('keyError');
             }
-            
+
             // 显示错误效果
             this.showError();
         }

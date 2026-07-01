@@ -108,6 +108,13 @@ const GameStats = {
             }
         };
         
+        // WPM 变化时数字跳一下
+        const wpmBump = ref(false);
+        watch(() => stats.wpm, () => {
+            wpmBump.value = false;
+            requestAnimationFrame(() => { wpmBump.value = true; });
+        });
+
         // 游戏状态变化监听
         watch(() => props.gameState.isPlaying, (isPlaying) => {
             if (isPlaying) {
@@ -149,7 +156,8 @@ const GameStats = {
             progressPercentage,
             formattedWPM,
             formattedCPM,
-            formattedAccuracy
+            formattedAccuracy,
+            wpmBump
         };
     },
     template: `
@@ -158,7 +166,7 @@ const GameStats = {
             <div class="stat-item">
                 <span class="stat-icon">⚡</span>
                 <span class="stat-label">WPM</span>
-                <span class="stat-value">{{ formattedWPM }}</span>
+                <span class="stat-value" :class="{ 'stat-bump': wpmBump }">{{ formattedWPM }}</span>
             </div>
             <div class="stat-item">
                 <span class="stat-icon">📝</span>

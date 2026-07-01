@@ -8,18 +8,20 @@ const AppUtils = {
         const currentTheme = ref('dark');
         
         // 主题配置 - 参考原UIManager实现
-        const themes = ['dark', 'light', 'blue', 'green', 'purple'];
+        const themes = ['candy', 'dark', 'light', 'blue', 'green', 'purple'];
         const themeIcons = {
+            candy: '🍭',
             dark: '🌙',
             light: '☀️',
             blue: '🌊',
             green: '🌿',
             purple: '🔮'
         };
-        
+
         // 获取主题中文名称
         const getThemeName = (theme) => {
             const themeNames = {
+                candy: '糖果',
                 dark: '暗色',
                 light: '亮色',
                 blue: '蓝色',

@@ -78,7 +78,7 @@ async def get_general_config():
     """获取通用配置"""
     default_config = {
         "defaultMode": "classic",
-        "theme": "dark",
+        "theme": "candy",
         "enableKeyboardSound": True,
         "enableBackgroundMusic": True
     }

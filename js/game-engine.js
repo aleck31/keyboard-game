@@ -229,6 +229,11 @@ class GameEngine extends Utils.EventEmitter {
 
             console.log('🎮 GameEngine.startGame() 开始');
 
+            // 重置连击特效
+            if (window.effectsManager) {
+                window.effectsManager.resetCombo();
+            }
+
             // 重置游戏状态（通过统一状态管理）
             this.gameStore.actions.resetGame();
 
@@ -353,10 +358,16 @@ class GameEngine extends Utils.EventEmitter {
 
             this.stopUpdateLoop();
 
-            // 播放完成音效
+            // 完成庆祝：胜利场景放大招（彩带雨+胜利号角），普通完成放小的
+            const isVictory = extraResults?.racingResults?.finalRank === 1
+                || extraResults?.defenseResults?.victory === true
+                || (!extraResults && ['classic', 'words'].includes(gameState.mode));
+            if (window.effectsManager) {
+                window.effectsManager.celebrate(isVictory);
+            }
             if (window.audioManager) {
                 window.audioManager.stopBackgroundMusic();
-                window.audioManager.playSound('gameEnd');
+                window.audioManager.playSound(isVictory ? 'victory' : 'gameEnd');
             }
 
             // 结束统计（唯一保存入口，extraResults 由调用方传入，如赛车模式的名次/得分）
@@ -424,17 +435,23 @@ class GameEngine extends Utils.EventEmitter {
             const textState = this.gameStore.getState('text');
             const currentText = textState.currentText;
             
-            // 播放音效和记录错误
+            // 播放音效、驱动特效并记录错误
             if (input.length > 0) {
                 const lastIndex = input.length - 1;
                 const expectedChar = currentText[lastIndex];
                 const actualChar = input[lastIndex];
-                
+
                 if (expectedChar === actualChar) {
+                    if (window.effectsManager) {
+                        window.effectsManager.onCorrectKey();
+                    }
                     if (window.audioManager) {
                         window.audioManager.playSound('keyPress');
                     }
                 } else {
+                    if (window.effectsManager) {
+                        window.effectsManager.onError();
+                    }
                     if (window.audioManager) {
                         window.audioManager.playSound('keyError');
                     }

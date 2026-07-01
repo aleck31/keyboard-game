@@ -60,56 +60,87 @@ class AudioManager extends Utils.EventEmitter {
     // 生成音效 (使用Web Audio API合成)
     generateSoundEffects() {
         if (!this.audioContext) return;
-        
+
         // 按键音效
         this.soundEffects.keyPress = this.createKeyPressSound();
         this.soundEffects.keyError = this.createKeyErrorSound();
         this.soundEffects.gameStart = this.createGameStartSound();
         this.soundEffects.gameEnd = this.createGameEndSound();
         this.soundEffects.achievement = this.createAchievementSound();
+        this.soundEffects.combo = this.createComboSound();
+        this.soundEffects.victory = this.createVictorySound();
     }
-    
-    // 创建按键音效
+
+    // 单音符工具（钟琴质感：正弦主音 + 高八度轻泛音）
+    playNote(freq, startDelay, duration, volume = 0.12) {
+        const t = this.audioContext.currentTime + startDelay;
+        [[freq, volume], [freq * 2, volume * 0.25]].forEach(([f, v]) => {
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(this.effectsGainNode);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, t);
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(v, t + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+            osc.start(t);
+            osc.stop(t + duration);
+        });
+    }
+
+    // 创建按键音效：C大调五声音阶，音高随连击等级爬升（打得越顺音越高）
     createKeyPressSound() {
+        const pentatonic = [523.25, 587.33, 659.25, 783.99, 880.00]; // C5 D5 E5 G5 A5
         return () => {
             if (!this.effectsEnabled || !this.audioContext) return;
-            
-            const oscillator = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(this.effectsGainNode);
-            
-            oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.1);
-            
-            gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-            
-            oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + 0.1);
+            const level = window.effectsManager ? window.effectsManager.getComboLevel() : 0;
+            const combo = window.effectsManager ? window.effectsManager.combo : 0;
+            const note = pentatonic[combo % pentatonic.length] * (1 + level * 0.12);
+            this.playNote(note, 0, 0.12, 0.09);
         };
     }
-    
-    // 创建错误音效
+
+    // 创建错误音效：低音"噗"声，柔和不刺耳（儿童友好）
     createKeyErrorSound() {
         return () => {
             if (!this.effectsEnabled || !this.audioContext) return;
-            
+
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(this.effectsGainNode);
-            
-            oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
-            oscillator.type = 'sawtooth';
-            
-            gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
-            
+
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(180, this.audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(90, this.audioContext.currentTime + 0.15);
+
+            gainNode.gain.setValueAtTime(0.12, this.audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+
             oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + 0.2);
+            oscillator.stop(this.audioContext.currentTime + 0.15);
+        };
+    }
+
+    // 连击里程碑音效：快速上行琶音
+    createComboSound() {
+        return () => {
+            if (!this.effectsEnabled || !this.audioContext) return;
+            [659.25, 783.99, 1046.50].forEach((f, i) => this.playNote(f, i * 0.06, 0.2, 0.12));
+        };
+    }
+
+    // 胜利音效：欢快的号角式旋律
+    createVictorySound() {
+        return () => {
+            if (!this.effectsEnabled || !this.audioContext) return;
+            const melody = [
+                [523.25, 0, 0.15], [659.25, 0.15, 0.15], [783.99, 0.3, 0.15],
+                [1046.50, 0.45, 0.4], [783.99, 0.85, 0.12], [1046.50, 1.0, 0.6]
+            ];
+            melody.forEach(([f, d, len]) => this.playNote(f, d, len, 0.15));
         };
     }
     
