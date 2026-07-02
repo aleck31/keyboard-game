@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-键盘打字竞速游戏 - FastAPI后端 (重构版)
+TypeQuest · 打字大冒险 - FastAPI后端
 """
 
 from fastapi import FastAPI, HTTPException
@@ -25,7 +25,7 @@ APP_VERSION = _read_version()
 
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="键盘打字竞速游戏",
+    title="TypeQuest · 打字大冒险",
     description="一款现代化的Web键盘打字练习游戏",
     version=APP_VERSION
 )
@@ -89,7 +89,7 @@ async def get_general_config():
     """获取通用配置"""
     default_config = {
         "defaultMode": "classic",
-        "theme": "space",
+        "theme": "arcade",
         "enableKeyboardSound": True,
         "enableBackgroundMusic": True
     }

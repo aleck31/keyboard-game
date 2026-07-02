@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="TypeQuest logo">
+  <!-- 敲键盘图标：无背景，键盘 + 两只按键的手，描边风格参照 favicon.png -->
+
+  <!-- 键盘主体 -->
+  <rect x="6" y="16" width="52" height="26" rx="6"
+        fill="#00d9ff" stroke="#12205f" stroke-width="3.5"/>
+  <!-- 键盘右侧投影面 -->
+  <path d="M52 17.8 L52 40.2 Q 56.2 39 56.2 34 L 56.2 24 Q 56.2 19 52 17.8 Z"
+        fill="#0aa8c4"/>
+
+  <!-- 键位（三排短横）-->
+  <g fill="#12205f">
+    <rect x="12" y="21.5" width="5" height="3" rx="1.5"/>
+    <rect x="20" y="21.5" width="5" height="3" rx="1.5"/>
+    <rect x="28" y="21.5" width="5" height="3" rx="1.5"/>
+    <rect x="36" y="21.5" width="5" height="3" rx="1.5"/>
+    <rect x="44" y="21.5" width="5" height="3" rx="1.5"/>
+    <rect x="15" y="27.5" width="5" height="3" rx="1.5"/>
+    <rect x="23" y="27.5" width="5" height="3" rx="1.5"/>
+    <rect x="31" y="27.5" width="5" height="3" rx="1.5"/>
+    <rect x="39" y="27.5" width="5" height="3" rx="1.5"/>
+    <rect x="24" y="33.5" width="16" height="3" rx="1.5"/>
+  </g>
+
+  <!-- 左手：两根按下的手指 -->
+  <g stroke="#12205f" stroke-width="3" stroke-linejoin="round">
+    <path d="M13 34
+             L13 52 Q13 56 17 56 L23 56 Q27 56 27 52
+             L27 38 Q27 35 24.5 35 Q22 35 22 38
+             L22 34 Q22 31 19.5 31 Q17 31 17 34
+             L17 36 Q15 33.5 13 34 Z"
+          fill="#ffe3b3"/>
+  </g>
+
+  <!-- 右手：两根按下的手指 -->
+  <g stroke="#12205f" stroke-width="3" stroke-linejoin="round">
+    <path d="M37 38
+             L37 52 Q37 56 41 56 L47 56 Q51 56 51 52
+             L51 34 Q51 31 48.5 31 Q46 31 46 34
+             L46 38 Q46 35 43.5 35 Q41 35 41 38
+             L41 40 Q39 37.5 37 38 Z"
+          fill="#ffe3b3"/>
+  </g>
+
+  <!-- 敲击动效线：指尖上方的两撮小弧线 -->
+  <g stroke="#ffd93d" stroke-width="2.6" stroke-linecap="round" fill="none">
+    <path d="M15 26 Q 16.5 24 18.5 24"/>
+    <path d="M44 22 Q 45.5 20 47.5 20"/>
+  </g>
+</svg>

@@ -54,13 +54,46 @@ body::before {
 }
 
 .game-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
     font-size: 2.5rem;
     font-weight: 700;
+}
+
+/* logo 不参与文字渐变裁剪，独立显示 */
+.game-logo {
+    width: 1.4em;
+    height: 1.4em;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+}
+
+/* 主名字标：圆润的 Fredoka 字体 + 主题渐变，各主题会覆盖上色 */
+.game-title-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    font-family: 'Fredoka', 'Trebuchet MS', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+/* 中文副标题：小字、大字距，与主名左对齐形成层次 */
+.game-subtitle {
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.52em;
+    margin-top: 3px;
+    -webkit-text-fill-color: var(--text-secondary);
+    color: var(--text-secondary);
+    text-shadow: none;
+    opacity: 0.9;
 }
 
 .header-controls {

@@ -1,7 +1,7 @@
 [project]
 name = "keyboard-game"
-version = "2.2.0"
-description = "键盘打字竞速游戏"
+version = "2.3.1"
+description = "TypeQuest · 打字大冒险"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.104.0",

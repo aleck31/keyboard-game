@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>键盘打字竞速游戏</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>TypeQuest · 打字大冒险</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <!-- 标题字标专用字体（仅 .game-title-text，不影响其它 UI）-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&display=swap">
     <!-- 样式文件 -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
@@ -17,12 +21,18 @@
     <!-- Vue.js 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
-<body class="theme-space">
+<body class="theme-arcade">
     <!-- Main Container -->
     <div class="game-container">
         <!-- Header -->
         <header class="game-header">
-            <h1 class="game-title">🎮 键盘打字竞速游戏</h1>
+            <h1 class="game-title">
+                <img src="assets/images/logo.svg" alt="" class="game-logo">
+                <span class="game-title-text">
+                    TypeQuest
+                    <span class="game-subtitle">打字大冒险</span>
+                </span>
+            </h1>
 
             <!-- 设置面板 -->
             <div class="header-controls">
@@ -56,7 +66,7 @@
 
         <!-- Footer -->
         <footer class="game-footer">
-            <p>&copy; 2025 键盘打字竞速游戏 | <span id="appVersion"></span></p>
+            <p>&copy; 2026 TypeQuest · 打字大冒险 | <span id="appVersion"></span></p>
             <p style="margin-top: 8px; font-size: 12px; opacity: 0.7;">
                 ⚡ 提升打字速度 | 🎮 趣味游戏模式 | 🏆 挑战自我
             </p>

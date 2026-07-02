@@ -5,7 +5,7 @@ const AppUtils = {
         const { ref, onMounted, onUnmounted } = Vue;
         
         // 当前主题状态
-        const currentTheme = ref('space');
+        const currentTheme = ref('arcade');
 
         // 主题配置
         const themes = ['space', 'arcade', 'ocean', 'comic', 'candy'];
@@ -196,7 +196,7 @@ const AppUtils = {
         // 加载当前设置到模态框
         const loadCurrentSettings = () => {
             const settings = Utils.Storage.get('gameSettings', {
-                theme: 'space',
+                theme: 'arcade',
                 timeLimit: 60,
                 difficulty: 'normal',
                 enableSounds: true,
@@ -222,7 +222,7 @@ const AppUtils = {
             
             const themeSelectModal = document.getElementById('themeSelectModal');
             if (themeSelectModal) {
-                themeSelectModal.value = settings.theme || 'space';
+                themeSelectModal.value = settings.theme || 'arcade';
             }
         };
         
@@ -234,7 +234,7 @@ const AppUtils = {
             const themeSelectModal = document.getElementById('themeSelectModal');
             
             const settings = {
-                theme: themeSelectModal?.value || 'space',
+                theme: themeSelectModal?.value || 'arcade',
                 enableSounds: enableSounds?.checked !== false,
                 enableMusic: enableMusic?.checked !== false,
                 highlightErrors: highlightErrors?.checked !== false
@@ -282,7 +282,7 @@ const AppUtils = {
             }
             return {
                 defaultMode: 'classic',
-                theme: 'space',
+                theme: 'arcade',
                 enableKeyboardSound: true,
                 enableBackgroundMusic: true
             };
@@ -308,7 +308,7 @@ const AppUtils = {
                 // 从API获取默认配置
                 const defaultConfig = await loadDefaultConfig();
                 const defaultSettings = {
-                    theme: defaultConfig.theme || 'space',
+                    theme: defaultConfig.theme || 'arcade',
                     timeLimit: 60,
                     difficulty: 'normal',
                     enableSounds: defaultConfig.enableKeyboardSound !== false,
@@ -453,7 +453,7 @@ const AppUtils = {
             if (!settings) {
                 const defaultConfig = await loadDefaultConfig();
                 settings = {
-                    theme: defaultConfig.theme || 'space',
+                    theme: defaultConfig.theme || 'arcade',
                     enableSounds: defaultConfig.enableKeyboardSound !== false,
                     enableMusic: defaultConfig.enableBackgroundMusic !== false,
                     timeLimit: 60,

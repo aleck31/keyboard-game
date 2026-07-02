@@ -161,11 +161,14 @@
 }
 
 .theme-candy .game-title {
+    animation: candy-title-bounce 3s ease-in-out infinite;
+}
+
+.theme-candy .game-title-text {
     background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: candy-title-bounce 3s ease-in-out infinite;
 }
 
 @keyframes candy-title-bounce {
