@@ -24,6 +24,7 @@ venv.bak/
 *.swo
 *~
 .DS_Store
+.dev
 .kiro/
 .claude/
 
@@ -62,17 +63,10 @@ Thumbs.db
 *.old
 *.orig
 
-# 配置文件（如果包含敏感信息）
-# config.json
-# .env
-
 # 生成的文件
 generated/
 build/
 dist/
-
-# 开发测试
-dev-docs/
 
 # 本地环境变量
 .env.local
@@ -86,8 +80,3 @@ userdata/
 # 媒体文件（如果很大的话）
 # assets/audio/
 # assets/images/
-
-# Clacky配置文件
-.1024*
-!.1024
-.breakpoints

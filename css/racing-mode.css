@@ -44,25 +44,24 @@
     flex-direction: column;
     align-items: center;
     padding: 15px 25px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid #444;
+    background: var(--card-bg, rgba(255, 255, 255, 0.05));
+    border: 2px solid var(--border-color, #444);
     border-radius: 12px;
-    color: #ccc;
+    color: var(--text-color, #ccc);
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 140px;
 }
 
 .racing-game-controls .difficulty-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: #666;
+    background: var(--card-bg-hover, rgba(255, 255, 255, 0.1));
     transform: translateY(-2px);
 }
 
 .racing-game-controls .difficulty-btn.active {
     background: rgba(255, 107, 53, 0.2);
     border-color: #ff6b35;
-    color: #fff;
+    color: var(--text-color, #fff);
 }
 
 .racing-game-controls .difficulty-btn .diff-name {
@@ -73,12 +72,8 @@
 
 .racing-game-controls .difficulty-btn .diff-desc {
     font-size: 0.8rem;
-    color: #999;
+    color: var(--text-secondary, #999);
     margin-bottom: 5px;
-}
-
-.racing-game-controls .difficulty-btn.active .diff-desc {
-    color: #ccc;
 }
 
 .racing-game-controls .difficulty-btn .diff-time {
@@ -316,60 +311,27 @@
 }
 
 /* 赛车统计面板 */
+/* 统计卡片复用基础 .stat-item 组件，容器对齐防御模式 5 列均分 */
 .racing-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.racing-stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 12px var(--shadow-color);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.racing-stat-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px var(--shadow-color);
-    border-color: var(--accent-color);
-}
-
-.racing-stat-icon {
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-}
-
-.racing-stat-label {
-    font-size: 0.9rem;
-    color: #ccc;
-    margin-bottom: 3px;
-}
-
-.racing-stat-value {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #fff;
-}
-
-.racing-stat-value.warning {
+/* 剩余时间告警：基础 .stat-value 无此样式，赛车专属 */
+.racing-stats .stat-value.warning {
     color: #ff4444;
     animation: timerPulse 1s ease-in-out infinite;
 }
 
 /* 排名显示 */
 .racing-leaderboard {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--card-bg, rgba(0, 0, 0, 0.3));
     border-radius: 8px;
     padding: 15px;
     margin: 15px 0;
-    border: 1px solid #444;
+    border: 1px solid var(--border-color, #444);
 }
 
 .racing-leaderboard-title {
@@ -378,6 +340,12 @@
     font-weight: bold;
     color: #ffd700;
     margin-bottom: 10px;
+}
+
+/* 亮色主题下金色标题在白卡上看不清 */
+.theme-comic .racing-leaderboard-title,
+.theme-candy .racing-leaderboard-title {
+    color: #b45309;
 }
 
 .racing-position {
@@ -425,7 +393,7 @@
 
 .racing-position-progress {
     font-size: 0.9rem;
-    color: #ccc;
+    color: var(--text-secondary, #ccc);
 }
 
 /* 时间显示 */
@@ -452,7 +420,7 @@
 .racing-game-over {
     text-align: center;
     padding: 20px;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--card-bg, rgba(0, 0, 0, 0.4));
     border-radius: 12px;
     margin: 20px 0;
     border: 2px solid #ff6b35;
@@ -481,21 +449,21 @@
 
 .racing-final-stat {
     padding: 10px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-bg-hover, rgba(255, 255, 255, 0.1));
     border-radius: 6px;
     text-align: center;
 }
 
 .racing-final-stat-label {
     font-size: 0.9rem;
-    color: #ccc;
+    color: var(--text-secondary, #ccc);
     margin-bottom: 5px;
 }
 
 .racing-final-stat-value {
     font-size: 1.3rem;
     font-weight: bold;
-    color: #fff;
+    color: var(--text-color, #fff);
 }
 
 /* 响应式设计 */

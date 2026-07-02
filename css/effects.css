@@ -36,7 +36,6 @@
     font-weight: 800;
     color: #fff;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    font-family: var(--display-font);
 }
 
 /* 亮色主题（comic/candy）用浅色蒙版，避免突兀的暗块 */
@@ -184,6 +183,12 @@
     border-radius: 22px;
     border: 3px solid var(--border-color);
     box-shadow: 0 6px 0 var(--border-color), 0 10px 24px var(--shadow-color);
+}
+
+/* 亮色主题：文字面板用白卡底，深色文字才可读（基础样式是半透明黑底） */
+.theme-candy .text-display,
+.theme-candy .racing-typing-panel {
+    background: var(--card-bg);
 }
 
 .theme-candy .btn,

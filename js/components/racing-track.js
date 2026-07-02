@@ -439,34 +439,34 @@ const RacingTrack = {
     },
     template: `
         <div class="racing-container" v-show="isVisible">
-            <!-- 顶部：状态面板 -->
+            <!-- 顶部：状态面板（复用基础 .stat-item 组件，与其它模式统一尺寸）-->
             <div class="racing-stats">
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">⚡</div>
-                    <div class="racing-stat-label">当前速度</div>
-                    <div class="racing-stat-value">{{ statsState.wpm || 0 }} WPM</div>
+                <div class="stat-item">
+                    <span class="stat-icon">⚡</span>
+                    <span class="stat-label">当前速度</span>
+                    <span class="stat-value">{{ statsState.wpm || 0 }} WPM</span>
                 </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">🚀</div>
-                    <div class="racing-stat-label">超越次数</div>
-                    <div class="racing-stat-value">{{ raceState.overtakeCount }}</div>
+                <div class="stat-item">
+                    <span class="stat-icon">🚀</span>
+                    <span class="stat-label">超越次数</span>
+                    <span class="stat-value">{{ raceState.overtakeCount }}</span>
                 </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">🏁</div>
-                    <div class="racing-stat-label">当前排名</div>
-                    <div class="racing-stat-value">
+                <div class="stat-item">
+                    <span class="stat-icon">🏁</span>
+                    <span class="stat-label">当前排名</span>
+                    <span class="stat-value">
                         {{ currentRankings.find(car => car.type === 'player')?.rank || '-' }}/{{ aiCars.length + 1 }}
-                    </div>
+                    </span>
                 </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">💰</div>
-                    <div class="racing-stat-label">得分</div>
-                    <div class="racing-stat-value">{{ raceState.score }}</div>
+                <div class="stat-item">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-label">得分</span>
+                    <span class="stat-value">{{ raceState.score }}</span>
                 </div>
-                <div class="racing-stat-item">
-                    <div class="racing-stat-icon">⏱️</div>
-                    <div class="racing-stat-label">剩余时间</div>
-                    <div class="racing-stat-value" :class="{ warning: isTimeWarning }">{{ timeDisplay }}</div>
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-label">剩余时间</span>
+                    <span class="stat-value" :class="{ warning: isTimeWarning }">{{ timeDisplay }}</span>
                 </div>
             </div>
 

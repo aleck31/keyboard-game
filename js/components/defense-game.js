@@ -44,15 +44,15 @@ const DefenseGame = {
                 key: 'easy',
                 name: '简单',
                 icon: '🌱',
-                desc: '4波 | 基础僵尸',
-                waves: 4
+                desc: '3波 | 基础僵尸',
+                waves: 3
             },
             {
                 key: 'medium',
                 name: '中等',
                 icon: '🌿',
-                desc: '7波 | 混合僵尸',
-                waves: 7
+                desc: '6波 | 混合僵尸',
+                waves: 6
             },
             {
                 key: 'hard',

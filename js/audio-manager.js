@@ -14,7 +14,8 @@ class AudioManager extends Utils.EventEmitter {
         this.effectsEnabled = true;
         this.musicVolume = 0.3;
         this.effectsVolume = 0.5;
-        
+        this.currentTheme = 'space';  // applyTheme 会同步，决定 BGM 风格
+
         this.init();
     }
     
@@ -240,191 +241,298 @@ class AudioManager extends Utils.EventEmitter {
         }
     }
     
-    // 创建背景音乐
+    // 设置当前主题（由 applyTheme 调用），音乐播放中则切换到对应风格
+    setTheme(theme) {
+        this.currentTheme = theme;
+        if (this.backgroundMusic) {
+            this.stopBackgroundMusic();
+            this.startBackgroundMusic();
+        }
+    }
+
+    // 创建背景音乐（按主题选择风格）
     createBackgroundMusic() {
         if (!this.audioContext || !this.musicEnabled || !this.isEnabled) return null;
-        
-        // 多种音乐模式随机选择
-        const musicModes = [
-            this.createClassicChordProgression,
-            this.createPentatonicMelody,
-            this.createArpeggioPattern,
-            this.createAmbientPad
-        ];
-        
-        const selectedMode = musicModes[Math.floor(Math.random() * musicModes.length)];
+
+        const themeMusicMap = {
+            space: this.createSpaceDrift,          // 星际：深空低音 + 缓慢琶音漂移
+            arcade: this.createChiptuneLoop,       // 街机：快节奏芯片音乐
+            ocean: this.createOceanWaves,          // 海洋：3/4拍摇曳 + 海浪涌动
+            comic: this.createUpbeatBounce,        // 漫画：欢快跳跃节奏
+            candy: this.createCandyBox             // 糖果：八音盒甜美旋律
+        };
+
+        const selectedMode = themeMusicMap[this.currentTheme] || this.createUpbeatBounce;
         return selectedMode.call(this);
     }
-    
-    // 经典和弦进行
-    createClassicChordProgression() {
-        // 简单的和弦进行: C - Am - F - G
-        const chords = [
-            [261.63, 329.63, 392.00], // C major
-            [220.00, 261.63, 329.63], // A minor
-            [174.61, 220.00, 261.63], // F major
-            [196.00, 246.94, 293.66]  // G major
-        ];
-        
-        let currentChord = 0;
-        const chordDuration = 3000; // 3秒每个和弦
+
+    // 星际漂移（space主题）：深空低音嗡鸣 + Am9琶音缓慢流动，空灵但可听见
+    createSpaceDrift() {
+        const arpeggio = [220.00, 261.63, 329.63, 440.00, 523.25, 440.00, 329.63, 261.63]; // Am9 上下行
+        let step = 0;
         let isPlaying = true;
-        
-        const playChord = () => {
+
+        const playDrone = () => {
             if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
-            
-            const chord = chords[currentChord];
-            const oscillators = [];
-            
-            chord.forEach(frequency => {
-                const oscillator = this.audioContext.createOscillator();
-                const gainNode = this.audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(this.musicGainNode);
-                
-                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.03, this.audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + chordDuration / 1000);
-                
-                oscillator.start(this.audioContext.currentTime);
-                oscillator.stop(this.audioContext.currentTime + chordDuration / 1000);
-                
-                oscillators.push(oscillator);
+            const t = this.audioContext.currentTime;
+            // 两个微失谐的低音正弦叠加，产生太空感的缓慢"拍频"波动
+            [55.00, 55.35].forEach(freq => {
+                const osc = this.audioContext.createOscillator();
+                const g = this.audioContext.createGain();
+                osc.connect(g);
+                g.connect(this.musicGainNode);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, t);
+                g.gain.setValueAtTime(0.001, t);
+                g.gain.linearRampToValueAtTime(0.05, t + 2);
+                g.gain.linearRampToValueAtTime(0.001, t + 8);
+                osc.start(t);
+                osc.stop(t + 8);
             });
-            
-            currentChord = (currentChord + 1) % chords.length;
-            
-            setTimeout(playChord, chordDuration);
+            setTimeout(playDrone, 7000);
         };
-        
-        playChord();
-        return { 
-            stop: () => { isPlaying = false; },
-            type: 'classic'
-        };
-    }
-    
-    // 五声音阶旋律
-    createPentatonicMelody() {
-        const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00]; // C D E G A
-        let isPlaying = true;
-        
-        const playMelody = () => {
+
+        const playArp = () => {
             if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
-            
-            const noteIndex = Math.floor(Math.random() * pentatonic.length);
-            const frequency = pentatonic[noteIndex];
-            const duration = 800 + Math.random() * 400; // 0.8-1.2秒
-            
-            const oscillator = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(this.musicGainNode);
-            
-            oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-            oscillator.type = 'triangle';
-            
-            gainNode.gain.setValueAtTime(0.04, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
-            
-            oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + duration / 1000);
-            
-            setTimeout(playMelody, duration + Math.random() * 500);
+            const t = this.audioContext.currentTime;
+            const freq = arpeggio[step % arpeggio.length];
+
+            const osc = this.audioContext.createOscillator();
+            const g = this.audioContext.createGain();
+            osc.connect(g);
+            g.connect(this.musicGainNode);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, t);
+            // 慢起音慢释放，音符之间互相交叠形成"漂浮"感
+            g.gain.setValueAtTime(0.001, t);
+            g.gain.linearRampToValueAtTime(0.04, t + 0.25);
+            g.gain.exponentialRampToValueAtTime(0.002, t + 1.8);
+            osc.start(t);
+            osc.stop(t + 1.8);
+
+            step++;
+            setTimeout(playArp, 650);
         };
-        
-        playMelody();
-        return { 
-            stop: () => { isPlaying = false; },
-            type: 'pentatonic'
-        };
+
+        playDrone();
+        playArp();
+        return { stop: () => { isPlaying = false; }, type: 'space-drift' };
     }
-    
-    // 琶音模式
-    createArpeggioPattern() {
-        const arpeggio = [130.81, 164.81, 196.00, 246.94]; // C3 E3 G3 B3
-        let currentNote = 0;
+
+    // 海浪摇曳（ocean主题）：3/4拍圆舞曲律动（低音-和弦-和弦）+ 低通噪声海浪涌动
+    createOceanWaves() {
+        // C - Am - F - G 进行，每小节一个和弦，90BPM 圆舞曲
+        const bars = [
+            { bass: 130.81, chord: [261.63, 329.63, 392.00] }, // C
+            { bass: 110.00, chord: [220.00, 261.63, 329.63] }, // Am
+            { bass: 87.31,  chord: [174.61, 220.00, 261.63] }, // F
+            { bass: 98.00,  chord: [196.00, 246.94, 293.66] }  // G
+        ];
+        const beatMs = 667; // 90 BPM
+        let bar = 0;
         let isPlaying = true;
-        
-        const playArpeggio = () => {
+
+        const playNote2 = (freq, at, len, gain, type = 'sine') => {
+            const osc = this.audioContext.createOscillator();
+            const g = this.audioContext.createGain();
+            osc.connect(g);
+            g.connect(this.musicGainNode);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, at);
+            g.gain.setValueAtTime(0.001, at);
+            g.gain.linearRampToValueAtTime(gain, at + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.002, at + len);
+            osc.start(at);
+            osc.stop(at + len);
+        };
+
+        const playBar = () => {
             if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
-            
-            const frequency = arpeggio[currentNote];
-            const duration = 600;
-            
-            const oscillator = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(this.musicGainNode);
-            
-            oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-            oscillator.type = 'sawtooth';
-            
-            gainNode.gain.setValueAtTime(0.02, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.005, this.audioContext.currentTime + duration / 1000);
-            
-            oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + duration / 1000);
-            
-            currentNote = (currentNote + 1) % arpeggio.length;
-            setTimeout(playArpeggio, duration);
+            const t = this.audioContext.currentTime;
+            const { bass, chord } = bars[bar % bars.length];
+
+            // 第1拍：低音；第2、3拍：柔和和弦，形成"咚-嚓-嚓"的摇曳感
+            playNote2(bass, t, 0.6, 0.055, 'triangle');
+            [1, 2].forEach(beat => {
+                chord.forEach(freq => playNote2(freq, t + beat * beatMs / 1000, 0.45, 0.016));
+            });
+
+            bar++;
+            setTimeout(playBar, beatMs * 3);
         };
-        
-        playArpeggio();
-        return { 
-            stop: () => { isPlaying = false; },
-            type: 'arpeggio'
+
+        // 海浪：低通滤波的白噪声缓慢涌起退去，每6秒一次
+        const playWave = () => {
+            if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
+            const t = this.audioContext.currentTime;
+            const dur = 4;
+            const buffer = this.audioContext.createBuffer(1, this.audioContext.sampleRate * dur, this.audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+            const src = this.audioContext.createBufferSource();
+            const filter = this.audioContext.createBiquadFilter();
+            const g = this.audioContext.createGain();
+            src.buffer = buffer;
+            src.connect(filter);
+            filter.connect(g);
+            g.connect(this.musicGainNode);
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(350, t);
+            g.gain.setValueAtTime(0.001, t);
+            g.gain.linearRampToValueAtTime(0.035, t + 1.5);
+            g.gain.linearRampToValueAtTime(0.001, t + dur);
+            src.start(t);
+            src.stop(t + dur);
+
+            setTimeout(playWave, 6000);
         };
+
+        playBar();
+        playWave();
+        return { stop: () => { isPlaying = false; }, type: 'ocean-waves' };
     }
-    
-    // 环境音垫
-    createAmbientPad() {
-        const frequencies = [65.41, 82.41, 98.00]; // C2 E2 G2
+
+    // 八音盒（candy主题）：铃铛音色的高音区甜美旋律，音符快起音长衰减
+    createCandyBox() {
+        // C大调原创小曲，八分音符为主（0=休止）
+        const melody = [
+            1046.50, 1318.51, 1567.98, 1318.51, 1396.91, 1760.00, 1567.98, 0,
+            1174.66, 1396.91, 1318.51, 1046.50, 1174.66, 1567.98, 1046.50, 0
+        ];
+        let step = 0;
         let isPlaying = true;
-        const oscillators = [];
-        
-        frequencies.forEach((frequency, index) => {
-            const playPad = () => {
-                if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
-                
-                const oscillator = this.audioContext.createOscillator();
-                const gainNode = this.audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(this.musicGainNode);
-                
-                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.01, this.audioContext.currentTime);
-                gainNode.gain.setValueAtTime(0.02, this.audioContext.currentTime + 2);
-                gainNode.gain.setValueAtTime(0.01, this.audioContext.currentTime + 8);
-                
-                oscillator.start(this.audioContext.currentTime);
-                oscillator.stop(this.audioContext.currentTime + 10);
-                
-                oscillators.push(oscillator);
-                
-                setTimeout(playPad, 8000 + index * 1000);
+
+        const playBell = (freq, t) => {
+            // 基音 + 2.7倍频微弱泛音 = 八音盒铃铛音色
+            [[freq, 0.03], [freq * 2.7, 0.006]].forEach(([f, gain]) => {
+                const osc = this.audioContext.createOscillator();
+                const g = this.audioContext.createGain();
+                osc.connect(g);
+                g.connect(this.musicGainNode);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(f, t);
+                g.gain.setValueAtTime(gain, t);
+                g.gain.exponentialRampToValueAtTime(0.0008, t + 0.7);
+                osc.start(t);
+                osc.stop(t + 0.7);
+            });
+        };
+
+        const tick = () => {
+            if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
+            const t = this.audioContext.currentTime;
+            const freq = melody[step % melody.length];
+            if (freq > 0) playBell(freq, t);
+            // 每小节开头补一个轻柔低音，撑住节奏
+            if (step % 8 === 0) {
+                const osc = this.audioContext.createOscillator();
+                const g = this.audioContext.createGain();
+                osc.connect(g);
+                g.connect(this.musicGainNode);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(261.63, t);
+                g.gain.setValueAtTime(0.025, t);
+                g.gain.exponentialRampToValueAtTime(0.002, t + 0.5);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            }
+            step++;
+            setTimeout(tick, 240);
+        };
+
+        tick();
+        return { stop: () => { isPlaying = false; }, type: 'candy-box' };
+    }
+
+    // 芯片音乐循环（街机主题）：方波 + 快速十六分音符低音线
+    createChiptuneLoop() {
+        // C大调8-bit风格短句，120ms一拍
+        const bassline = [130.81, 130.81, 196.00, 130.81, 164.81, 164.81, 196.00, 164.81];
+        const lead = [523.25, 659.25, 783.99, 659.25, 523.25, 587.33, 659.25, 523.25];
+        let step = 0;
+        let isPlaying = true;
+
+        const tick = () => {
+            if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
+
+            const t = this.audioContext.currentTime;
+            const playSquare = (freq, gain, len) => {
+                const osc = this.audioContext.createOscillator();
+                const g = this.audioContext.createGain();
+                osc.connect(g);
+                g.connect(this.musicGainNode);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, t);
+                g.gain.setValueAtTime(gain, t);
+                g.gain.exponentialRampToValueAtTime(0.003, t + len);
+                osc.start(t);
+                osc.stop(t + len);
             };
-            
-            setTimeout(playPad, index * 2000);
-        });
-        
-        return { 
-            stop: () => { 
-                isPlaying = false;
-                oscillators.forEach(osc => {
-                    try { osc.stop(); } catch(e) {}
-                });
-            },
-            type: 'ambient'
+
+            playSquare(bassline[step % bassline.length], 0.025, 0.1);
+            if (step % 2 === 0) playSquare(lead[(step / 2) % lead.length], 0.018, 0.15);
+
+            step++;
+            setTimeout(tick, 120);
         };
+
+        tick();
+        return { stop: () => { isPlaying = false; }, type: 'chiptune' };
+    }
+
+    // 欢快跳跃节奏（漫画/糖果主题）：明亮三和弦 + 弹跳低音，约每分钟140拍
+    createUpbeatBounce() {
+        const progression = [
+            [261.63, 329.63, 392.00], // C
+            [293.66, 369.99, 440.00], // D
+            [329.63, 415.30, 493.88], // E
+            [293.66, 369.99, 440.00]  // D
+        ];
+        const bass = [130.81, 146.83, 164.81, 146.83];
+        let bar = 0;
+        let isPlaying = true;
+
+        const playBar = () => {
+            if (!this.musicEnabled || !this.isEnabled || !this.audioContext || !isPlaying) return;
+
+            const t = this.audioContext.currentTime;
+            const chord = progression[bar % progression.length];
+
+            // 弹跳低音：每小节两次"蹦蹦"
+            [0, 0.43].forEach(offset => {
+                const osc = this.audioContext.createOscillator();
+                const g = this.audioContext.createGain();
+                osc.connect(g);
+                g.connect(this.musicGainNode);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(bass[bar % bass.length], t + offset);
+                g.gain.setValueAtTime(0.05, t + offset);
+                g.gain.exponentialRampToValueAtTime(0.005, t + offset + 0.2);
+                osc.start(t + offset);
+                osc.stop(t + offset + 0.2);
+            });
+
+            // 明亮和弦：轻快断奏
+            chord.forEach(freq => {
+                const osc = this.audioContext.createOscillator();
+                const g = this.audioContext.createGain();
+                osc.connect(g);
+                g.connect(this.musicGainNode);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq * 2, t + 0.21); // 高八度更明亮
+                g.gain.setValueAtTime(0.022, t + 0.21);
+                g.gain.exponentialRampToValueAtTime(0.004, t + 0.21 + 0.18);
+                osc.start(t + 0.21);
+                osc.stop(t + 0.21 + 0.18);
+            });
+
+            bar++;
+            setTimeout(playBar, 860); // ~140 BPM
+        };
+
+        playBar();
+        return { stop: () => { isPlaying = false; }, type: 'upbeat' };
     }
     
     // 停止背景音乐

@@ -131,17 +131,22 @@ const AppUtils = {
         const applyTheme = (theme) => {
             // 移除所有主题类
             document.body.className = document.body.className.replace(/theme-\w+/g, '');
-            
+
             // 添加新主题类
             document.body.classList.add(`theme-${theme}`);
-            
+
             // 更新主题按钮图标
             const themeToggleBtn = document.getElementById('themeToggle');
             if (themeToggleBtn) {
                 themeToggleBtn.textContent = themeIcons[theme] || '🌙';
                 themeToggleBtn.title = `当前: ${getThemeName(theme)}主题，点击切换`;
             }
-            
+
+            // 同步给音频管理器，让BGM风格跟随主题
+            if (window.audioManager) {
+                window.audioManager.setTheme(theme);
+            }
+
             console.log(`应用主题: ${theme}`);
         };
         
