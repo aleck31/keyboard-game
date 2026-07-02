@@ -532,8 +532,14 @@ const DefenseGame = {
                 
                 <!-- 特效容器 -->
                 <div class="effects-container" id="effectsContainer"></div>
+
+                <!-- 暂停蒙版：模糊战场上的僵尸单词 -->
+                <div class="paused-veil" v-if="gameState.isPaused">
+                    <div class="veil-icon">⏸️</div>
+                    <div class="veil-text">僵尸也在休息~</div>
+                </div>
             </div>
-            
+
             <!-- 当前目标单词 -->
             <div class="target-word-container">
                 <div class="target-label">目标单词:</div>
@@ -541,6 +547,10 @@ const DefenseGame = {
                 <div class="word-progress" v-if="currentTarget">
                     <span class="typed-part">{{ typedPart }}</span>
                     <span class="remaining-part">{{ remainingPart }}</span>
+                </div>
+                <!-- 暂停蒙版：模糊目标单词 -->
+                <div class="paused-veil" v-if="gameState.isPaused">
+                    <div class="veil-icon">💤</div>
                 </div>
             </div>
             

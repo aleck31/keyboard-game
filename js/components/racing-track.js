@@ -543,6 +543,11 @@ const RacingTrack = {
                     <div v-if="textState.highlightedText" v-html="textState.highlightedText"></div>
                     <div v-else>{{ textState.currentText }}</div>
                 </div>
+                <!-- 暂停蒙版：模糊文本 -->
+                <div class="paused-veil" v-if="raceState.isPaused">
+                    <div class="veil-icon">⏸️</div>
+                    <div class="veil-text">进站休息~</div>
+                </div>
             </div>
 
             <!-- 底部：游戏控制 -->

@@ -1,3 +1,63 @@
+/* ===== 暂停蒙版（四个模式通用）=====
+   挂在游戏区容器上：容器需 position:relative，蒙版盖住并模糊下层内容 */
+.paused-veil {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: inherit;
+    background: rgba(15, 18, 40, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 50;
+    animation: veil-in 0.25s ease;
+}
+
+@keyframes veil-in {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to { opacity: 1; backdrop-filter: blur(10px); }
+}
+
+.paused-veil .veil-icon {
+    font-size: 3rem;
+    animation: veil-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes veil-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.paused-veil .veil-text {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    font-family: var(--display-font);
+}
+
+/* 亮色主题（comic/candy）用浅色蒙版，避免突兀的暗块 */
+.theme-comic .paused-veil,
+.theme-candy .paused-veil {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.theme-comic .paused-veil .veil-text,
+.theme-candy .paused-veil .veil-text {
+    color: #333;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .paused-veil,
+    .paused-veil .veil-icon {
+        animation: none !important;
+    }
+}
+
 /* ===== 特效层（粒子画布 + 连击气泡）===== */
 
 .fx-canvas {

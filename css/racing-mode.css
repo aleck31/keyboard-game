@@ -8,6 +8,7 @@
 
 /* 打字文本面板 */
 .racing-typing-panel {
+    position: relative; /* 暂停蒙版定位锚点 */
     background: rgba(0, 0, 0, 0.4);
     border-radius: 12px;
     padding: 20px;

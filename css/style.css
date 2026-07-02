@@ -260,6 +260,7 @@ body::before {
 
 /* 文本显示区域 */
 .text-display {
+    position: relative; /* 暂停蒙版 .paused-veil 的定位锚点 */
     background: rgba(0, 0, 0, 0.4);
     border-radius: 12px;
     padding: 25px;

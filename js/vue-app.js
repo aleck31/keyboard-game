@@ -231,7 +231,7 @@ const VueTypingGameApp = {
                 <!-- 文本显示区域 -->
                 <div class="text-display">
                     <div class="text-content">
-                        <div v-if="textState.highlightedText" 
+                        <div v-if="textState.highlightedText"
                              v-html="textState.highlightedText">
                         </div>
                         <div v-else-if="textState.currentText">
@@ -240,6 +240,11 @@ const VueTypingGameApp = {
                         <div v-else class="text-placeholder">
                             点击开始按钮开始游戏...
                         </div>
+                    </div>
+                    <!-- 暂停蒙版：模糊文本，防止暂停时偷读 -->
+                    <div class="paused-veil" v-if="gameState.isPaused">
+                        <div class="veil-icon">⏸️</div>
+                        <div class="veil-text">休息一下~</div>
                     </div>
                 </div>
                 

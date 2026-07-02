@@ -377,6 +377,7 @@
 
 /* 目标单词容器 */
 .target-word-container {
+    position: relative; /* 暂停蒙版定位锚点 */
     text-align: center;
     background: rgba(0, 0, 0, 0.4);
     padding: 15px;
