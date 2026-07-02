@@ -384,7 +384,8 @@
     border-radius: 12px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     margin-bottom: 20px;
-    backdrop-filter: blur(8px);
+    /* 不设 backdrop-filter：本容器内嵌 .paused-veil，
+       父级的 backdrop-filter 会使子级遮罩的模糊失效（暂停时透出目标单词）*/
 }
 
 .target-label {

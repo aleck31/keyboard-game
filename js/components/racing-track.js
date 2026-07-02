@@ -149,6 +149,21 @@ const RacingTrack = {
             raceState.value.aiPositions = positions;
         };
 
+        // 第 laneIndex 条车道的垂直中心（车道总数 = 玩家 + AI）
+        const laneCenter = (laneIndex) => {
+            const laneCount = aiCars.value.length + 1;
+            return ((laneIndex + 0.5) / laneCount) * 100 + '%';
+        };
+
+        // 进度(0-100)映射到赛道水平位置：起点留 2% 车身空间，
+        // 终点 END 必须与终点线(.racing-track::after 的 left)对齐，
+        // 这样进度 100% 时车正好压线，与排行榜百分比语义一致
+        const FINISH_LINE_PCT = 90;
+        const laneX = (progress) => {
+            const START = 2, END = FINISH_LINE_PCT;
+            return START + (Math.min(100, Math.max(0, progress)) / 100) * (END - START) + '%';
+        };
+
         // 选择难度
         const selectDifficulty = (difficulty) => {
             if (raceState.value.isRunning) return;
@@ -206,7 +221,20 @@ const RacingTrack = {
             updateAICars(deltaTime);
             checkOvertakes();
 
+            // 到达终点即结束（先冲线者胜）；计时归零是兜底，在 raceTimer 里处理
+            if (hasReachedFinish()) {
+                finishRace();
+                return;
+            }
+
             animationFrame.value = requestAnimationFrame(updateLoop);
+        };
+
+        // 是否有车抵达终点线（位置达到赛道全长）
+        const hasReachedFinish = () => {
+            const len = config.value.trackLength;
+            if (raceState.value.playerPosition >= len) return true;
+            return aiCars.value.some(car => (raceState.value.aiPositions[car.id] || 0) >= len);
         };
 
         // 暂停比赛
@@ -382,6 +410,15 @@ const RacingTrack = {
             }
         };
 
+        // “结束”按钮：主动放弃比赛，先本地重置（置 isRunning=false，使下方 watch 不再结算成绩），
+        // 再走统一生命周期重置，回到难度选择
+        const resetGame = () => {
+            resetRace();
+            if (window.gameEngine) {
+                window.gameEngine.resetGame();
+            }
+        };
+
         watch(() => props.gameState.isPlaying, (isPlaying) => {
             if (isPlaying && props.gameState.mode === 'racing' && !raceState.value.isRunning) {
                 startRace();
@@ -427,6 +464,8 @@ const RacingTrack = {
             currentRankings,
             timeDisplay,
             isTimeWarning,
+            laneCenter,
+            laneX,
             selectDifficulty,
             startRaceButtonClick,
             startRace,
@@ -434,7 +473,8 @@ const RacingTrack = {
             resumeRace,
             togglePause,
             finishRace,
-            resetRace
+            resetRace,
+            resetGame
         };
     },
     template: `
@@ -470,70 +510,51 @@ const RacingTrack = {
                 </div>
             </div>
 
-            <!-- 排行榜 -->
-            <div class="racing-leaderboard">
-                <div class="racing-leaderboard-title">🏆 实时排名</div>
-                <div
-                    v-for="car in currentRankings"
-                    :key="car.type"
-                    class="racing-position"
-                    :class="{
-                        first: car.rank === 1,
-                        second: car.rank === 2,
-                        third: car.rank === 3,
-                        player: car.type === 'player'
-                    }"
-                >
-                    <div class="racing-position-rank">
-                        {{ car.rank === 1 ? '🥇' : car.rank === 2 ? '🥈' : car.rank === 3 ? '🥉' : car.rank }}
-                    </div>
-                    <div class="racing-position-name">
-                        {{ car.icon }} {{ car.name }}
-                    </div>
-                    <div class="racing-position-progress">
-                        {{ Math.round(car.progress) }}%
-                    </div>
-                </div>
-            </div>
-
             <!-- 中间：游戏区域 -->
             <div class="racing-game-area">
-                <!-- 赛道 -->
-                <div class="racing-track">
-                    <!-- 玩家赛车 -->
+                <!-- 赛道（车道数 = 玩家 + AI，每道等高）-->
+                <div class="racing-track" :style="{ '--lane-count': aiCars.length + 1 }">
+                    <!-- 紧凑实时排名：浮在赛道右上角 -->
+                    <div class="racing-mini-rank">
+                        <div
+                            v-for="car in currentRankings"
+                            :key="car.type"
+                            class="racing-mini-rank-row"
+                            :class="{ player: car.type === 'player' }"
+                        >
+                            <span class="racing-mini-rank-pos">{{ car.rank }}</span>
+                            <span class="racing-mini-rank-icon">{{ car.icon }}</span>
+                            <span class="racing-mini-rank-pct">{{ Math.round(car.progress) }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- 玩家赛车（第 1 道）-->
                     <div
                         class="racing-car player"
-                        :style="{ left: playerProgress + '%' }"
+                        :style="{ left: laneX(playerProgress), top: laneCenter(0) }"
                     >
                         {{ config.cars.player.icon }}
                     </div>
 
-                    <!-- AI赛车 -->
+                    <!-- AI赛车（第 2..N 道）-->
                     <div
                         v-for="(car, index) in aiCars"
                         :key="car.id"
                         class="racing-car ai"
                         :class="car.id"
                         :style="{
-                            left: aiProgress[car.id] + '%',
-                            top: (20 + index * 15) + '%'
+                            left: laneX(aiProgress[car.id]),
+                            top: laneCenter(index + 1)
                         }"
                     >
                         {{ car.icon }}
                     </div>
 
                     <!-- 暂停遮罩 -->
-                    <div class="racing-paused-overlay" v-if="raceState.isPaused">
-                        <div class="paused-text">⏸️ 比赛暂停</div>
-                        <button class="racing-resume-btn" @click="togglePause">▶️ 继续比赛</button>
+                    <div class="paused-veil" v-if="raceState.isPaused">
+                        <div class="veil-icon">⏸️</div>
+                        <div class="veil-text">比赛暂停</div>
                     </div>
-                </div>
-
-                <!-- 比赛中的暂停按钮 -->
-                <div class="racing-controls" v-if="raceState.isRunning">
-                    <button class="racing-control-btn pause" @click="togglePause">
-                        {{ raceState.isPaused ? '▶️ 继续' : '⏸️ 暂停' }}
-                    </button>
                 </div>
             </div>
 
@@ -598,6 +619,28 @@ const RacingTrack = {
                         <div class="racing-final-stat-value">{{ statsState.wpm || 0 }} WPM</div>
                     </div>
                 </div>
+
+                <button class="racing-start-btn" @click="resetGame">
+                    🏎️ 再来一局
+                </button>
+            </div>
+
+            <!-- 游戏控制按钮（container 最下方，与植物防御模式统一）-->
+            <div class="game-controls" v-if="raceState.isRunning" style="margin-top: 20px;">
+                <button
+                    class="btn btn-secondary"
+                    @click="togglePause"
+                    style="background: #ff9800; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 5px;"
+                >
+                    {{ raceState.isPaused ? '▶️ 继续' : '⏸️ 暂停' }}
+                </button>
+                <button
+                    class="btn btn-secondary"
+                    @click="resetGame"
+                    style="background: #f44336; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 5px;"
+                >
+                    🔄 结束
+                </button>
             </div>
         </div>
     `

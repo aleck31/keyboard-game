@@ -85,7 +85,6 @@ body::before {
 .game-footer p {
     margin: 5px 0;
 }
-}
 
 /* ===== 按钮组件 ===== */
 .btn {
@@ -267,7 +266,6 @@ body::before {
     margin-bottom: 20px;
     min-height: 200px;
     border: 2px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
 }
 
 .text-content {

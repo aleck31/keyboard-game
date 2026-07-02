@@ -106,74 +106,6 @@
     transform: translateY(0);
 }
 
-/* 游戏控制按钮 */
-.racing-controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.racing-control-btn {
-    padding: 10px 25px;
-    font-size: 1rem;
-    font-weight: bold;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid #666;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.racing-control-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: #888;
-}
-
-.racing-control-btn.pause {
-    border-color: #ffd700;
-}
-
-/* 暂停遮罩 */
-.racing-paused-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    border-radius: 12px;
-}
-
-.racing-paused-overlay .paused-text {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #ffd700;
-    margin-bottom: 20px;
-}
-
-.racing-resume-btn {
-    padding: 15px 40px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #fff;
-    background: linear-gradient(135deg, #00c853, #69f0ae);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.racing-resume-btn:hover {
-    transform: scale(1.05);
-}
-
 /* 赛车追逐容器 */
 .racing-container {
     position: relative;
@@ -195,42 +127,52 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* 赛道容器 */
+/* 赛道容器：纯沥青路面 + 上下草地边缘 */
 .racing-track {
+    --lane-count: 4; /* 由模板按 玩家+AI 数量注入 */
     position: relative;
-    height: 300px;
-    background: linear-gradient(180deg, 
-        #87ceeb 0%,     /* 天空蓝 */
-        #98fb98 10%,    /* 草地绿 */
-        #696969 20%,    /* 赛道灰 */
-        #2f2f2f 50%,    /* 赛道深灰 */
-        #696969 80%,    /* 赛道灰 */
-        #98fb98 90%,    /* 草地绿 */
-        #87ceeb 100%    /* 天空蓝 */
-    );
+    height: 380px;
+    background:
+        linear-gradient(180deg, #6ab04c 0 3%, transparent 3%),
+        linear-gradient(0deg, #6ab04c 0 3%, transparent 3%),
+        linear-gradient(180deg, #3a3a42 0%, #2b2b31 50%, #3a3a42 100%);
     border-radius: 12px;
     overflow: hidden;
     margin: 20px 0;
-    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* 赛道分隔线 */
+/* 车道分隔线：在每条车道边界画白色虚线（25%/50%/75%）*/
 .racing-track::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: repeating-linear-gradient(
-        90deg,
-        #fff 0px,
-        #fff 20px,
-        transparent 20px,
-        transparent 40px
-    );
-    transform: translateY(-50%);
+    inset: 0;
     z-index: 1;
+    pointer-events: none;
+    --lane-dash: repeating-linear-gradient(90deg, rgba(255,255,255,0.85) 0 24px, transparent 24px 48px);
+    background-image: var(--lane-dash), var(--lane-dash), var(--lane-dash);
+    background-size: 100% 2px;
+    background-repeat: no-repeat;
+    background-position:
+        0 25%,
+        0 50%,
+        0 75%;
+}
+
+/* 终点线：竖向黑白棋盘格，位于 90% 处（与 laneX 的 END 对齐，车抵达即压线），不盖到草坪 */
+.racing-track::after {
+    content: '';
+    position: absolute;
+    top: 4%;
+    bottom: 4%;
+    left: 90%;
+    width: 20px;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        conic-gradient(#fff 90deg, #111 90deg 180deg, #fff 180deg 270deg, #111 270deg)
+        0 0 / 14px 14px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
 /* 赛车基础样式 */
@@ -243,9 +185,8 @@
     transform: scaleX(-1); /* 翻转车头朝右 */
 }
 
-/* 玩家赛车 */
+/* 玩家赛车（垂直位置由模板 laneCenter 内联设置）*/
 .racing-car.player {
-    top: 45%;
     transform: scaleX(-1) translateY(-50%);
     animation: playerCarBounce 2s ease-in-out infinite;
 }
@@ -255,20 +196,9 @@
     transform: scaleX(-1) translateY(-50%);
 }
 
-.racing-car.ai.slow {
-    top: 25%;
-    color: #90ee90;
-}
-
-.racing-car.ai.medium {
-    top: 35%;
-    color: #ffd700;
-}
-
-.racing-car.ai.fast {
-    top: 65%;
-    color: #ff6347;
-}
+.racing-car.ai.slow { color: #90ee90; }
+.racing-car.ai.medium { color: #ffd700; }
+.racing-car.ai.fast { color: #ff6347; }
 
 /* 赛车动画 */
 @keyframes playerCarBounce {
@@ -293,21 +223,23 @@
     }
 }
 
-/* 赛车尾气效果 */
+/* 赛车尾气效果：车头朝右行驶（父级 scaleX(-1)），烟雾在车尾（视觉左侧）向后飘散
+   ::after 不再自身翻转，坐标系只剩父级一层，方向推理简单：
+   在父级翻转坐标里 left:100% = 视觉左侧（车尾），translateX 正向 = 视觉向左（后方） */
 .racing-car::after {
     content: '💨';
     position: absolute;
     left: 100%;
     top: 50%;
-    transform: scaleX(-1) translateY(-50%);
+    transform: translateY(-50%);
     font-size: 0.8em;
     opacity: 0.6;
     animation: exhaustSmoke 1s ease-in-out infinite;
 }
 
 @keyframes exhaustSmoke {
-    0% { opacity: 0.6; transform: scaleX(-1) translateY(-50%) translateX(0); }
-    100% { opacity: 0; transform: scaleX(-1) translateY(-50%) translateX(20px); }
+    0% { opacity: 0.6; transform: translateY(-50%) translateX(0); }
+    100% { opacity: 0; transform: translateY(-50%) translateX(20px); }
 }
 
 /* 赛车统计面板 */
@@ -325,75 +257,46 @@
     animation: timerPulse 1s ease-in-out infinite;
 }
 
-/* 排名显示 */
-.racing-leaderboard {
-    background: var(--card-bg, rgba(0, 0, 0, 0.3));
-    border-radius: 8px;
-    padding: 15px;
-    margin: 15px 0;
-    border: 1px solid var(--border-color, #444);
-}
-
-.racing-leaderboard-title {
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #ffd700;
-    margin-bottom: 10px;
-}
-
-/* 亮色主题下金色标题在白卡上看不清 */
-.theme-comic .racing-leaderboard-title,
-.theme-candy .racing-leaderboard-title {
-    color: #b45309;
-}
-
-.racing-position {
+/* 紧凑实时排名：浮在赛道右上角 */
+.racing-mini-rank {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.racing-mini-rank-row {
+    display: flex;
     align-items: center;
-    padding: 8px 12px;
-    margin: 5px 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    border-left: 4px solid transparent;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #fff;
+    line-height: 1.4;
 }
 
-.racing-position.first {
-    border-left-color: #ffd700;
-    background: rgba(255, 215, 0, 0.1);
-}
-
-.racing-position.second {
-    border-left-color: #c0c0c0;
-    background: rgba(192, 192, 192, 0.1);
-}
-
-.racing-position.third {
-    border-left-color: #cd7f32;
-    background: rgba(205, 127, 50, 0.1);
-}
-
-.racing-position.player {
-    border-left-color: #00ff00;
-    background: rgba(0, 255, 0, 0.1);
+.racing-mini-rank-row.player {
     font-weight: bold;
+    color: #ffd93d;
 }
 
-.racing-position-rank {
-    font-size: 1.1rem;
-    font-weight: bold;
-    min-width: 30px;
+.racing-mini-rank-pos {
+    min-width: 14px;
+    text-align: center;
+    opacity: 0.8;
 }
 
-.racing-position-name {
-    flex: 1;
-    margin: 0 10px;
-}
-
-.racing-position-progress {
-    font-size: 0.9rem;
-    color: var(--text-secondary, #ccc);
+.racing-mini-rank-pct {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.85;
 }
 
 /* 时间显示 */
@@ -469,9 +372,9 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
     .racing-track {
-        height: 250px;
+        height: 320px;
     }
-    
+
     .racing-car {
         font-size: 2rem;
     }
@@ -492,9 +395,9 @@
 
 @media (max-width: 480px) {
     .racing-track {
-        height: 200px;
+        height: 280px;
     }
-    
+
     .racing-car {
         font-size: 1.5rem;
     }

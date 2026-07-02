@@ -10,13 +10,24 @@ from typing import Optional
 import json
 import os
 import random
+import tomllib
 from datetime import datetime
+
+# 版本号唯一来源：pyproject.toml，避免多处硬编码漂移
+def _read_version() -> str:
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "pyproject.toml"), "rb") as f:
+            return tomllib.load(f)["project"]["version"]
+    except Exception:
+        return "0.0.0"
+
+APP_VERSION = _read_version()
 
 # 创建 FastAPI 应用
 app = FastAPI(
     title="键盘打字竞速游戏",
     description="一款现代化的Web键盘打字练习游戏",
-    version="2.1.0"
+    version=APP_VERSION
 )
 
 # 数据模型
@@ -83,6 +94,7 @@ async def get_general_config():
         "enableBackgroundMusic": True
     }
     config = load_json_file("data/config/general.json", default_config)
+    config["version"] = APP_VERSION  # 版本号统一来自 pyproject.toml
     return {"status": "success", "data": config}
 
 @app.get("/api/texts")

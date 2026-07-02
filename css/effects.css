@@ -18,7 +18,7 @@
 
 @keyframes veil-in {
     from { opacity: 0; backdrop-filter: blur(0); }
-    to { opacity: 1; backdrop-filter: blur(10px); }
+    to { opacity: 1; backdrop-filter: blur(16px); }
 }
 
 .paused-veil .veil-icon {
@@ -41,7 +41,7 @@
 /* 亮色主题（comic/candy）用浅色蒙版，避免突兀的暗块 */
 .theme-comic .paused-veil,
 .theme-candy .paused-veil {
-    background: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.78);
 }
 
 .theme-comic .paused-veil .veil-text,

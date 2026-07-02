@@ -288,6 +288,20 @@ const AppUtils = {
             };
         };
 
+        // 版本号来自后端（唯一真源 pyproject.toml），无条件拉取填入页脚
+        const loadVersion = async () => {
+            try {
+                const response = await window.apiClient?.getConfig();
+                const version = response?.data?.version;
+                if (version) {
+                    const el = document.getElementById('appVersion');
+                    if (el) el.textContent = 'v' + version;
+                }
+            } catch (error) {
+                console.warn('获取版本号失败');
+            }
+        };
+
         // 重置设置
         const resetSettings = async () => {
             if (confirm('确定要重置所有设置为默认值吗？')) {
@@ -431,6 +445,9 @@ const AppUtils = {
         
         // 生命周期
         onMounted(async () => {
+            // 无条件拉取版本号填页脚（不依赖是否首次访问）
+            loadVersion();
+
             // 加载保存的主题设置，若无则从API获取默认配置
             let settings = Utils.Storage.get('gameSettings', null);
             if (!settings) {
