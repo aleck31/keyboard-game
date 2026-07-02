@@ -1,13 +1,13 @@
 /* CSS变量定义 */
 :root {
-    /* 主色调 - 现代渐变色 */
+    /* 主色调 - 现代渐变色（各主题会覆盖） */
     --primary-color: #667eea;
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --secondary-color: #f093fb;
     --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --accent-color: #4facfe;
     --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    
+
     /* 状态颜色 - 柔和版本 */
     --success-color: #10b981;
     --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -17,153 +17,433 @@
     --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     --info-color: #06b6d4;
     --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+
+    /* 各主题可覆盖的显示字体（标题/按钮用），正文保持等宽 */
+    --display-font: inherit;
 }
 
-/* 暗色主题 - 更深邃的背景 */
-.theme-dark {
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #151b2e;
-    --card-bg: #1e2538;
-    --card-bg-hover: #252d42;
-    --border-color: #2d3548;
-    --text-color: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --shadow-color: rgba(0, 0, 0, 0.5);
-    
-    background: linear-gradient(135deg, #0a0e1a 0%, #151b2e 100%);
+/* ===== 🚀 星际探险（默认）===== */
+.theme-space {
+    --primary-color: #00d9ff;
+    --primary-gradient: linear-gradient(135deg, #00d9ff 0%, #7b2ff7 100%);
+    --secondary-color: #ff00d4;
+    --secondary-gradient: linear-gradient(135deg, #ff00d4 0%, #7b2ff7 100%);
+    --accent-color: #ffd93d;
+    --accent-gradient: linear-gradient(135deg, #ffd93d 0%, #ff8c42 100%);
+    --success-color: #4ade80;
+    --error-color: #ff5c7a;
+
+    --bg-primary: #0a0e3f;
+    --bg-secondary: #131a5c;
+    --card-bg: #1a2270;
+    --card-bg-hover: #232d8a;
+    --border-color: #2f3ba8;
+    --text-color: #e8ecff;
+    --text-secondary: #9aa5e8;
+    --shadow-color: rgba(0, 217, 255, 0.25);
+    --display-font: 'Orbitron', sans-serif;
+
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(123, 47, 247, 0.35) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 25%, rgba(0, 217, 255, 0.22) 0%, transparent 40%),
+        radial-gradient(ellipse at 55% 90%, rgba(255, 0, 212, 0.18) 0%, transparent 45%),
+        linear-gradient(180deg, #050820 0%, #0a0e3f 55%, #131a5c 100%);
     color: var(--text-color);
 }
 
-/* 亮色主题 - 清新明亮 */
-.theme-light {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #f1f5f9;
+/* 星空：闪烁星点（纯CSS） */
+.theme-space::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(1.5px 1.5px at 12% 22%, #fff 50%, transparent 50%),
+        radial-gradient(1px 1px at 32% 68%, #cfe8ff 50%, transparent 50%),
+        radial-gradient(2px 2px at 54% 14%, #fff 50%, transparent 50%),
+        radial-gradient(1px 1px at 71% 42%, #ffe9c9 50%, transparent 50%),
+        radial-gradient(1.5px 1.5px at 88% 78%, #fff 50%, transparent 50%),
+        radial-gradient(1px 1px at 44% 88%, #cfe8ff 50%, transparent 50%),
+        radial-gradient(1.5px 1.5px at 8% 55%, #ffd6f5 50%, transparent 50%),
+        radial-gradient(1px 1px at 63% 60%, #fff 50%, transparent 50%),
+        radial-gradient(2px 2px at 94% 8%, #cfe8ff 50%, transparent 50%);
+    animation: space-twinkle 4s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes space-twinkle {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+
+.theme-space .game-title {
+    font-family: var(--display-font);
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+}
+
+.theme-space .char-correct { background-color: rgba(74, 222, 128, 0.85); color: #052e12; border-radius: 3px; }
+.theme-space .char-incorrect { background-color: #ff5c7a; color: #fff; border-radius: 3px; }
+.theme-space .char-current {
+    background-color: #00d9ff;
+    color: #04263a;
+    border-radius: 3px;
+    box-shadow: 0 0 12px rgba(0, 217, 255, 0.9);
+}
+
+.theme-space .btn,
+.theme-space .mode-btn,
+.theme-space .selector-btn,
+.theme-space .difficulty-btn {
+    font-family: var(--display-font);
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(0, 217, 255, 0.35);
+}
+
+.theme-space .stat-value {
+    font-family: var(--display-font);
+    color: var(--primary-color);
+    text-shadow: 0 0 12px rgba(0, 217, 255, 0.5);
+}
+
+/* ===== 🕹️ 复古街机 8-bit ===== */
+.theme-arcade {
+    --primary-color: #ffd93d;
+    --primary-gradient: linear-gradient(135deg, #ffd93d 0%, #ff4757 100%);
+    --secondary-color: #3742fa;
+    --secondary-gradient: linear-gradient(135deg, #3742fa 0%, #5352ed 100%);
+    --accent-color: #2ed573;
+    --accent-gradient: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
+    --success-color: #2ed573;
+    --error-color: #ff4757;
+
+    --bg-primary: #14001f;
+    --bg-secondary: #1f0a2e;
+    --card-bg: #2a1240;
+    --card-bg-hover: #351a50;
+    --border-color: #ffd93d;
+    --text-color: #fdf9e5;
+    --text-secondary: #c9a7e8;
+    --shadow-color: rgba(255, 71, 87, 0.35);
+    --display-font: 'Press Start 2P', monospace;
+
+    background:
+        linear-gradient(rgba(255, 217, 61, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 217, 61, 0.05) 1px, transparent 1px),
+        linear-gradient(180deg, #14001f 0%, #2a0845 100%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+    color: var(--text-color);
+}
+
+/* 街机扫描线 */
+.theme-arcade::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+    z-index: 9990;
+}
+
+.theme-arcade .game-title {
+    font-family: var(--display-font);
+    font-size: 1.5rem;
+    line-height: 1.8;
+    color: var(--primary-color);
+    -webkit-text-fill-color: var(--primary-color);
+    text-shadow: 3px 3px 0 #ff4757, 6px 6px 0 #3742fa;
+    animation: arcade-blink 2.5s steps(1) infinite;
+}
+
+@keyframes arcade-blink {
+    0%, 92%, 100% { opacity: 1; }
+    95% { opacity: 0.4; }
+}
+
+.theme-arcade .btn,
+.theme-arcade .mode-btn,
+.theme-arcade .selector-btn,
+.theme-arcade .difficulty-btn,
+.theme-arcade .racing-start-btn {
+    font-family: var(--display-font);
+    font-size: 0.7rem;
+    border-radius: 0;
+    border: 3px solid var(--border-color);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    transition: transform 0.05s steps(1), box-shadow 0.05s steps(1);
+}
+
+.theme-arcade .btn:active,
+.theme-arcade .mode-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.6);
+}
+
+.theme-arcade .game-header,
+.theme-arcade .basic-game-container,
+.theme-arcade .stat-item,
+.theme-arcade .text-display,
+.theme-arcade .racing-typing-panel {
+    border-radius: 0;
+    border: 3px solid var(--border-color);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.5);
+}
+
+.theme-arcade .char-correct { background-color: #2ed573; color: #06280f; }
+.theme-arcade .char-incorrect { background-color: #ff4757; color: #fff; }
+.theme-arcade .char-current {
+    background-color: #ffd93d;
+    color: #4a3800;
+    animation: arcade-caret 0.6s steps(2) infinite;
+}
+
+@keyframes arcade-caret {
+    50% { background-color: transparent; color: var(--text-color); }
+}
+
+.theme-arcade .stat-value {
+    font-family: var(--display-font);
+    font-size: 1rem;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 0 #ff4757;
+}
+
+/* ===== 🌊 海底世界 ===== */
+.theme-ocean {
+    --primary-color: #06b6d4;
+    --primary-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    --secondary-color: #f472b6;
+    --secondary-gradient: linear-gradient(135deg, #f472b6 0%, #fb923c 100%);
+    --accent-color: #fbbf24;
+    --accent-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    --success-color: #34d399;
+    --error-color: #fb7185;
+
+    --bg-primary: #042f4b;
+    --bg-secondary: #064663;
+    --card-bg: #0a5578;
+    --card-bg-hover: #0e648c;
+    --border-color: #1387b0;
+    --text-color: #e6fbff;
+    --text-secondary: #8fd6e8;
+    --shadow-color: rgba(6, 182, 212, 0.3);
+    --display-font: 'Comfortaa', cursive;
+
+    background:
+        radial-gradient(ellipse at 30% 0%, rgba(251, 191, 36, 0.15) 0%, transparent 35%),
+        radial-gradient(ellipse at 70% 100%, rgba(4, 20, 40, 0.6) 0%, transparent 60%),
+        linear-gradient(180deg, #0a7ea4 0%, #075985 30%, #042f4b 75%, #021c30 100%);
+    color: var(--text-color);
+}
+
+/* 上浮的气泡 */
+.theme-ocean::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle 10px at 15% 105%, rgba(230, 251, 255, 0.28) 40%, transparent 44%),
+        radial-gradient(circle 6px at 38% 112%, rgba(230, 251, 255, 0.22) 40%, transparent 44%),
+        radial-gradient(circle 14px at 60% 108%, rgba(230, 251, 255, 0.18) 40%, transparent 44%),
+        radial-gradient(circle 8px at 82% 115%, rgba(230, 251, 255, 0.25) 40%, transparent 44%);
+    background-repeat: no-repeat;
+    animation: ocean-bubbles 14s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes ocean-bubbles {
+    0% { transform: translateY(0) translateX(0); opacity: 1; }
+    50% { transform: translateY(-60vh) translateX(12px); }
+    100% { transform: translateY(-125vh) translateX(-8px); opacity: 0.3; }
+}
+
+.theme-ocean .game-title {
+    font-family: var(--display-font);
+    font-weight: 700;
+    background: linear-gradient(135deg, #7dd3fc 0%, #06b6d4 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: ocean-sway 5s ease-in-out infinite;
+}
+
+@keyframes ocean-sway {
+    0%, 100% { transform: rotate(-0.6deg) translateY(0); }
+    50% { transform: rotate(0.6deg) translateY(-3px); }
+}
+
+.theme-ocean .game-header,
+.theme-ocean .basic-game-container,
+.theme-ocean .stat-item,
+.theme-ocean .text-display,
+.theme-ocean .racing-typing-panel {
+    border-radius: 24px;
+    border: 2px solid rgba(125, 211, 252, 0.35);
+    backdrop-filter: blur(4px);
+}
+
+.theme-ocean .btn,
+.theme-ocean .mode-btn,
+.theme-ocean .selector-btn,
+.theme-ocean .difficulty-btn {
+    font-family: var(--display-font);
+    font-weight: 700;
+    border-radius: 999px;
+}
+
+.theme-ocean .char-correct { background-color: #34d399; color: #033222; border-radius: 5px; }
+.theme-ocean .char-incorrect { background-color: #fb7185; color: #fff; border-radius: 5px; }
+.theme-ocean .char-current {
+    background-color: #fbbf24;
+    color: #4a3200;
+    border-radius: 5px;
+    animation: ocean-caret 1.2s ease-in-out infinite;
+}
+
+@keyframes ocean-caret {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+    50% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.15); }
+}
+
+.theme-ocean .stat-value {
+    font-family: var(--display-font);
+    color: #7dd3fc;
+}
+
+/* ===== 💥 漫画超英 ===== */
+.theme-comic {
+    --primary-color: #dc2626;
+    --primary-gradient: linear-gradient(135deg, #dc2626 0%, #f97316 100%);
+    --secondary-color: #1e40af;
+    --secondary-gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    --accent-color: #facc15;
+    --accent-gradient: linear-gradient(135deg, #facc15 0%, #f97316 100%);
+    --success-color: #16a34a;
+    --error-color: #dc2626;
+
+    --bg-primary: #fef9c3;
+    --bg-secondary: #fef3c7;
     --card-bg: #ffffff;
-    --card-bg-hover: #f8fafc;
-    --border-color: #e2e8f0;
-    --text-color: #1e293b;
-    --text-secondary: #64748b;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    
-    background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+    --card-bg-hover: #fffbeb;
+    --border-color: #111111;
+    --text-color: #111111;
+    --text-secondary: #52525b;
+    --shadow-color: rgba(17, 17, 17, 0.35);
+    --display-font: 'Bangers', cursive;
+
+    /* Ben-Day 网点 */
+    background:
+        radial-gradient(circle 3px at 8px 8px, rgba(220, 38, 38, 0.13) 50%, transparent 52%),
+        linear-gradient(135deg, #fef9c3 0%, #fde68a 60%, #fbcfe8 100%);
+    background-size: 24px 24px, 100% 100%;
     color: var(--text-color);
 }
 
-/* 蓝色主题 - 科技感 */
-.theme-blue {
-    --primary-color: #3b82f6;
-    --bg-primary: #0c1222;
-    --bg-secondary: #1a2332;
-    --card-bg: #1e2a3f;
-    --card-bg-hover: #2a3650;
-    --border-color: #2d3f5f;
-    --text-color: #dbeafe;
-    --text-secondary: #93c5fd;
-    --shadow-color: rgba(59, 130, 246, 0.3);
-    
-    background: linear-gradient(135deg, #0c1222 0%, #1e3a8a 100%);
-    color: var(--text-color);
-}
-    
-    background-color: var(--bg-primary);
-    color: var(--text-color);
+.theme-comic .game-title {
+    font-family: var(--display-font);
+    font-size: 3rem;
+    letter-spacing: 0.06em;
+    color: #dc2626;
+    -webkit-text-fill-color: #dc2626;
+    text-shadow: 3px 3px 0 #111, 6px 6px 0 #facc15;
+    transform: rotate(-2deg);
 }
 
-/* 绿色主题 */
-.theme-green {
-    --primary-color: #00cc66;
-    --bg-primary: #001a0d;
-    --bg-secondary: #00331a;
-    --card-bg: #004d26;
-    --border-color: #006633;
-    --text-color: #e6ffe6;
-    --text-secondary: #99ff99;
-    
-    background-color: var(--bg-primary);
-    color: var(--text-color);
+.theme-comic .game-header,
+.theme-comic .basic-game-container,
+.theme-comic .stat-item,
+.theme-comic .text-display,
+.theme-comic .racing-typing-panel {
+    border-radius: 14px;
+    border: 3px solid #111;
+    box-shadow: 6px 6px 0 #111;
+    background: var(--card-bg);
 }
 
-/* 紫色主题 */
-.theme-purple {
-    --primary-color: #9c27b0;
-    --bg-primary: #1a0d1a;
-    --bg-secondary: #331a33;
-    --card-bg: #4d264d;
-    --border-color: #663366;
-    --text-color: #ffe6ff;
-    --text-secondary: #ff99ff;
-    
-    background-color: var(--bg-primary);
-    color: var(--text-color);
+.theme-comic .btn,
+.theme-comic .mode-btn,
+.theme-comic .selector-btn,
+.theme-comic .difficulty-btn,
+.theme-comic .racing-start-btn {
+    font-family: var(--display-font);
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    border-radius: 10px;
+    border: 3px solid #111;
+    box-shadow: 4px 4px 0 #111;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
+
+.theme-comic .btn:hover,
+.theme-comic .mode-btn:hover {
+    transform: translate(-1px, -1px) rotate(-1deg);
+    box-shadow: 6px 6px 0 #111;
+}
+
+.theme-comic .btn:active,
+.theme-comic .mode-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 #111;
+}
+
+.theme-comic .char-correct { background-color: #16a34a; color: #fff; border-radius: 3px; }
+.theme-comic .char-incorrect { background-color: #dc2626; color: #fff; border-radius: 3px; }
+.theme-comic .char-current {
+    background-color: #facc15;
+    color: #111;
+    border-radius: 3px;
+    outline: 2px solid #111;
+}
+
+.theme-comic .stat-value {
+    font-family: var(--display-font);
+    font-size: 1.6rem;
+    color: #dc2626;
+    text-shadow: 2px 2px 0 #facc15;
+}
+
+.theme-comic .text-content {
+    color: #111;
+}
+
+/* ===== 通用 ===== */
 
 /* 主题切换动画 */
 * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* 特殊元素的主题适配 */
-.theme-dark .text-input::placeholder {
-    color: var(--text-secondary);
-}
-
-.theme-light .text-input::placeholder {
-    color: var(--text-secondary);
-}
-
-/* 滚动条样式 */
-.theme-dark ::-webkit-scrollbar {
+/* 滚动条（跟随主题变量，所有主题通用） */
+::-webkit-scrollbar {
     width: 8px;
 }
 
-.theme-dark ::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
     background: var(--bg-secondary);
 }
 
-.theme-dark ::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 4px;
 }
 
-.theme-dark ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary);
-}
-
-.theme-light ::-webkit-scrollbar {
-    width: 8px;
-}
-
-.theme-light ::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-}
-
-.theme-light ::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
-}
-
-.theme-light ::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
 }
 
 /* 选中文本样式 */
-.theme-dark ::selection {
+::selection {
     background: rgba(33, 150, 243, 0.3);
     color: var(--text-color);
 }
 
-.theme-light ::selection {
-    background: rgba(33, 150, 243, 0.2);
-    color: var(--text-color);
-}
-
 /* 焦点样式 */
-.theme-dark *:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
-
-.theme-light *:focus {
+*:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }

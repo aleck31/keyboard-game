@@ -265,22 +265,6 @@
         --error-color: #cc0000;
         --border-color: #666666;
     }
-
-    .theme-dark {
-        --bg-primary: #000000;
-        --bg-secondary: #111111;
-        --card-bg: #222222;
-        --text-color: #ffffff;
-        --border-color: #888888;
-    }
-
-    .theme-light {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f0f0f0;
-        --card-bg: #ffffff;
-        --text-color: #000000;
-        --border-color: #666666;
-    }
 }
 
 /* 减少动画模式 */

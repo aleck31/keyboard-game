@@ -5,28 +5,26 @@ const AppUtils = {
         const { ref, onMounted, onUnmounted } = Vue;
         
         // 当前主题状态
-        const currentTheme = ref('dark');
-        
-        // 主题配置 - 参考原UIManager实现
-        const themes = ['candy', 'dark', 'light', 'blue', 'green', 'purple'];
+        const currentTheme = ref('space');
+
+        // 主题配置
+        const themes = ['space', 'arcade', 'ocean', 'comic', 'candy'];
         const themeIcons = {
-            candy: '🍭',
-            dark: '🌙',
-            light: '☀️',
-            blue: '🌊',
-            green: '🌿',
-            purple: '🔮'
+            space: '🚀',
+            arcade: '🕹️',
+            ocean: '🌊',
+            comic: '💥',
+            candy: '🍭'
         };
 
         // 获取主题中文名称
         const getThemeName = (theme) => {
             const themeNames = {
-                candy: '糖果',
-                dark: '暗色',
-                light: '亮色',
-                blue: '蓝色',
-                green: '绿色',
-                purple: '紫色'
+                space: '星际探险',
+                arcade: '复古街机',
+                ocean: '海底世界',
+                comic: '漫画超英',
+                candy: '糖果'
             };
             return themeNames[theme] || '未知';
         };
@@ -193,7 +191,7 @@ const AppUtils = {
         // 加载当前设置到模态框
         const loadCurrentSettings = () => {
             const settings = Utils.Storage.get('gameSettings', {
-                theme: 'dark',
+                theme: 'space',
                 timeLimit: 60,
                 difficulty: 'normal',
                 enableSounds: true,
@@ -219,7 +217,7 @@ const AppUtils = {
             
             const themeSelectModal = document.getElementById('themeSelectModal');
             if (themeSelectModal) {
-                themeSelectModal.value = settings.theme || 'dark';
+                themeSelectModal.value = settings.theme || 'space';
             }
         };
         
@@ -231,7 +229,7 @@ const AppUtils = {
             const themeSelectModal = document.getElementById('themeSelectModal');
             
             const settings = {
-                theme: themeSelectModal?.value || 'dark',
+                theme: themeSelectModal?.value || 'space',
                 enableSounds: enableSounds?.checked !== false,
                 enableMusic: enableMusic?.checked !== false,
                 highlightErrors: highlightErrors?.checked !== false
@@ -279,7 +277,7 @@ const AppUtils = {
             }
             return {
                 defaultMode: 'classic',
-                theme: 'dark',
+                theme: 'space',
                 enableKeyboardSound: true,
                 enableBackgroundMusic: true
             };
@@ -291,7 +289,7 @@ const AppUtils = {
                 // 从API获取默认配置
                 const defaultConfig = await loadDefaultConfig();
                 const defaultSettings = {
-                    theme: defaultConfig.theme || 'dark',
+                    theme: defaultConfig.theme || 'space',
                     timeLimit: 60,
                     difficulty: 'normal',
                     enableSounds: defaultConfig.enableKeyboardSound !== false,
@@ -433,7 +431,7 @@ const AppUtils = {
             if (!settings) {
                 const defaultConfig = await loadDefaultConfig();
                 settings = {
-                    theme: defaultConfig.theme || 'dark',
+                    theme: defaultConfig.theme || 'space',
                     enableSounds: defaultConfig.enableKeyboardSound !== false,
                     enableMusic: defaultConfig.enableBackgroundMusic !== false,
                     timeLimit: 60,
